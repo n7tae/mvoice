@@ -1,6 +1,13 @@
 # Prerequisites
 *.d
 
+# VS Code
+.vscode
+
+# Glade backup
+*~
+\#DigitalVoice.*
+
 # Compiled Object files
 *.slo
 *.lo
@@ -26,7 +33,16 @@
 *.a
 *.lib
 
-# Executables
-*.exe
-*.out
-*.app
+# intermediate files
+qdvdash.service
+
+# host files
+gwys.txt
+XLX_Hosts.txt
+DExtra_Hosts.txt
+DPlus_Hosts.txt
+DCS_Hosts.txt
+My_Hosts.txt
+
+# Executable
+mvoice
