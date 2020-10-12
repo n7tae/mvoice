@@ -50,52 +50,23 @@ private:
 	// data classes
 	CFGDATA data;
 	// other data
-	bool bCallsign, bStation, bM17Source;
+	bool bM17Source;
 	// Windows
 	CMainWindow *pMainWindow;
     Gtk::Dialog *pDlg;
 	// widgets
-	Gtk::Button *pAMBERescanButton, *pOkayButton, *pAudioRescanButton;
+	Gtk::Button *pOkayButton, *pAudioRescanButton;
 	Gtk::ComboBox *pAudioInputComboBox, *pAudioOutputComboBox;
-	Gtk::CheckButton *pUseMyCallCheckButton, *pDPlusEnableCheckButton, *pAPRSEnableCheckButton, *pGPSDEnableCheckButton, *pLinkingCheckButton, *pRoutingCheckbutton, *pIPv4CheckButton, *pIPv6CheckButton;
-	Gtk::Entry *pStationCallsignEntry, *pMyCallsignEntry, *pMyNameEntry, *pMessageEntry, *pLocationEntry[2], *pURLEntry, *pLatitudeEntry, *pLongitudeEntry, *pLinkAtStartEntry, *pAPRSServerEntry, *pAPRSPortEntry, *pAPRSIntervalEntry, *pGPSDServerEntry, *pGPSDPortEntry, *pM17SourceCallsignEntry;
-	Gtk::RadioButton *p230kRadioButton, *p460kRadioButton, *pCodec2RadioButton, *pAMBERadioButton, *pM17VoiceOnlyRadioButton, *pM17VoiceDataRadioButton;
-	Gtk::Label *pDevicePathLabel, *pProductIDLabel, *pVersionLabel, *pInputDescLabel, *pOutputDescLabel;
+	Gtk::CheckButton *pIPv4CheckButton, *pIPv6CheckButton;
+	Gtk::Entry *pM17SourceCallsignEntry;
+	Gtk::RadioButton *pM17VoiceOnlyRadioButton, *pM17VoiceDataRadioButton;
+	Gtk::Label *pInputDescLabel, *pOutputDescLabel;
 	Gtk::Notebook *pSettingsNotebook;
 	// events
 	void on_M17SourceCallsignEntry_changed();
-	void on_Codec2RadioButton_clicked();
-	void on_AMBERadioButton_clicked();
-	void on_LinkingCheckButton_toggled();
-	void on_RoutingCheckButton_toggled();
-	void on_UseMyCallsignCheckButton_toggled();
 	void on_AudioRescanButton_clicked();
-	void on_MyCallsignEntry_changed();
-	void on_MyNameEntry_changed();
-	void on_StationCallsignEntry_changed();
-	void On20CharMsgChanged(Gtk::Entry *pEntry);
-	void on_MessageEntry_changed();
-	void on_Location1Entry_changed();
-	void on_Location2Entry_changed();
-	void OnLatLongChanged(Gtk::Entry *pEntry);
-	void on_LatitudeEntry_changed();
-	void on_LongitudeEntry_changed();
-	void on_URLEntry_changed();
-	void OnServerChanged(Gtk::Entry *pEntry);
-	void on_AMBERescanButton_clicked();
 	void on_IPv4CheckButton_clicked();
 	void on_IPv6CheckButton_clicked();
-	void on_LinkAtStartEntry_changed();
 	void on_AudioInputComboBox_changed();
 	void on_AudioOutputComboBox_changed();
-	void on_APRSServerEntry_changed();
-	void on_GPSDServerEntry_changed();
-	void OnIntegerChanged(Gtk::Entry *pEntry);
-	void on_APRSPortEntry_changed();
-	void on_APRSIntervalEntry_changed();
-	void on_GPSDPortEntry_changed();
-	void on_APRSEnableCheckButton_toggled();
-	void on_GPSDEnableCheckButton_toggled();
-	// state changed
-	void BaudrateChanged(int newBaudrate);
 };

@@ -1,4 +1,3 @@
-#pragma once
 /*
  *   Copyright (C) 2019 by Thomas Early N7TAE
  *
@@ -16,6 +15,7 @@
  *   along with this program; if not, write to the Free Software
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
+#pragma once
 
 #include <string>
 #include <stdlib.h>

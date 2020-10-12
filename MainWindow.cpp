@@ -29,7 +29,6 @@
 
 #include "MainWindow.h"
 #include "WaitCursor.h"
-#include "DPlusAuthenticator.h"
 #include "Utilities.h"
 #include "TemplateClasses.h"
 
@@ -43,17 +42,12 @@ CMainWindow::CMainWindow() :
 	pWin(nullptr),
 	pQuitButton(nullptr),
 	pSettingsButton(nullptr),
-	pGate(nullptr),
-	pLink(nullptr),
 	pM17Gate(nullptr),
 	bDestCS(false),
 	bDestIP(false),
 	bTransOK(true)
 {
 	cfg.CopyTo(cfgdata);
-	if (! AudioManager.AMBEDevice.IsOpen()) {
-		AudioManager.AMBEDevice.FindandOpen(cfgdata.iBaudRate, Encoding::dstar);
-	}
 	// allowed M17 " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."
 	CallRegEx = std::regex("^(([1-9][A-Z])|([A-PR-Z][0-9])|([A-PR-Z][A-Z][0-9]))[0-9A-Z]*[A-Z][ ]*[ A-RT-Z]$", std::regex::extended);
 	IPv4RegEx = std::regex("^((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])$", std::regex::extended);
@@ -67,27 +61,7 @@ CMainWindow::~CMainWindow()
 {
 	if (pWin)
 		delete pWin;
-	StopLink();
-	StopGate();
 	StopM17();
-}
-
-void CMainWindow::RunLink()
-{
-	pLink = new CQnetLink;
-	if (! pLink->Init(&cfgdata))
-		pLink->Process();
-	delete pLink;
-	pLink = nullptr;
-}
-
-void CMainWindow::RunGate()
-{
-	pGate = new CQnetGateway;
-	if (! pGate->Init(&cfgdata))
-		pGate->Process();
-	delete pGate;
-	pGate = nullptr;
 }
 
 void CMainWindow::RunM17()
@@ -103,47 +77,14 @@ void CMainWindow::RunM17()
 
 void CMainWindow::SetState(const CFGDATA &data)
 {
-	if (data.bCodec2Enable) {
-		pMainStack->set_visible_child("page1");
-		StopGate();
-		StopLink();
-		pM17DestCallsignEntry->set_text(data.sM17DestCallsign);
-		pM17DestIPEntry->set_text(data.sM17DestIp);
-		if (nullptr == pM17Gate && cfg.IsOkay())
-			futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
-	} else {
-		pMainStack->set_visible_child("page0");
-		StopM17();
-		if (data.bRouteEnable) {
-			if (nullptr == pGate && cfg.IsOkay())
-				futGate = std::async(std::launch::async, &CMainWindow::RunGate, this);
-			pRouteComboBox->set_sensitive(true);
-			pRouteActionButton->set_sensitive(true);
-		} else {
-			StopGate();
-			pRouteEntry->set_text("CQCQCQ");
-			pRouteEntry->set_sensitive(false);
-			pRouteComboBox->set_sensitive(false);
-			pRouteActionButton->set_sensitive(false);
-		}
-
-		if (data.bLinkEnable) { // if data.bLinkEnable==true, then the TimeoutProcess() will handle the link frame widgets
-			if (nullptr == pGate && cfg.IsOkay())
-				futLink = std::async(std::launch::async, &CMainWindow::RunLink, this);
-		} else {
-			StopLink();
-			pLinkButton->set_sensitive(false);
-			pLinkEntry->set_sensitive(false);
-			pUnlinkButton->set_sensitive(false);
-			pLinkEntry->set_text("");
-		}
-	}
+	pM17DestCallsignEntry->set_text(data.sM17DestCallsign);
+	pM17DestIPEntry->set_text(data.sM17DestIp);
+	if (nullptr == pM17Gate && cfg.IsOkay())
+		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 }
 
 void CMainWindow::CloseAll()
 {
-	Gate2AM.Close();
-	Link2AM.Close();
 	M172AM.Close();
 	LogInput.Close();
 }
@@ -156,15 +97,6 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 		return true;
 	qnDB.ClearLH();
 	qnDB.ClearLS();
-	RebuildGateways(cfgdata.bDPlusEnable);
-
-	if (Gate2AM.Open("gate2am"))
-		return true;
-
-	if (Link2AM.Open("link2am")) {
-		CloseAll();
-		return true;
-	}
 
 	if (M172AM.Open("m172am")) {
 		CloseAll();
@@ -188,9 +120,6 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 		return true;
 	}
 
-	if (cfgdata.bAPRSEnable)
-		aprs.Init();
-
 	//setup our css context and provider
 	Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
 	Glib::RefPtr<Gtk::StyleContext> style = Gtk::StyleContext::create();
@@ -212,21 +141,12 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 
 	builder->get_widget("QuitButton", pQuitButton);
 	builder->get_widget("SettingsButton", pSettingsButton);
-	builder->get_widget("LinkButton", pLinkButton);
-	builder->get_widget("UnlinkButton", pUnlinkButton);
-	builder->get_widget("RouteActionButton", pRouteActionButton);
-	builder->get_widget("RouteComboBox", pRouteComboBox);
-	builder->get_widget("RouteEntry", pRouteEntry);
-	builder->get_widget("LinkEntry", pLinkEntry);
 	builder->get_widget("EchoTestButton", pEchoTestButton);
 	builder->get_widget("PTTButton", pPTTButton);
 	builder->get_widget("QuickKeyButton", pQuickKeyButton);
 	builder->get_widget("ScrolledWindow", pScrolledWindow);
 	builder->get_widget("LogTextView", pLogTextView);
 	builder->get_widget("AboutMenuItem", pAboutMenuItem);
-	builder->get_widget("MainStack", pMainStack);
-	builder->get_widget("M17Stack", pM17Stack);
-	builder->get_widget("DStarStack", pDStarStack);
 	builder->get_widget("M17DestActionButton", pM17DestActionButton);
 	builder->get_widget("M17DestCallsignEntry", pM17DestCallsignEntry);
 	builder->get_widget("M17DestIPEntry", pM17DestIPEntry);
@@ -245,18 +165,11 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	pM17UnlinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_M17UnlinkButton_clicked));
 	pSettingsButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_SettingsButton_clicked));
 	pQuitButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_QuitButton_clicked));
-	pRouteActionButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_RouteActionButton_clicked));
-	pRouteComboBox->signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::on_RouteComboBox_changed));
-	pRouteEntry->signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::on_RouteEntry_changed));
 	pEchoTestButton->signal_toggled().connect(sigc::mem_fun(*this, &CMainWindow::on_EchoTestButton_toggled));
 	pPTTButton->signal_toggled().connect(sigc::mem_fun(*this, &CMainWindow::on_PTTButton_toggled));
 	pQuickKeyButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_QuickKeyButton_clicked));
-	pLinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_LinkButton_clicked));
-	pUnlinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_UnlinkButton_clicked));
-	pLinkEntry->signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::on_LinkEntry_changed));
 	pAboutMenuItem->signal_activate().connect(sigc::mem_fun(*this, &CMainWindow::on_AboutMenuItem_activate));
 
-	ReadRoutes();
 	routeMap.Open();
 	for (const auto &item : routeMap.GetKeys()) {
 		// std::cout << "Addding " << item << " to M17 ComboBox" << std::endl;
@@ -269,8 +182,6 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	on_M17DestCallsignComboBox_changed();
 
 	// i/o events
-	Glib::signal_io().connect(sigc::mem_fun(*this, &CMainWindow::RelayGate2AM), Gate2AM.GetFD(), Glib::IO_IN);
-	Glib::signal_io().connect(sigc::mem_fun(*this, &CMainWindow::RelayLink2AM), Link2AM.GetFD(), Glib::IO_IN);
 	Glib::signal_io().connect(sigc::mem_fun(*this, &CMainWindow::RelayM172AM),  M172AM.GetFD(), Glib::IO_IN);
 	Glib::signal_io().connect(sigc::mem_fun(*this, &CMainWindow::GetLogInput), LogInput.GetFD(), Glib::IO_IN);
 	// idle processing
@@ -287,10 +198,7 @@ void CMainWindow::Run()
 void CMainWindow::on_QuitButton_clicked()
 {
 	CWaitCursor wait;
-	aprs.Close();
-	AudioManager.KeyOff(! cfgdata.bCodec2Enable);
-	StopGate();
-	StopLink();
+	AudioManager.KeyOff();
 	StopM17();
 
 	if (pWin)
@@ -307,89 +215,12 @@ void CMainWindow::on_SettingsButton_clicked()
 	auto newdata = SettingsDlg.Show();
 	if (newdata) {	// the user clicked okay so we need to see if anything changed. We'll shut things down and let SetState start things up again
 		CWaitCursor wait;
-		if (newdata->sStation.compare(cfgdata.sCallsign) || newdata->cModule!=cfgdata.cModule) {	// the station callsign has changed
-			StopGate();
-			StopLink();
-		} else if (newdata->eNetType != cfgdata.eNetType) {
+		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->cModule!=cfgdata.cModule || newdata->eNetType!=cfgdata.eNetType) {
 			StopM17();
-			StopGate();
 		}
-
-		if (! newdata->bCodec2Enable)
-			StopM17();
-
-		if (! newdata->bLinkEnable)
-			StopLink();
-
-		if (! newdata->bRouteEnable)
-			StopGate();
-
 		SetState(*newdata);
 		cfg.CopyTo(cfgdata);
 	}
-}
-
-void CMainWindow::WriteRoutes()
-{
-	std::string path(CFG_DIR);
-	path.append("routes.cfg");
-	std::ofstream file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
-	if (! file.is_open())
-		return;
-	for (auto it=routeset.begin(); it!=routeset.end(); it++) {
-		file << *it << std::endl;
-	}
-	file.close();
-}
-
-void CMainWindow::ReadRoutes()
-{
-	std::string path(CFG_DIR);
-
-	path.append("routes.cfg");
-	std::ifstream file(path.c_str(), std::ifstream::in);
-	if (file.is_open()) {
-		char line[128];
-		while (file.getline(line, 128)) {
-			if ('#' != *line) {
-				routeset.insert(line);
-			}
-		}
-		file.close();
-		for (auto it=routeset.begin(); it!=routeset.end(); it++) {
-			pRouteComboBox->append(*it);
-		}
-		pRouteComboBox->set_active(0);
-		return;
-	}
-
-	routeset.insert("CQCQCQ");
-	routeset.insert("DSTAR1");
-	routeset.insert("DSTAR1 T");
-	routeset.insert("DSTAR2");
-	routeset.insert("DSTAR2 T");
-	routeset.insert("QNET20 C");
-	routeset.insert("QNET20 Z");
-	for (auto it=routeset.begin(); it!=routeset.end(); it++)
-		pRouteComboBox->append(*it);
-	pRouteComboBox->set_active(0);
-}
-
-void CMainWindow::on_RouteEntry_changed()
-{
-	int pos = pRouteEntry->get_position();
-	Glib::ustring s = pRouteEntry->get_text().uppercase();
-	const Glib::ustring good("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ");
-	Glib::ustring n;
-	for (auto it=s.begin(); it!=s.end(); it++) {
-		if (Glib::ustring::npos != good.find(*it)) {
-			n.append(1, *it);
-		}
-	}
-	pRouteEntry->set_text(n);
-	pRouteEntry->set_position(pos);
-	pRouteActionButton->set_sensitive(n.size() ? true : false);
-	pRouteActionButton->set_label((routeset.end() == routeset.find(s)) ? "Save" : "Delete");
 }
 
 void CMainWindow::on_M17DestCallsignComboBox_changed()
@@ -429,35 +260,6 @@ void CMainWindow::on_M17DestActionButton_clicked()
 	routeMap.Save();
 }
 
-void CMainWindow::on_RouteComboBox_changed()
-{
-	pRouteEntry->set_text(pRouteComboBox->get_active_text());
-}
-
-void CMainWindow::on_RouteActionButton_clicked()
-{
-	if (pRouteActionButton->get_label().compare("Save")) {
-		// deleting an entry
-		auto todelete = pRouteEntry->get_text();
-		int index = pRouteComboBox->get_active_row_number();
-		pRouteComboBox->remove_text(index);
-		routeset.erase(todelete);
-		if (index >= int(routeset.size()))
-			index--;
-		if (index >= 0)
-			pRouteComboBox->set_active(index);
-	} else {
-		// adding an entry
-		auto toadd = pRouteEntry->get_text();
-		routeset.insert(toadd);
-		pRouteComboBox->remove_all();
-		for (const auto &item : routeset)
-			pRouteComboBox->append(item);
-		pRouteComboBox->set_active_text(toadd);
-	}
-	WriteRoutes();
-}
-
 void CMainWindow::on_EchoTestButton_toggled()
 {
 	if (pEchoTestButton->get_active()) {
@@ -473,13 +275,8 @@ void CMainWindow::on_EchoTestButton_toggled()
 
 void CMainWindow::Receive(bool is_rx)
 {
-	bool ppt_okay;
 	bTransOK = ! is_rx;
-	if (cfgdata.bCodec2Enable) {
-		ppt_okay = bTransOK && bDestCS && bDestIP;
-	} else {
-		ppt_okay = bTransOK && (pRouteEntry->get_text().size() > 0);
-	}
+	bool ppt_okay = bTransOK && bDestCS && bDestIP;
 	pPTTButton->set_sensitive(ppt_okay);
 	pEchoTestButton->set_sensitive(bTransOK);
 	pQuickKeyButton->set_sensitive(ppt_okay);
@@ -487,52 +284,16 @@ void CMainWindow::Receive(bool is_rx)
 
 void CMainWindow::on_PTTButton_toggled()
 {
-	if (cfgdata.bCodec2Enable) {
-		const std::string dest(pM17DestCallsignEntry->get_text().c_str());
-		if (pPTTButton->get_active()) {
-			AudioManager.RecordMicThread(E_PTT_Type::m17, dest);
-		} else
-			AudioManager.KeyOff(! cfgdata.bCodec2Enable);
-	} else {
-		const std::string urcall(pRouteEntry->get_text().c_str());
-		bool is_cqcqcq = (0 == urcall.compare(0, 6, "CQCQCQ"));
-
-		if ((! is_cqcqcq && cfgdata.bRouteEnable) || (is_cqcqcq && cfgdata.bLinkEnable)) {
-			if (pPTTButton->get_active()) {
-				if (is_cqcqcq) {
-					AudioManager.RecordMicThread(E_PTT_Type::link, "CQCQCQ");
-				} else {
-					AudioManager.RecordMicThread(E_PTT_Type::gateway, urcall);
-				}
-				if (cfgdata.bAPRSEnable)
-					aprs.UpdateUser();
-			} else
-				AudioManager.KeyOff(! cfgdata.bCodec2Enable);
-		}
-	}
+	const std::string dest(pM17DestCallsignEntry->get_text().c_str());
+	if (pPTTButton->get_active()) {
+		AudioManager.RecordMicThread(E_PTT_Type::m17, dest);
+	} else
+		AudioManager.KeyOff();
 }
 
 void CMainWindow::on_QuickKeyButton_clicked()
 {
-	if (cfgdata.bCodec2Enable)
-		AudioManager.QuickKey(pM17DestCallsignEntry->get_text().c_str(), cfgdata.sM17SourceCallsign);
-	else
-		AudioManager.QuickKey(pRouteEntry->get_text().c_str());
-}
-
-bool CMainWindow::RelayLink2AM(Glib::IOCondition condition)
-{
-	if (condition & Glib::IO_IN) {
-		SDSVT dsvt;
-		Link2AM.Read(dsvt.title, 56);
-		if (0 == memcmp(dsvt.title, "DSVT", 4))
-			AudioManager.Link2AudioMgr(dsvt);
-		else if (0 == memcmp(dsvt.title, "PLAY", 4))
-			AudioManager.PlayFile((char *)&dsvt.config);
-	} else {
-		std::cerr << "RelayLink2AM not a read event!" << std::endl;
-	}
-	return true;
+	AudioManager.QuickKey(pM17DestCallsignEntry->get_text().c_str(), cfgdata.sM17SourceCallsign);
 }
 
 bool CMainWindow::RelayM172AM(Glib::IOCondition condition)
@@ -546,21 +307,6 @@ bool CMainWindow::RelayM172AM(Glib::IOCondition condition)
 			AudioManager.PlayFile((char *)&m17.streamid);
 	} else {
 		std::cerr << "RelayM17_2AM not a read event!" << std::endl;
-	}
-	return true;
-}
-
-bool CMainWindow::RelayGate2AM(Glib::IOCondition condition)
-{
-	if (condition & Glib::IO_IN) {
-		SDSVT dsvt;
-		Gate2AM.Read(dsvt.title, 56);
-		if (0 == memcmp(dsvt.title, "DSVT", 4))
-			AudioManager.Gateway2AudioMgr(dsvt);
-		else if (0 == memcmp(dsvt.title, "PLAY", 4))
-			AudioManager.PlayFile((char *)&dsvt.config);
-	} else {
-		std::cerr << "RelayGate2AM not a read event!" << std::endl;
 	}
 	return true;
 }
@@ -584,13 +330,6 @@ bool CMainWindow::GetLogInput(Glib::IOCondition condition)
 
 bool CMainWindow::TimeoutProcess()
 {
-	if (!cfgdata.bCodec2Enable) { // don't do this test if we are in M17 mode
-		// this is all about syncing the LinkFrame widgets to the actual link state of the module
-		// so if pLink is not up, then we don't need to do anything
-		if ((! cfgdata.bLinkEnable) || (nullptr == pLink))
-			return true;
-	}
-
 	std::list<CLink> linkstatus;
 	if (qnDB.FindLS(cfgdata.cModule, linkstatus))	// get the link status list of our module (there should only be one, or none if it's not linked)
 		return true;
@@ -602,25 +341,10 @@ bool CMainWindow::TimeoutProcess()
 	}
 
 	if (call.empty()) {
-		// DStar
-		pLinkEntry->set_sensitive(true);
-		pUnlinkButton->set_sensitive(false);
-		std::string s(pLinkEntry->get_text().c_str());
-		pLinkButton->set_sensitive((8==s.size() && isalpha(s.at(7)) && qnDB.FindGW(s.c_str())) ? true : false);
-		// M17
-		// pM17DestCallsignEntry->set_sensitive(true);
-		// pM17DestIPEntry->set_sensitive(true);
 		pM17UnlinkButton->set_sensitive(false);
-		s.assign(pM17DestCallsignEntry->get_text().c_str());
+		std::string s(pM17DestCallsignEntry->get_text().c_str());
 		pM17LinkButton->set_sensitive(std::regex_match(s, M17RefRegEx));
 	} else {
-		// DStar
-		pLinkEntry->set_sensitive(false);
-		pLinkButton->set_sensitive(false);
-		pUnlinkButton->set_sensitive(true);
-		// M17
-		// pM17DestCallsignEntry->set_sensitive(false);
-		// pM17DestIPEntry->set_sensitive(false);
 		pM17LinkButton->set_sensitive(false);
 		pM17UnlinkButton->set_sensitive(true);
 	}
@@ -720,100 +444,16 @@ void CMainWindow::FixM17DestActionButton()
 	pQuickKeyButton->set_sensitive(all);
 }
 
-void CMainWindow::on_LinkEntry_changed()
-{
-	int pos = pLinkEntry->get_position();
-	Glib::ustring s = pLinkEntry->get_text().uppercase();
-	const Glib::ustring good("ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ");
-	Glib::ustring n;
-	for (auto it=s.begin(); it!=s.end(); it++) {
-		if (Glib::ustring::npos != good.find(*it)) {
-			n.append(1, *it);
-		}
-	}
-	pLinkEntry->set_text(n);
-	pLinkEntry->set_position(pos);
-	if (8==n.size() && isalpha(n.at(7)) && qnDB.FindGW(n.c_str())) {
-		pLinkEntry->set_icon_from_icon_name("gtk-ok");
-		pLinkButton->set_sensitive(true);
-	} else {
-	 	pLinkEntry->set_icon_from_icon_name("gtk-cancel");
-		pLinkButton->set_sensitive(false);
-	}
-}
-
-void CMainWindow::on_LinkButton_clicked()
-{
-	if (pLink) {
-		//std::cout << "Pushed the Link button for " << pLinkEntry->get_text().c_str() << '.' << std::endl;
-		std::string cmd("LINK");
-		cmd.append(pLinkEntry->get_text().c_str());
-		AudioManager.Link(cmd);
-	}
-}
-
-void CMainWindow::on_UnlinkButton_clicked()
-{
-	if (pLink) {
-		std::string cmd("LINK");
-		AudioManager.Link(cmd);
-	}
-}
-
-void CMainWindow::RebuildGateways(bool includelegacy)
-{
-	CWaitCursor WaitCursor;
-	qnDB.ClearGW();
-	CHostQueue qhost;
-
-	std::string filename(CFG_DIR);	// now open the gateways text file
-	filename.append("gwys.txt");
-	int count = 0;
-	std::ifstream hostfile(filename);
-	if (hostfile.is_open()) {
-		std::string line;
-		while (std::getline(hostfile, line)) {
-			trim(line);
-			if (! line.empty() && ('#' != line.at(0))) {
-				std::istringstream iss(line);
-				std::string name, addr;
-				unsigned short port;
-				iss >> name >> addr >> port;
-				CHost host(name, addr, port);
-				qhost.Push(host);
-				count++;
-			}
-		}
-		hostfile.close();
-		qnDB.UpdateGW(qhost);
-	}
-
-	if (includelegacy && ! cfgdata.sStation.empty()) {
-		const std::string website("auth.dstargateway.org");
-		CDPlusAuthenticator auth(cfgdata.sStation, website);
-		int dplus = auth.Process(qnDB, true, false);
-		if (0 == dplus) {
-			fprintf(stdout, "DPlus Authorization failed.\n");
-			printf("# of Gateways: %s=%d\n", filename.c_str(), count);
-		} else {
-			fprintf(stderr, "DPlus Authorization completed!\n");
-			printf("# of Gateways %s=%d %s=%d Total=%d\n", filename.c_str(), count, website.c_str(), dplus, qnDB.Count("GATEWAYS"));
-		}
-	} else {
-		printf("#Gateways: %s=%d\n", filename.c_str(), count);
-	}
-}
-
 int main (int argc, char **argv)
 {
-	theApp = Gtk::Application::create(argc, argv, "net.openquad.QnetDV");
+	theApp = Gtk::Application::create(argc, argv, "net.openquad.DVoice");
 
 	//Load the GtkBuilder file and instantiate its widgets:
 	Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
 	try
 	{
 		std::string path(CFG_DIR);
-		builder->add_from_file(path + "DigitalVoice.glade");
+		builder->add_from_file(path + "MVoice.glade");
 	}
 	catch (const Glib::FileError& ex)
 	{
@@ -838,24 +478,6 @@ int main (int argc, char **argv)
 	MainWindow.Run();
 
 	return 0;
-}
-
-void CMainWindow::StopLink()
-{
-	if (nullptr != pLink) {
-		pLink->keep_running = false;
-		futLink.get();
-		pLink = nullptr;
-	}
-}
-
-void CMainWindow::StopGate()
-{
-	if(nullptr != pGate) {
-		pGate->keep_running = false;
-		futGate.get();
-		pGate = nullptr;
-	}
 }
 
 void CMainWindow::StopM17()

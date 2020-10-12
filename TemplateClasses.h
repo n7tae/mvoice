@@ -80,11 +80,6 @@ private:
 using CAudioFrame = CTFrame<short int, bool, 160>;
 using CAudioQueue = CTQueue<CAudioFrame>;
 
-// AMBE
-using CAmbeDataFrame = CTFrame<unsigned char, bool, 9>;
-using CAmbeDataQueue = CTQueue<CAmbeDataFrame>;
-using CAmbeSeqQueue = CTQueue<bool>;	// used to pass the flag over the ambe device
-
 // M17
 using CC2DataFrame = CTFrame<unsigned char, bool, 8>;
 using CC2DataQueue = CTQueue<CC2DataFrame>;
