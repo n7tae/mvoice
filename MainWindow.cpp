@@ -42,7 +42,6 @@ CMainWindow::CMainWindow() :
 	pWin(nullptr),
 	pQuitButton(nullptr),
 	pSettingsButton(nullptr),
-	pM17Gate(nullptr),
 	bDestCS(false),
 	bDestIP(false),
 	bTransOK(true)
@@ -59,27 +58,24 @@ CMainWindow::CMainWindow() :
 
 CMainWindow::~CMainWindow()
 {
+	StopM17();
 	if (pWin)
 		delete pWin;
-	StopM17();
 }
 
 void CMainWindow::RunM17()
 {
-	pM17Gate = new CM17Gateway;
 	std::cout << "Starting M17 Gateway..." << std::endl;
-	if (! pM17Gate->Init(cfgdata, &routeMap))
-		pM17Gate->Process();
-	delete pM17Gate;
+	if (! pM17Gate.Init(cfgdata, &routeMap))
+		pM17Gate.Process();
 	std::cout << "M17 Gateway has stopped." << std::endl;
-	pM17Gate = nullptr;
 }
 
 void CMainWindow::SetState(const CFGDATA &data)
 {
 	pM17DestCallsignEntry->set_text(data.sM17DestCallsign);
 	pM17DestIPEntry->set_text(data.sM17DestIp);
-	if (nullptr == pM17Gate && cfg.IsOkay())
+	if (cfg.IsOkay())
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 }
 
@@ -213,9 +209,9 @@ void CMainWindow::on_AboutMenuItem_activate()
 void CMainWindow::on_SettingsButton_clicked()
 {
 	auto newdata = SettingsDlg.Show();
-	if (newdata) {	// the user clicked okay so we need to see if anything changed. We'll shut things down and let SetState start things up again
+	if (newdata) {	// the user clicked okay so if anything changed. We'll shut things down and let SetState start things up again
 		CWaitCursor wait;
-		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->cModule!=cfgdata.cModule || newdata->eNetType!=cfgdata.eNetType) {
+		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->eNetType!=cfgdata.eNetType) {
 			StopM17();
 		}
 		SetState(*newdata);
@@ -391,21 +387,15 @@ void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
 
 void CMainWindow::on_M17LinkButton_clicked()
 {
-	if (pM17Gate) {
-		//std::cout << "Pushed the Link button for " << pM17DestCallsignEntry->get_text().c_str() << '.' << std::endl;
-		std::string cmd("M17L");
-		cmd.append(pM17DestCallsignEntry->get_text().c_str());
-		AudioManager.Link(cmd);
-	} else
-		std::cout << "Pushed the link button, but the gateway is not running" << std::endl;
+	std::string cmd("M17L");
+	cmd.append(pM17DestCallsignEntry->get_text().c_str());
+	AudioManager.Link(cmd);
 }
 
 void CMainWindow::on_M17UnlinkButton_clicked()
 {
-	if (pM17Gate) {
-		std::string cmd("M17U");
-		AudioManager.Link(cmd);
-	}
+	std::string cmd("M17U");
+	AudioManager.Link(cmd);
 }
 
 void CMainWindow::FixM17DestActionButton()
@@ -482,9 +472,8 @@ int main (int argc, char **argv)
 
 void CMainWindow::StopM17()
 {
-	if (nullptr != pM17Gate) {
-		pM17Gate->keep_running = false;
+	if (pM17Gate.keep_running) {
+		pM17Gate.keep_running = false;
 		futM17.get();
-		pM17Gate = nullptr;
 	}
 }
