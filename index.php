@@ -73,7 +73,7 @@ function MyAndSfxToQrz(string $my, string $sfx)
 	return $my;
 }
 
-ParseKVFile($cfgdir . '/qdv.cfg', $cfg);
+ParseKVFile($cfgdir . '/mvoice.cfg', $cfg);
 ?>
 
 <html>

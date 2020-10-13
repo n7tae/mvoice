@@ -46,7 +46,7 @@ void CConfigure::SetDefaultValues()
 void CConfigure::ReadData()
 {
 	std::string path(CFG_DIR);
-	path.append("mmdvoice.cfg");
+	path.append("mvoice.cfg");
 
 	std::ifstream cfg(path.c_str(), std::ifstream::in);
 	if (! cfg.is_open()) {
@@ -99,7 +99,7 @@ void CConfigure::WriteData()
 {
 
 	std::string path(CFG_DIR);
-	path.append("mmdvoice.cfg");
+	path.append("mvoice.cfg");
 
 	// directory exists, now make the file
 	std::ofstream file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
@@ -123,6 +123,9 @@ void CConfigure::WriteData()
 		file << "IPv4";
 	file << std::endl;
 	file << "Module=" << data.cModule << std::endl;
+	// audio
+	file << "AudioInput='" << data.sAudioIn << "'" << std::endl;
+	file << "AudioOutput='" << data.sAudioOut << "'" << std::endl;
 
 	file.close();
 }

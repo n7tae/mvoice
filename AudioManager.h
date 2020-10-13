@@ -57,7 +57,7 @@ private:
 	CAudioQueue audio_queue;
 	CC2DataQueue c2_queue;
 	std::mutex audio_mutex, data_mutex;
-	std::future<void> r1, r2, r3, r4, p1, p2, p3;
+	std::future<void> r1, r2, r3, p1, p2;
 	bool link_open;
 
 	// Unix sockets
