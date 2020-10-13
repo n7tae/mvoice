@@ -44,27 +44,9 @@ make install
 
 All the configuration files are located in ~/etc and the mvoice executable is in ~/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory unless you want to remove *mvoice* from your system.
 
-## Dashboard
-
-DigitalVoice includes a web-based dashboard that uses the php mini-server. To start the mini-server:
-
-```bash
-sudo make installdash
-```
-
-This will automatically install packages needed for the mini-server. The mini-server can run in the background even if you are not using the *mvoice* program. If it is not serving a browser client, it doesn't use much resources.
-
-Once *mvoice* is running, you can point your broswer to `http://localhost`, or `http://*hostname*.local` where *hostname* is, of course, the hostname where your running *mvoice*.
-
-If you want to turn off the mini-server:
-
-```bash
-sudo make uninstalldash
-```
-
 ## Configuring mvoice
 
-Be sure to plug in your headset before starting *mvoice*. Once your ready, open a shell and type `bin/mvoice`. Most log messages will be displayed within the log window of mvoice, but a few messages, especially if there are problems, may also be printed in the shell you launch mvoice from.
+Be sure to plug in your headset before starting *mvoice*. Once your ready, open a shell and type `mvoice` if ~/bin is in your search path, otherwise, move to your home directory and type `bin/mvoice`. Most log messages will be displayed within the log window of mvoice, but a few messages, especially if there are problems, may also be printed in the shell you launch mvoice from.
 
 Once it launches, click the **Settings** button and make sure to set your callsign and the codec setting on the M17 page. You can usually leave the audio settings on "default". Also enable IPv6 if you internet provider supports it. Click the Okay button and your settings will be saved in your ~/etc/ directory.
 
@@ -72,9 +54,11 @@ On the main window, set your destination callsign and IP address. Once you've en
 
 For Linking, you can select a reflector or to automatically link when the linking thread starts. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if the module you are requesting is actually configured and operational.
 
-## Operating
+## Firewall
 
-*mvoice* can operate in linking or routing mode. Use the check boxes on the Settings dialog to enable or disable these modes. When you disable a mode, the thread operating the that mode will be shut down.
+*mvoice* can operate in linking or routing mode. If you want to be able to recieve incoming callsign routes, you'll need to port-forward UDP 17000 on your network firewall. If you can't, you can still connect to M17 reflectors. You can originate an direct, callsign route, but if there is a long pause in the QSO, you're firewall will shutdown the port until you key up again.
+
+## Operating
 
 There are three "transmitting" buttons on *mvoice*:
 
