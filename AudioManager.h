@@ -31,6 +31,11 @@
 #include "CRC.h"
 
 using M17PacketQueue = CTQueue<SM17Frame>;
+using SVolStats = struct volstats_tag
+{
+	int count, clip;
+	double ss;
+};
 
 enum class E_PTT_Type { echo, m17 };
 
@@ -49,6 +54,9 @@ public:
 	void PlayFile(const char *filetoplay);
 	void QuickKey(const std::string &dest, const std::string &sour);
 	void Link(const std::string &linkcmd);
+
+	// for volume stats
+	SVolStats volStats;
 
 private:
 	// data
@@ -75,4 +83,5 @@ private:
 	void codec2audio(const bool is_3200);
 	void codec2m17gateway(const std::string &dest, const std::string &sour, bool voiceonly);
 	void play_audio_queue();
+	void calc_audio_stats(const short int *audio = nullptr);
 };

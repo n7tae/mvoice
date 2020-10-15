@@ -30,7 +30,7 @@ public:
 	CCallsign(const uint8_t *code);
 	void CSIn(const std::string &cs);
 	void CodeIn(const uint8_t *code);
-	const std::string GetCS(unsigned len = 9) const;
+	const std::string GetCS(unsigned len = 0) const;
 	void CodeOut(uint8_t *out) const { memcpy(out, code, 6); };
 	bool operator==(const CCallsign &rhs) const;
 	char GetModule(void) const;

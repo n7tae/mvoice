@@ -62,10 +62,18 @@ For Linking, you can select a reflector or to automatically link when the linkin
 
 There are three "transmitting" buttons on *mvoice*:
 
-1) **Echo Test** is a toggle switch. Click it to start recording an echo test and your voice will be encoded using the Codec2 mode you selected in the Settings dialog. Note that the button will turn red when you are recording and listening to your echo. Click the button again and *mvoice* will decode the saved AMBE data and play it back to you. This is a great way to check the operation of you setup as well as the volume levels and make sure your headset is working properly. Note that *mvoice* has no volume or gain controls for either TX or RX. You'll use your ALSA interface for this.
+1) **Echo Test** is a toggle switch. Click it to start recording an echo test and your voice will be encoded using the Codec2 mode you selected in the Settings dialog. Note that the button will turn red when you are recording and listening to your echo. Click the button again and *mvoice* will decode the saved AMBE data and play it back to you. This is a great way to check the operation of you setup as well as the volume levels and make sure your headset is working properly. Whenever you complete an Echo Test, you will get a summary showing the "hot mic" time, the volume (in decibels relative to an arbitrary reference that is mostly quiet audio) and the precentage of when you audio was at or very near clipping (95% of the maximum amplitude). For the echo test, you'll generally want a volume of at least 24 to 30dB, although below 20dB is still copyable. Note that *mvoice* has no volume or gain controls for either TX or RX. You'll use your Linux settings for this.
 
-2) **PTT** the large PTT button is also toggle switch. Click it and it will turn red also and *mvoice* will encode your audio and send it on a route or to your destination. Click the button again to return *mvoice* to receiving.
+2) **PTT** the large PTT button is also toggle switch. Click it and it will turn red also and *mvoice* will encode your audio and send it on a route or to your destination. Click the button again to return *mvoice* to receiving. When you do, you'll see your volume statistics. *mvoice* will also report volume statistics on incoming audio streams.
 
 3) **Quick Key** is a single press button that will send a 200 millisecond transmission. This is useful when trying to get the attention of a Net Control Operator when you are participating in a Net. It could also be useful if you are trying to do a direct callsign route target if you are behind a firewall you can't configure.
+
+## Bugs
+
+ I would like the Echo Test button to switch back from red as soon as you toggle the button to end your recording, but it does not. This is a bug that may not be fixable based on the gtkmm gui. For now at least, we can say the Echo Test button will stay lit until the playback has completed.
+
+ The text buffer for the display window is not truncated in anyway and given enough messages, it will eventually overflow and probably, but it will take a very long time.
+
+ I know, auto-scrolling doesn't work as good as it should.
 
 de N7TAE (at) tearly (dot) net

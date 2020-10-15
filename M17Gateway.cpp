@@ -270,7 +270,7 @@ void CM17Gateway::Process()
 				default:
 					break;
 				}
-			} else if (0 == dest.GetCS().compare("U        ")) {
+			} else if (0 == dest.GetCS().compare("U")) {
 				SM17RefPacket disc;
 				memcpy(disc.magic, "DISC", 4);
 				std::string s(cfg.sM17SourceCallsign);

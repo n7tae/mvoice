@@ -4,7 +4,7 @@ BINDIR = $(HOME)/bin/
 
 # choose this if you want debugging help
 #CPPFLAGS=-ggdb -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
-# or, you can choose this for a much smaller executable without debugging help
+# or, you can choose this for a smaller executable without debugging help
 CPPFLAGS=-W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
 
 EXE = mvoice
@@ -15,7 +15,7 @@ DEPS = $(SRCS:.cpp=.d)
 $(EXE) : $(OBJS)
 	g++ -o $@ $^ `pkg-config --libs gtkmm-3.0` -lasound -lsqlite3 -pthread
 
-%.o : %.cpp
+%.o : %.cpp MVoice.glade
 	g++ $(CPPFLAGS) -MMD -MD -c $< -o $@
 
 .PHONY : clean
@@ -25,7 +25,7 @@ clean :
 
 -include $(DEPS)
 
-install : $(EXE) MVoice.glade
+install : $(EXE)
 	mkdir -p $(CFGDIR)
 	/bin/cp -rf $(shell pwd)/announce $(CFGDIR)
 	/bin/ln -f $(shell pwd)/MVoice.glade $(CFGDIR)
@@ -38,8 +38,6 @@ uninstall :
 	/bin/rm -f $(CFGDIR)$(EXE).cfg
 	/bin/rm -f $(CFGDIR)qn.db
 	/bin/rm -f $(BINDIR)$(EXE)
-	/bin/rm -f $(WINDIR)index.php
-	/bin/rm qdvdash.service
 
 #interactive :
 #	GTK_DEBUG=interactive ./$(EXE)

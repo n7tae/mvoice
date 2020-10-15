@@ -77,6 +77,8 @@ private:
 	void StopM17();
 	CUnixDgramReader Gate2AM, Link2AM, M172AM, LogInput;
 	void CloseAll();
+	void insertLogText(const char *line);
+	void AudioSummary(const char *title);
 
 	// events
 	void on_QuitButton_clicked();

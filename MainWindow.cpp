@@ -238,7 +238,6 @@ void CMainWindow::on_M17DestActionButton_clicked()
 		for (const auto &member : routeMap.GetKeys())
 			pM17DestCallsignComboBox->append(member);
 		pM17DestCallsignComboBox->set_active_text(cs);
-		SetDestActionButton(true, "Delete");
 	} else if (0 == label.compare("Delete")) {
 		int index = pM17DestCallsignComboBox->get_active_row_number();
 		pM17DestCallsignComboBox->remove_text(index);
@@ -251,21 +250,33 @@ void CMainWindow::on_M17DestActionButton_clicked()
 		} else
 			pM17DestCallsignComboBox->set_active(index);
 	} else if (0 == label.compare("Update")) {
-		routeMap.Update(pM17DestIPEntry->get_text(), pM17DestIPEntry->get_text());
+		routeMap.Update(cs, pM17DestIPEntry->get_text());
 	}
+	FixM17DestActionButton();
 	routeMap.Save();
+}
+
+void CMainWindow::AudioSummary(const char *title)
+{
+		char line[640];
+		double t = AudioManager.volStats.count * 0.000125;	// 0.000125 = 1 / 8000
+		// we only do the sums of squares on every other point, so 0.5 mult in denominator
+		// 25 db subtration for "ambient quiet", an arbitrary reference point
+		double d = 20.0 * log10(sqrt(AudioManager.volStats.ss/(0.5 * AudioManager.volStats.count))) - 45.0;
+		double c = 100.0 * AudioManager.volStats.clip / AudioManager.volStats.count;
+		snprintf(line, 64, "%s Time=%.1fs Vol=%.0fdB Clip=%.0f%%\n", title, t, d, c);
+		insertLogText(line);
 }
 
 void CMainWindow::on_EchoTestButton_toggled()
 {
 	if (pEchoTestButton->get_active()) {
 		// record the mic to a queue
-		AudioManager.RecordMicThread(E_PTT_Type::echo, "CQCQCQ  ");
-		//std::cout << "AM.RecordMicThread() returned\n";
+		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
 	} else {
+		AudioSummary("Echo");
 		// play back the queue
 		AudioManager.PlayEchoDataThread();
-		//std::cout << "AM.PlayEchoDataThread() returned\n";
 	}
 }
 
@@ -276,6 +287,8 @@ void CMainWindow::Receive(bool is_rx)
 	pPTTButton->set_sensitive(ppt_okay);
 	pEchoTestButton->set_sensitive(bTransOK);
 	pQuickKeyButton->set_sensitive(ppt_okay);
+	if (bTransOK && AudioManager.volStats.count)
+		AudioSummary("RX Audio");
 }
 
 void CMainWindow::on_PTTButton_toggled()
@@ -283,8 +296,10 @@ void CMainWindow::on_PTTButton_toggled()
 	const std::string dest(pM17DestCallsignEntry->get_text().c_str());
 	if (pPTTButton->get_active()) {
 		AudioManager.RecordMicThread(E_PTT_Type::m17, dest);
-	} else
+	} else {
 		AudioManager.KeyOff();
+		AudioSummary("PTT");
+	}
 }
 
 void CMainWindow::on_QuickKeyButton_clicked()
@@ -307,17 +322,21 @@ bool CMainWindow::RelayM172AM(Glib::IOCondition condition)
 	return true;
 }
 
-bool CMainWindow::GetLogInput(Glib::IOCondition condition)
+void CMainWindow::insertLogText(const char *line)
 {
 	static auto it = pLogTextBuffer->begin();
+	if (strlen(line)) {
+		it = pLogTextBuffer->insert(it, line);
+		pLogTextView->scroll_to(it, 0.0, 0.0, 0.0);
+	}
+}
+
+bool CMainWindow::GetLogInput(Glib::IOCondition condition)
+{
 	if (condition & Glib::IO_IN) {
 		char line[256] = { 0 };
 		LogInput.Read(line, 256);
-		//const char *p;
-		//if (g_utf8_validate(line, length, &p))
-		//	std::cout << "bogus charater '" << int(*p) << "' at " << int(p-line) << std::endl;
-		it = pLogTextBuffer->insert(it, line);
-		pLogTextView->scroll_to(it, 0.0, 0.0, 1.0);
+		insertLogText(line);
 	} else {
 		std::cerr << "GetLogInput is not a read event!" << std::endl;
 	}

@@ -78,10 +78,9 @@ void CCallsign::CodeIn(const uint8_t *in)
 
 const std::string CCallsign::GetCS(unsigned len) const
 {
-	if (len > 9)
-		len = 9;
 	std::string rval(cs);
-	rval.resize(len, ' ');
+	if (len)
+		rval.resize(len, ' ');
 	return rval;
 }
 

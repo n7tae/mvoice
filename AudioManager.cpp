@@ -36,6 +36,7 @@
 CAudioManager::CAudioManager() : hot_mic(false), play_file(false), m17_sid_in(0U)
 {
 	link_open = true;
+	volStats.count = 0;
 }
 
 bool CAudioManager::Init(CMainWindow *pMain)
@@ -87,6 +88,7 @@ void CAudioManager::audio2codec(const bool is_3200)
 {
 	CCodec2 c2(is_3200);
 	bool last;
+	calc_audio_stats();  // initialize volume statistics
 	bool is_odd = false; // true if we've processed an odd number of audio frames
 	do {
 		while ( audio_is_empty() )
@@ -94,6 +96,7 @@ void CAudioManager::audio2codec(const bool is_3200)
 		audio_mutex.lock();
 		CAudioFrame audioframe = audio_queue.Pop();
 		audio_mutex.unlock();
+		calc_audio_stats(audioframe.GetData());
 		last = audioframe.GetFlag();
 		if ( is_3200 ) {
 			is_odd = ! is_odd;
@@ -115,15 +118,18 @@ void CAudioManager::audio2codec(const bool is_3200)
 				data_mutex.unlock();
 			}
 		} else { // 1600 - we need 40 ms of audio
-			short audio[320] = { 0 }; // 40 ms of silence
+			short audio[320] = { 0 }; // initialize to 40 ms of silence
 			unsigned char data[8];
-			memcpy(audio, audioframe.GetData(), 160*sizeof(short)); // we have 20 ms of audio at the beginning
-			if (! last) { // get another frame, if available
-				while (audio_is_empty())
+			memcpy(audio, audioframe.GetData(), 160*sizeof(short)); // we'll put 20 ms of audio at the beginning
+			if (last) { // get another frame, if available
+				volStats.count += 160; // a quite frame will only contribute to the total count
+			} else {
+				while (audio_is_empty()) // now we'll get another 160 sample frame
 					std::this_thread::sleep_for(std::chrono::milliseconds(3));
 				audio_mutex.lock();
 				audioframe = audio_queue.Pop();
 				audio_mutex.unlock();
+				calc_audio_stats(audioframe.GetData());
 				memcpy(audio+160, audioframe.GetData(), 160*sizeof(short));	// now we have 40 ms total
 				last = audioframe.GetFlag();
 			}
@@ -259,7 +265,6 @@ void CAudioManager::microphone2audioqueue()
 	do {
 		short int audio_buffer[frames];
 		rc = snd_pcm_readi(handle, audio_buffer, frames);
-		//std::cout << "audio:" << count << " hot_mic:" << hot_mic << std::endl;
 		if (rc == -EPIPE) {
 			// EPIPE means overrun
 			std::cerr << "overrun occurred" << std::endl;
@@ -276,7 +281,6 @@ void CAudioManager::microphone2audioqueue()
 		audio_queue.Push(frame);
 		audio_mutex.unlock();
 	} while (keep_running);
-	//std::cout << count << " frames by microphone2audioqueue\n";
 	snd_pcm_drop(handle);
 	snd_pcm_close(handle);
 }
@@ -285,6 +289,7 @@ void CAudioManager::codec2audio(const bool is_3200)
 {
 	CCodec2 c2(is_3200);
 	bool last;
+	calc_audio_stats(); // init volume stats
 	do {
 		while (codec_is_empty())
 			std::this_thread::sleep_for(std::chrono::milliseconds(3));
@@ -300,6 +305,7 @@ void CAudioManager::codec2audio(const bool is_3200)
 			audio_mutex.lock();
 			audio_queue.Push(audioframe);
 			audio_mutex.unlock();
+			calc_audio_stats(audio);
 		} else {
 			short audio[320];	// C2 1600 is 40 ms audio
 			c2.codec2_decode(audio, dataframe.GetData());
@@ -310,6 +316,8 @@ void CAudioManager::codec2audio(const bool is_3200)
 			audio_queue.Push(audio1);
 			audio_queue.Push(audio2);
 			audio_mutex.unlock();
+			calc_audio_stats(audio);
+			calc_audio_stats(audio+160);
 		}
 	} while (! last);
 }
@@ -626,4 +634,21 @@ void CAudioManager::PlayFile(const char *filetoplay)
 	p1.get();
 	p2.get();
 	play_file = false;
+}
+
+void CAudioManager::calc_audio_stats(const short int *wave)
+{
+	if (wave) {
+		double ss = 0.0;
+		for (unsigned int i=0; i<160; i++) {
+			auto a = (unsigned int)abs(wave[i]);
+			if (a > 31126) volStats.clip++;
+			if (i % 2) ss += double(a) * double(a); // every other point will do
+		}
+		volStats.count += 160;
+		volStats.ss += ss;
+	} else {
+		volStats.count = volStats.clip = 0;
+		volStats.ss = 0.0;
+	}
 }
