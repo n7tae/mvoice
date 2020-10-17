@@ -32,7 +32,7 @@ Then you can download and build mvoice:
 
 ```bash
 git clone git://github.com/n7tae/mvoice.git
-cd DigitalVoice
+cd mvoice
 make
 ```
 
