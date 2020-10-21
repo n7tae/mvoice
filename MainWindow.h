@@ -72,7 +72,7 @@ private:
 	void SetDestActionButton(const bool sensitive, const char *label);
 	CM17Gateway gateM17;
 	std::future<void> futM17;
-	void SetState(const CFGDATA &data);
+	void SetState();
 	void RunM17();
 	void StopM17();
 	CUnixDgramReader Gate2AM, Link2AM, M172AM, LogInput;

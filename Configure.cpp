@@ -31,8 +31,6 @@
 void CConfigure::SetDefaultValues()
 {
 	// M17
-	data.sM17DestCallsign.clear();
-	data.sM17DestIp.clear();
 	data.sM17SourceCallsign.clear();
 	data.bVoiceOnlyEnable = true;
 	// mode and module
@@ -82,10 +80,6 @@ void CConfigure::ReadData()
 			data.sAudioIn.assign(val);
 		} else if (0 == strcmp(key, "AudioOutput")) {
 			data.sAudioOut.assign(val);
-		} else if (0 == strcmp(key, "M17DestCallsign")) {
-			data.sM17DestCallsign.assign(val);
-		} else if (0 == strcmp(key, "M17DestIP")) {
-			data.sM17DestIp.assign(val);
 		} else if (0 == strcmp(key, "M17SourceCallsign")) {
 			data.sM17SourceCallsign.assign(val);
 		} else if (0 == strcmp(key, "M17VoiceOnly")) {
@@ -109,8 +103,6 @@ void CConfigure::WriteData()
 	}
 	file << "#Generated Automatically, DO NOT MANUALLY EDIT!" << std::endl;
 	// M17
-	file << "M17DestCallsign='" << data.sM17DestCallsign << "'" << std::endl;
-	file << "M17DestIP='" << data.sM17DestIp << "'" << std::endl;
 	file << "M17SourceCallsign='" << data.sM17SourceCallsign << "'" << std::endl;
 	file << "M17VoiceOnly=" << (data.bVoiceOnlyEnable ? "true" : "false") << std::endl;
 	// mode and module
@@ -133,8 +125,6 @@ void CConfigure::WriteData()
 void CConfigure::CopyFrom(const CFGDATA &from)
 {
 	// M17
-	data.sM17DestCallsign.assign(from.sM17DestCallsign);
-	data.sM17DestIp.assign(from.sM17DestIp);
 	data.sM17SourceCallsign.assign(from.sM17SourceCallsign);
 	data.bVoiceOnlyEnable = from.bVoiceOnlyEnable;
 	// mode and module
@@ -148,8 +138,6 @@ void CConfigure::CopyFrom(const CFGDATA &from)
 void CConfigure::CopyTo(CFGDATA &to)
 {
 	// M17
-	to.sM17DestCallsign.assign(data.sM17DestCallsign);
-	to.sM17DestIp.assign(data.sM17DestIp);
 	to.sM17SourceCallsign.assign(data.sM17SourceCallsign);
 	to.bVoiceOnlyEnable = data.bVoiceOnlyEnable;
 	// mode and module

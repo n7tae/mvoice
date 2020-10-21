@@ -71,10 +71,8 @@ void CMainWindow::RunM17()
 	std::cout << "M17 Gateway has stopped." << std::endl;
 }
 
-void CMainWindow::SetState(const CFGDATA &data)
+void CMainWindow::SetState()
 {
-	pM17DestCallsignEntry->set_text(data.sM17DestCallsign);
-	pM17DestIPEntry->set_text(data.sM17DestIp);
 	if (cfg.IsOkay() && false == gateM17.keep_running)
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 }
@@ -174,7 +172,7 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	if (routeMap.Size())
 		pM17DestCallsignComboBox->set_active(0);
 	Receive(false);
-	SetState(cfgdata);
+	SetState();
 	on_M17DestCallsignComboBox_changed();
 
 	// i/o events
@@ -214,7 +212,7 @@ void CMainWindow::on_SettingsButton_clicked()
 		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->eNetType!=cfgdata.eNetType) {
 			StopM17();
 		}
-		SetState(*newdata);
+		SetState();
 		cfg.CopyTo(cfgdata);
 	}
 }
