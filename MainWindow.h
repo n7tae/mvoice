@@ -70,7 +70,7 @@ private:
 	// helpers
 	void FixM17DestActionButton();
 	void SetDestActionButton(const bool sensitive, const char *label);
-	CM17Gateway pM17Gate;
+	CM17Gateway gateM17;
 	std::future<void> futM17;
 	void SetState(const CFGDATA &data);
 	void RunM17();

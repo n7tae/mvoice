@@ -66,8 +66,8 @@ CMainWindow::~CMainWindow()
 void CMainWindow::RunM17()
 {
 	std::cout << "Starting M17 Gateway..." << std::endl;
-	if (! pM17Gate.Init(cfgdata, &routeMap))
-		pM17Gate.Process();
+	if (! gateM17.Init(cfgdata, &routeMap))
+		gateM17.Process();
 	std::cout << "M17 Gateway has stopped." << std::endl;
 }
 
@@ -75,7 +75,7 @@ void CMainWindow::SetState(const CFGDATA &data)
 {
 	pM17DestCallsignEntry->set_text(data.sM17DestCallsign);
 	pM17DestIPEntry->set_text(data.sM17DestIp);
-	if (cfg.IsOkay())
+	if (cfg.IsOkay() && false == gateM17.keep_running)
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 }
 
@@ -491,8 +491,8 @@ int main (int argc, char **argv)
 
 void CMainWindow::StopM17()
 {
-	if (pM17Gate.keep_running) {
-		pM17Gate.keep_running = false;
+	if (gateM17.keep_running) {
+		gateM17.keep_running = false;
 		futM17.get();
 	}
 }
