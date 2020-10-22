@@ -50,7 +50,7 @@ Plug in your headset and start *mvoice*: Open a shell and type `mvoice` if ~/bin
 
 Once it launches, click the **Settings** button and make sure to set your callsign and the codec setting on the M17 page. You can usually leave the audio settings on "default". Also enable IPv6 if your internet provider supports it. Click the Okay button and your settings will be saved in your ~/etc/ directory.
 
-On the main window, set your destination callsign and IP address. Once you've entered valid values for both, you can save these for future use.
+On the main window, set your destination callsign and IP address. Once you've entered valid values for both, you can save these for future use. Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a vaild callsign is exactly **nine** characters long, `M17-xxx y` where `xxx` is made up of letters or numbers and `y` is the module, a letter from `A` to `Z`. Note that there is one space before the module. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary.
 
 For Linking, you can select a reflector. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if the module you are requesting is actually configured and operational, or even if it actually exists.
 
