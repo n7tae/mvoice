@@ -44,7 +44,7 @@ public:
 	void Run();
 	void Receive(bool is_rx);
 	// regular expression for testing stuff
-	std::regex CallRegEx, IPv4RegEx, IPv6RegEx, M17CallRegEx, M17RefRegEx;
+	std::regex IPv4RegEx, IPv6RegEx, M17CallRegEx, M17RefRegEx;
 
 private:
 	// classes

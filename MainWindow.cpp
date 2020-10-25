@@ -51,7 +51,7 @@ CMainWindow::CMainWindow() :
 	IPv4RegEx = std::regex("^((25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])\\.){3,3}(25[0-5]|(2[0-4]|1{0,1}[0-9]){0,1}[0-9])$", std::regex::extended);
 	IPv6RegEx = std::regex("([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}:[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|[0-9a-fA-F]{1,4}:((:[0-9a-fA-F]{1,4}){1,6})|:((:[0-9a-fA-F]{1,4}){1,7}|:)$", std::regex::extended);
 	M17RefRegEx = std::regex("^M17-([A-Z0-9]){3,3}[ ][A-Z]$", std::regex::extended);
-	M17CallRegEx = std::regex("^(([1-9][A-Z])|([A-PR-Z][0-9])|([A-PR-Z][A-Z][0-9]))[0-9A-Z]*[- /\\.A-Z0-9]*$", std::regex::extended);
+	M17CallRegEx = std::regex("^[0-9]{0,1}[A-Z]{1,2}[0-9][A-Z]{1,4}(()|[ ]*[A-Z]|([-/\\.][A-Z0-9]*))$", std::regex::extended);
 }
 
 CMainWindow::~CMainWindow()

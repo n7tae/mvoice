@@ -163,7 +163,7 @@ void CSettingsDlg::on_M17SourceCallsignEntry_changed()
 	Glib::ustring s = pM17SourceCallsignEntry->get_text().uppercase();
 	pM17SourceCallsignEntry->set_text(s);
 	pM17SourceCallsignEntry->set_position(pos);
-	bM17Source = std::regex_match(s.c_str(), pMainWindow->CallRegEx);
+	bM17Source = std::regex_match(s.c_str(), pMainWindow->M17CallRegEx);
 	pM17SourceCallsignEntry->set_icon_from_icon_name(bM17Source ? "gtk-ok" : "gtk-cancel");
 	pOkayButton->set_sensitive(bM17Source);
 }
