@@ -258,7 +258,7 @@ void CMainWindow::AudioSummary(const char *title)
 		double t = AudioManager.volStats.count * 0.000125;	// 0.000125 = 1 / 8000
 		// we only do the sums of squares on every other point, so 0.5 mult in denominator
 		// 25 db subtration for "ambient quiet", an arbitrary reference point
-		double d = 20.0 * log10(sqrt(AudioManager.volStats.ss/(0.5 * AudioManager.volStats.count))) - 45.0;
+		double d = 20.0 * log10(sqrt(AudioManager.volStats.ss/(0.5 * AudioManager.volStats.count))) - 25.0;
 		double c = 100.0 * AudioManager.volStats.clip / AudioManager.volStats.count;
 		snprintf(line, 64, "%s Time=%.1fs Vol=%.0fdB Clip=%.0f%%\n", title, t, d, c);
 		insertLogText(line);

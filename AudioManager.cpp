@@ -642,7 +642,7 @@ void CAudioManager::calc_audio_stats(const short int *wave)
 		double ss = 0.0;
 		for (unsigned int i=0; i<160; i++) {
 			auto a = (unsigned int)abs(wave[i]);
-			if (a > 31126) volStats.clip++;
+			if (a > 16383) volStats.clip++;
 			if (i % 2) ss += double(a) * double(a); // every other point will do
 		}
 		volStats.count += 160;
