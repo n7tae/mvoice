@@ -345,7 +345,8 @@ bool CM17Gateway::ProcessFrame(const uint8_t *buf)
 	} else {
 		// here comes a first packet, so init the currentStream
 		auto check = crc.CalcCRC(frame);
-		std::cout << "Header Packet crc=0x" << std::hex << frame.GetCRC() << " calculate=0x" << std::hex << check << std::endl;
+		if (frame.GetCRC() != check)
+			std::cout << "Header Packet crc=0x" << std::hex << frame.GetCRC() << " calculate=0x" << std::hex << check << std::endl;
 		memcpy(currentStream.header.magic, frame.magic, sizeof(SM17Frame));
 		M172AM.Write(frame.magic, sizeof(SM17Frame));
 		const CCallsign call(frame.lich.addr_src);
