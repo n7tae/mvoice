@@ -23,7 +23,6 @@
 
 #include "UnixDgramSocket.h"
 #include "SockAddress.h"
-#include "M17RouteMap.h"
 #include "Configure.h"
 #include "UDPSocket.h"
 #include "Callsign.h"
@@ -56,8 +55,9 @@ class CM17Gateway : public CBase
 public:
 	CM17Gateway();
 	~CM17Gateway();
-	bool Init(const CFGDATA &cfgdata, CM17RouteMap *map);
+	bool Init(const CFGDATA &cfgdata);
 	void Process();
+	void SetDestAddress(const std::string &address, uint16_t port);
 
 	std::atomic<bool> keep_running;
 
@@ -72,8 +72,7 @@ private:
 	CTimer linkingTime;
 	SStream currentStream;
 	std::string qnvoice_file;
-	CM17RouteMap *routeMap;
-	CSockAddress from17k;
+	CSockAddress from17k, destination;
 
 	void LinkCheck();
 	void Write(const void *buf, const size_t size, const CSockAddress &addr) const;

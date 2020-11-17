@@ -40,7 +40,7 @@ CM17Gateway::~CM17Gateway()
 	ipv6.Close();
 }
 
-bool CM17Gateway::Init(const CFGDATA &cfgdata, CM17RouteMap *map)
+bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
 	std::string path(CFG_DIR);
 	path.append("qn.db");
@@ -61,7 +61,6 @@ bool CM17Gateway::Init(const CFGDATA &cfgdata, CM17RouteMap *map)
 	CConfigure config;
 	config.CopyFrom(cfgdata);
 	config.CopyTo(cfg);
-	routeMap = map;
 	return false;
 }
 
@@ -281,25 +280,24 @@ void CM17Gateway::Process()
 				Write(disc.magic, 10, mlink.addr);
 				qnDB.DeleteLS(mlink.addr.GetAddress());
 			} else {
-				const auto addr = routeMap->Find(dest.GetCS());
-				if (addr)
-					Write(frame.magic, sizeof(SM17Frame), *addr);
-				else
-					std::cout << "Couldn't find an address for destination '" << dest.GetCS() << "'" << std::endl;
+				Write(frame.magic, sizeof(SM17Frame), destination);
 			}
 			FD_CLR(amfd, &fdset);
 		}
 	}
 }
 
+void CM17Gateway::SetDestAddress(const std::string &address, uint16_t port)
+{
+	if (std::string::npos == address.find(':'))
+		destination.Initialize(AF_INET, port, address.c_str());
+	else
+		destination.Initialize(AF_INET6, port, address.c_str());
+}
+
 void CM17Gateway::SendLinkRequest(const CCallsign &ref)
 {
-	auto addr = routeMap->FindBase(ref.GetCS());
-	if (nullptr == addr) {
-		std::cerr << "Can't find '" << ref.GetCS() << "' in route map. Aborting link request." << std::endl;
-		return;
-	}
-	mlink.addr = *addr;
+	mlink.addr = destination;
 	mlink.cs = ref;
 	mlink.from_mod = cfg.cModule;
 

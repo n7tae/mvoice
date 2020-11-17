@@ -64,7 +64,7 @@ CMainWindow::~CMainWindow()
 void CMainWindow::RunM17()
 {
 	std::cout << "Starting M17 Gateway..." << std::endl;
-	if (! gateM17.Init(cfgdata, &routeMap))
+	if (! gateM17.Init(cfgdata))
 		gateM17.Process();
 	std::cout << "M17 Gateway has stopped." << std::endl;
 }
@@ -162,7 +162,7 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	pQuickKeyButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_QuickKeyButton_clicked));
 	pAboutMenuItem->signal_activate().connect(sigc::mem_fun(*this, &CMainWindow::on_AboutMenuItem_activate));
 
-	routeMap.Open();
+	routeMap.ReadAll();
 	for (const auto &item : routeMap.GetKeys()) {
 		// std::cout << "Addding " << item << " to M17 ComboBox" << std::endl;
 		pM17DestCallsignComboBox->append(item);
@@ -219,9 +219,14 @@ void CMainWindow::on_M17DestCallsignComboBox_changed()
 {
 	auto cs = pM17DestCallsignComboBox->get_active_text();
 	pM17DestCallsignEntry->set_text(cs);
-	auto address = routeMap.Find(cs.c_str());
-	if (address)
-		pM17DestIPEntry->set_text(address->GetAddress());
+	auto host = routeMap.Find(cs.c_str());
+	if (host) {
+		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
+			// if we're not in IPv4-only mode && there is an IPv6 address for this host
+			pM17DestIPEntry->set_text(host->ip6addr);
+		else
+			pM17DestIPEntry->set_text(host->ip4addr);
+	}
 }
 
 void CMainWindow::on_M17DestActionButton_clicked()
@@ -229,7 +234,11 @@ void CMainWindow::on_M17DestActionButton_clicked()
 	auto label = pM17DestActionButton->get_label();
 	auto cs = pM17DestCallsignEntry->get_text();
 	if (0 == label.compare("Save")) {
-		routeMap.Update(cs, pM17DestIPEntry->get_text());
+		std::string a = pM17DestIPEntry->get_text();
+		if (std::string::npos == a.find(':'))
+			routeMap.Update(cs, "", a, "");
+		else
+			routeMap.Update(cs, "", "", a);
 		pM17DestCallsignComboBox->remove_all();
 		for (const auto &member : routeMap.GetKeys())
 			pM17DestCallsignComboBox->append(member);
@@ -246,7 +255,11 @@ void CMainWindow::on_M17DestActionButton_clicked()
 		} else
 			pM17DestCallsignComboBox->set_active(index);
 	} else if (0 == label.compare("Update")) {
-		routeMap.Update(cs, pM17DestIPEntry->get_text());
+		std::string a = pM17DestIPEntry->get_text();
+		if (std::string::npos == a.find(':'))
+			routeMap.Update(cs, "", a, "");
+		else
+			routeMap.Update(cs, "", "", a);
 	}
 	FixM17DestActionButton();
 	routeMap.Save();
@@ -369,9 +382,13 @@ void CMainWindow::on_M17DestCallsignEntry_changed()
 	pM17DestCallsignEntry->set_text(s);
 	pM17DestCallsignEntry->set_position(pos);
 	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || std::regex_match(s.c_str(), M17RefRegEx);
-	const auto addr = routeMap.FindBase(s);
-	if (addr)
-		pM17DestIPEntry->set_text(addr->GetAddress());
+	const auto host = routeMap.FindBase(s);
+	if (host) {
+		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
+			pM17DestIPEntry->set_text(host->ip6addr);
+		else if (!host->ip4addr.empty())
+			pM17DestIPEntry->set_text(host->ip4addr);
+	}
 	pM17DestCallsignEntry->set_icon_from_icon_name(bDestCS ? "gtk-ok" : "gtk-cancel");
 	FixM17DestActionButton();
 }
@@ -417,12 +434,12 @@ void CMainWindow::FixM17DestActionButton()
 {
 	const std::string cs(pM17DestCallsignEntry->get_text().c_str());
 	const std::string ip(pM17DestIPEntry->get_text().c_str());
-	if (bDestCS) {
-		auto addr = routeMap.Find(cs);
-		if (addr) {
+	if (bDestCS) {	// is the destination c/s valid?
+		auto host = routeMap.Find(cs);	// look for it
+		if (host) {
 			// cs is found in map
-			if (bDestIP) { // is the IP okay?
-				if (ip.compare(addr->GetAddress())) {
+			if (bDestIP && host->url.empty()) { // is the IP okay and is this not from the csv file?
+				if (ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) {
 					// the ip in the IPEntry is different
 					SetDestActionButton(true, "Update");
 				} else {
@@ -435,7 +452,7 @@ void CMainWindow::FixM17DestActionButton()
 			}
 		} else {
 			// cs is not found in map
-			if (bDestIP) { // is the IP okay?
+			if (bDestIP && host->url.empty()) { // is the IP okay and is the not from the csv file?
 				SetDestActionButton(true, "Save");
 			} else {
 				SetDestActionButton(false, "");

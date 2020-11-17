@@ -26,22 +26,29 @@
 
 #include "SockAddress.h"
 
+using SHost = struct host_tag
+{
+	std::string url, ip4addr, ip6addr;
+	uint16_t port;
+};
+
 class CM17RouteMap
 {
 public:
 	CM17RouteMap() {}
 	~CM17RouteMap();
-	const std::shared_ptr<CSockAddress> Find(const std::string &cs) const;
-	const std::shared_ptr<CSockAddress> FindBase(const std::string &call) const;
-	void Update(const std::string &cs, const std::string &addr);
-	void Open();
+	const std::shared_ptr<SHost> Find(const std::string &cs) const;
+	const std::shared_ptr<SHost> FindBase(const std::string &call) const;
+	void Update(const std::string &cs, const std::string &url, const std::string &ip4addr, const std::string &ip6addr, const uint16_t port = 17000);
 	void Save() const;
+	void ReadAll();
 	const std::list<std::string> GetKeys() const;
 	void Erase(const std::string &cs);
 	size_t Size() const;
 
 private:
-	std::map<std::string, std::shared_ptr<CSockAddress>> baseMap;
+	void Read(const char *filename);
+	std::map<std::string, std::shared_ptr<SHost>> baseMap;
 	std::map<std::string, std::string> cs2baseMap;
 	mutable std::mutex mux;
 };
