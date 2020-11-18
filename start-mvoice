@@ -1,0 +1,3 @@
+#!/bin/bash
+wget -O ~/etc/M17Hosts.csv http://www.dudetronics.com/ar-dns/M17Hosts-full.csv
+~/bin/mvoice

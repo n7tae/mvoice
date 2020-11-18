@@ -73,6 +73,30 @@ void CMainWindow::SetState()
 {
 	if (cfg.IsOkay() && false == gateM17.keep_running)
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
+
+	// set up the destination combo box
+	const auto current = pM17DestCallsignEntry->get_text();
+	pM17DestCallsignComboBox->remove_all();
+	for (const auto &cs : routeMap.GetKeys()) {
+		const auto host = routeMap.Find(cs);
+		if (host) {
+			switch (cfgdata.eNetType) {
+				case EInternetType::ipv6only:
+					if (! host->ip6addr.empty())
+						pM17DestCallsignComboBox->append(cs);
+					break;
+				case EInternetType::ipv4only:
+					if (! host->ip4addr.empty())
+						pM17DestCallsignComboBox->append(cs);
+					break;
+				default:
+					pM17DestCallsignComboBox->append(cs);
+					break;
+			}
+		}
+	}
+	if (routeMap.FindBase(current))
+		pM17DestCallsignComboBox->set_active_text(current);
 }
 
 void CMainWindow::CloseAll()
@@ -163,12 +187,6 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	pAboutMenuItem->signal_activate().connect(sigc::mem_fun(*this, &CMainWindow::on_AboutMenuItem_activate));
 
 	routeMap.ReadAll();
-	for (const auto &item : routeMap.GetKeys()) {
-		// std::cout << "Addding " << item << " to M17 ComboBox" << std::endl;
-		pM17DestCallsignComboBox->append(item);
-	}
-	if (routeMap.Size())
-		pM17DestCallsignComboBox->set_active(0);
 	Receive(false);
 	SetState();
 	on_M17DestCallsignComboBox_changed();
@@ -452,7 +470,8 @@ void CMainWindow::FixM17DestActionButton()
 			}
 		} else {
 			// cs is not found in map
-			if (bDestIP && host->url.empty()) { // is the IP okay and is the not from the csv file?
+			host = routeMap.FindBase(cs);
+			if (bDestIP && host && host->url.empty()) { // is the IP okay and is the not from the csv file?
 				SetDestActionButton(true, "Save");
 			} else {
 				SetDestActionButton(false, "");
@@ -464,6 +483,14 @@ void CMainWindow::FixM17DestActionButton()
 	bool all = (bTransOK && bDestCS && bDestIP);
 	pPTTButton->set_sensitive(all);
 	pQuickKeyButton->set_sensitive(all);
+	// set destintaion IP in the M17Gateway
+	if (bDestCS && bDestIP) {
+		uint16_t port = 17000;	// we need to get the port from the routeMap in case it's not 17000
+		auto host = routeMap.FindBase(cs);
+		if (host)
+			port = host->port;
+		gateM17.SetDestAddress(ip, port);
+	}
 }
 
 int main (int argc, char **argv)

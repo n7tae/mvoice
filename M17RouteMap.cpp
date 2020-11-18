@@ -109,7 +109,7 @@ void CM17RouteMap::Read(const char *filename)
 			trim(line);
 			if (0==line.size() || '#'==line[0]) continue;
 			std::vector<std::string> elem;
-			split(line, '.', elem);
+			split(line, ',', elem);
 			Update(elem[0], elem[1], elem[2], elem[3], std::stoul(elem[4]));
 		}
 		file.close();

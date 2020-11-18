@@ -52,6 +52,7 @@ private:
 	CAboutDlg AboutDlg;
 	CQnetDB qnDB;
 	CM17RouteMap routeMap;
+	CM17Gateway gateM17;
 
 	// widgets
 	Gtk::Window *pWin;
@@ -70,7 +71,6 @@ private:
 	// helpers
 	void FixM17DestActionButton();
 	void SetDestActionButton(const bool sensitive, const char *label);
-	CM17Gateway gateM17;
 	std::future<void> futM17;
 	void SetState();
 	void RunM17();
