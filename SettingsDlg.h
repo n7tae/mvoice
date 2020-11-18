@@ -57,16 +57,14 @@ private:
 	// widgets
 	Gtk::Button *pOkayButton, *pAudioRescanButton;
 	Gtk::ComboBox *pAudioInputComboBox, *pAudioOutputComboBox;
-	Gtk::CheckButton *pIPv4CheckButton, *pIPv6CheckButton;
 	Gtk::Entry *pM17SourceCallsignEntry;
 	Gtk::RadioButton *pM17VoiceOnlyRadioButton, *pM17VoiceDataRadioButton;
+	Gtk::RadioButton *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Gtk::Label *pInputDescLabel, *pOutputDescLabel;
 	Gtk::Notebook *pSettingsNotebook;
 	// events
 	void on_M17SourceCallsignEntry_changed();
 	void on_AudioRescanButton_clicked();
-	void on_IPv4CheckButton_clicked();
-	void on_IPv6CheckButton_clicked();
 	void on_AudioInputComboBox_changed();
 	void on_AudioOutputComboBox_changed();
 };

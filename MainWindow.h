@@ -56,8 +56,9 @@ private:
 
 	// widgets
 	Gtk::Window *pWin;
-	Gtk::Button *pQuitButton, *pSettingsButton, *pQuickKeyButton, *pM17DestActionButton, *pM17LinkButton, *pM17UnlinkButton;
+	Gtk::Button *pQuitButton, *pSettingsButton, *pQuickKeyButton, *pM17DestActionButton, *pM17LinkButton, *pM17UnlinkButton, *pDashboardButton;
 	Gtk::ComboBoxText *pM17DestCallsignComboBox;
+	Gtk::RadioButton *pModuleRadioButton[26];
 	Gtk::Entry *pM17DestCallsignEntry, *pM17DestIPEntry;
 	Gtk::ToggleButton *pEchoTestButton, *pPTTButton;
 	Gtk::MenuItem *pAboutMenuItem;
@@ -79,6 +80,9 @@ private:
 	void CloseAll();
 	void insertLogText(const char *line);
 	void AudioSummary(const char *title);
+	char GetDestinationModule();
+	void SetDestinationAddress(std::string &cs);
+	void SetModuleSensitive(const std::string &dest);
 
 	// events
 	void on_QuitButton_clicked();
@@ -93,6 +97,7 @@ private:
 	void on_M17DestActionButton_clicked();
 	void on_M17LinkButton_clicked();
 	void on_M17UnlinkButton_clicked();
+	void on_DashboardButton_clicked();
 	bool RelayM172AM(Glib::IOCondition condition);
 	bool GetLogInput(Glib::IOCondition condition);
 	bool TimeoutProcess();

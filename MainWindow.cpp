@@ -50,7 +50,7 @@ CMainWindow::CMainWindow() :
 	// allowed M17 " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."
 	IPv4RegEx = std::regex("^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3,3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9]){1,1}$", std::regex::extended);
 	IPv6RegEx = std::regex("^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}(:[0-9a-fA-F]{1,4}){1,1}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|([0-9a-fA-F]{1,4}:){1,1}(:[0-9a-fA-F]{1,4}){1,6}|:((:[0-9a-fA-F]{1,4}){1,7}|:))$", std::regex::extended);
-	M17RefRegEx = std::regex("^M17-([A-Z0-9]){3,3}[ ][A-Z]$", std::regex::extended);
+	M17RefRegEx = std::regex("^M17-([A-Z0-9]){3,3}$", std::regex::extended);
 	M17CallRegEx = std::regex("^[0-9]{0,1}[A-Z]{1,2}[0-9][A-Z]{1,4}(()|[ ]*[A-Z]|([-/\\.][A-Z0-9]*))$", std::regex::extended);
 }
 
@@ -95,7 +95,7 @@ void CMainWindow::SetState()
 			}
 		}
 	}
-	if (routeMap.FindBase(current))
+	if (routeMap.Find(current))
 		pM17DestCallsignComboBox->set_active_text(current);
 }
 
@@ -169,6 +169,12 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	builder->get_widget("M17DestCallsignComboBox", pM17DestCallsignComboBox);
 	builder->get_widget("M17LinkButton", pM17LinkButton);
 	builder->get_widget("M17UnlinkButton", pM17UnlinkButton);
+	builder->get_widget("DashboardButton", pDashboardButton);
+	for (unsigned i=0; i<26; i++) {
+		std::string name("RadioButton");
+		name.append(1, 'A'+i);
+		builder->get_widget(name.c_str(), pModuleRadioButton[i]);
+	}
 
 	pLogTextBuffer = pLogTextView->get_buffer();
 
@@ -180,6 +186,7 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 	pM17LinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_M17LinkButton_clicked));
 	pM17UnlinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_M17UnlinkButton_clicked));
 	pSettingsButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_SettingsButton_clicked));
+	pDashboardButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_DashboardButton_clicked));
 	pQuitButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_QuitButton_clicked));
 	pEchoTestButton->signal_toggled().connect(sigc::mem_fun(*this, &CMainWindow::on_EchoTestButton_toggled));
 	pPTTButton->signal_toggled().connect(sigc::mem_fun(*this, &CMainWindow::on_PTTButton_toggled));
@@ -228,9 +235,9 @@ void CMainWindow::on_SettingsButton_clicked()
 		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->eNetType!=cfgdata.eNetType) {
 			StopM17();
 		}
-		SetState();
 		cfg.CopyTo(cfgdata);
 	}
+	SetState();
 }
 
 void CMainWindow::on_M17DestCallsignComboBox_changed()
@@ -318,11 +325,27 @@ void CMainWindow::Receive(bool is_rx)
 		AudioSummary("RX Audio");
 }
 
+void CMainWindow::SetDestinationAddress(std::string &cs)
+{
+	cs.assign(pM17DestCallsignEntry->get_text().c_str());
+	const std::string ip(pM17DestIPEntry->get_text().c_str());
+	uint16_t port = 17000;	// we need to get the port from the routeMap in case it's not 17000
+	auto host = routeMap.Find(cs);
+	if (host)
+		port = host->port;
+	gateM17.SetDestAddress(ip, port);
+	if (0 == cs.compare(0, 4, "M17-")) {
+		cs.resize(8, ' ');
+		cs.append(1, GetDestinationModule());
+	}
+}
+
 void CMainWindow::on_PTTButton_toggled()
 {
-	const std::string dest(pM17DestCallsignEntry->get_text().c_str());
 	if (pPTTButton->get_active()) {
-		AudioManager.RecordMicThread(E_PTT_Type::m17, dest);
+		std::string cs;
+		SetDestinationAddress(cs);
+		AudioManager.RecordMicThread(E_PTT_Type::m17, cs);
 	} else {
 		AudioManager.KeyOff();
 		AudioSummary("PTT");
@@ -331,7 +354,9 @@ void CMainWindow::on_PTTButton_toggled()
 
 void CMainWindow::on_QuickKeyButton_clicked()
 {
-	AudioManager.QuickKey(pM17DestCallsignEntry->get_text().c_str(), cfgdata.sM17SourceCallsign);
+	std::string cs;
+	SetDestinationAddress(cs);
+	AudioManager.QuickKey(cs, cfgdata.sM17SourceCallsign);
 }
 
 bool CMainWindow::RelayM172AM(Glib::IOCondition condition)
@@ -393,20 +418,30 @@ bool CMainWindow::TimeoutProcess()
 	return true;
 }
 
+void CMainWindow::SetModuleSensitive(const std::string &dest)
+{
+	const bool state = (0 == dest.compare(0,4, "M17-")) ? true : false;
+	for (unsigned i=0; i<26; i++)
+		pModuleRadioButton[i]->set_sensitive(state);
+}
+
 void CMainWindow::on_M17DestCallsignEntry_changed()
 {
-	int pos = pM17DestCallsignEntry->get_position();
-	Glib::ustring s = pM17DestCallsignEntry->get_text().uppercase();
+	auto pos = pM17DestCallsignEntry->get_position();
+	auto s = pM17DestCallsignEntry->get_text().uppercase();
+	SetModuleSensitive(s.c_str());
 	pM17DestCallsignEntry->set_text(s);
 	pM17DestCallsignEntry->set_position(pos);
-	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || std::regex_match(s.c_str(), M17RefRegEx);
-	const auto host = routeMap.FindBase(s);
+	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
+	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
+	const auto host = routeMap.Find(s);
 	if (host) {
 		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
 			pM17DestIPEntry->set_text(host->ip6addr);
 		else if (!host->ip4addr.empty())
 			pM17DestIPEntry->set_text(host->ip4addr);
 	}
+	pDashboardButton->set_sensitive(is_valid_reflector && host && !host->url.empty());
 	pM17DestCallsignEntry->set_icon_from_icon_name(bDestCS ? "gtk-ok" : "gtk-cancel");
 	FixM17DestActionButton();
 }
@@ -438,7 +473,9 @@ void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
 void CMainWindow::on_M17LinkButton_clicked()
 {
 	std::string cmd("M17L");
-	cmd.append(pM17DestCallsignEntry->get_text().c_str());
+	std::string cs;
+	SetDestinationAddress(cs);
+	cmd.append(cs);
 	AudioManager.Link(cmd);
 }
 
@@ -446,6 +483,16 @@ void CMainWindow::on_M17UnlinkButton_clicked()
 {
 	std::string cmd("M17U");
 	AudioManager.Link(cmd);
+}
+
+void CMainWindow::on_DashboardButton_clicked()
+{
+	auto host = routeMap.Find(pM17DestCallsignEntry->get_text().c_str());
+	if (host && ! host->url.empty()) {
+		std::string opencmd("xdg-open ");
+		opencmd.append(host->url);
+		system(opencmd.c_str());
+	}
 }
 
 void CMainWindow::FixM17DestActionButton()
@@ -470,7 +517,7 @@ void CMainWindow::FixM17DestActionButton()
 			}
 		} else {
 			// cs is not found in map
-			host = routeMap.FindBase(cs);
+			host = routeMap.Find(cs);
 			if (bDestIP && host && host->url.empty()) { // is the IP okay and is the not from the csv file?
 				SetDestActionButton(true, "Save");
 			} else {
@@ -483,14 +530,6 @@ void CMainWindow::FixM17DestActionButton()
 	bool all = (bTransOK && bDestCS && bDestIP);
 	pPTTButton->set_sensitive(all);
 	pQuickKeyButton->set_sensitive(all);
-	// set destintaion IP in the M17Gateway
-	if (bDestCS && bDestIP) {
-		uint16_t port = 17000;	// we need to get the port from the routeMap in case it's not 17000
-		auto host = routeMap.FindBase(cs);
-		if (host)
-			port = host->port;
-		gateM17.SetDestAddress(ip, port);
-	}
 }
 
 int main (int argc, char **argv)
@@ -535,4 +574,13 @@ void CMainWindow::StopM17()
 		gateM17.keep_running = false;
 		futM17.get();
 	}
+}
+
+char CMainWindow::GetDestinationModule()
+{
+	for (unsigned i=0; i<26; i++) {
+		if (pModuleRadioButton[i]->get_active())
+			return 'A' + i;
+	}
+	return '!';	// ERROR!
 }

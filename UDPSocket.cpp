@@ -90,6 +90,7 @@ void CUDPSocket::Close(void)
 {
 	if ( m_fd >= 0 )
 	{
+		std::cout << "Closing socket " << m_fd << " on " << m_addr << std::endl;
 		close(m_fd);
 		m_fd = -1;
 	}

@@ -66,14 +66,12 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	// station
 	d.cModule = data.cModule;
 	// Internet
-	if (pIPv6CheckButton->get_active()) {
-		if (pIPv4CheckButton->get_active())
-			d.eNetType = EInternetType::dualstack;
-		else
-			d.eNetType = EInternetType::ipv6only;
-	}
-	else
+	if (pIPv4RadioButton->get_active())
 		d.eNetType = EInternetType::ipv4only;
+	else if (pIPv6RadioButton->get_active())
+		d.eNetType = EInternetType::ipv6only;
+	else
+		d.eNetType = EInternetType::dualstack;
 	// audio
 	Gtk::ListStore::iterator it = pAudioInputComboBox->get_active();
 	Gtk::ListStore::Row row = *it;
@@ -96,16 +94,13 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 	//quadnet
 	switch (d.eNetType) {
 		case EInternetType::ipv6only:
-			pIPv6CheckButton->set_active();
-			pIPv4CheckButton->set_active(false);
+			pIPv6RadioButton->clicked();
 			break;
 		case EInternetType::dualstack:
-			pIPv4CheckButton->set_active();
-			pIPv6CheckButton->set_active();
+			pDualStackRadioButton->clicked();
 			break;
 		default:
-			pIPv4CheckButton->set_active();
-			pIPv6CheckButton->set_active(false);
+			pIPv4RadioButton->clicked();
 			break;
 	}
 }
@@ -130,8 +125,9 @@ bool CSettingsDlg::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::us
 	builder->get_widget("M17VoiceOnlyRadioButton", pM17VoiceOnlyRadioButton);
 	builder->get_widget("M17VoiceDataRadioButton", pM17VoiceDataRadioButton);
 	// Internet
-	builder->get_widget("IPv4CheckButton", pIPv4CheckButton);
-	builder->get_widget("IPv6CheckButton", pIPv6CheckButton);
+	builder->get_widget("IPv4RadioButton", pIPv4RadioButton);
+	builder->get_widget("IPv6RadioButton", pIPv6RadioButton);
+	builder->get_widget("DualStackRadioButton", pDualStackRadioButton);
 	// Audio
 	builder->get_widget("AudioInputComboBox", pAudioInputComboBox);
 	refAudioInListModel = Gtk::ListStore::create(audio_columns);
@@ -147,8 +143,6 @@ bool CSettingsDlg::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::us
 	builder->get_widget("OutputDescLabel", pOutputDescLabel);
 	builder->get_widget("AudioRescanButton", pAudioRescanButton);
 
-	pIPv4CheckButton->signal_clicked().connect(sigc::mem_fun(*this, &CSettingsDlg::on_IPv4CheckButton_clicked));
-	pIPv6CheckButton->signal_clicked().connect(sigc::mem_fun(*this, &CSettingsDlg::on_IPv6CheckButton_clicked));
 	pAudioRescanButton->signal_clicked().connect(sigc::mem_fun(*this, &CSettingsDlg::on_AudioRescanButton_clicked));
 	pAudioInputComboBox->signal_changed().connect(sigc::mem_fun(*this, &CSettingsDlg::on_AudioInputComboBox_changed));
 	pAudioOutputComboBox->signal_changed().connect(sigc::mem_fun(*this, &CSettingsDlg::on_AudioOutputComboBox_changed));
@@ -166,22 +160,6 @@ void CSettingsDlg::on_M17SourceCallsignEntry_changed()
 	bM17Source = std::regex_match(s.c_str(), pMainWindow->M17CallRegEx);
 	pM17SourceCallsignEntry->set_icon_from_icon_name(bM17Source ? "gtk-ok" : "gtk-cancel");
 	pOkayButton->set_sensitive(bM17Source);
-}
-
-void CSettingsDlg::on_IPv4CheckButton_clicked()
-{
-	if (pIPv4CheckButton->get_active())
-		data.eNetType = pIPv6CheckButton->get_active() ? EInternetType::dualstack : EInternetType::ipv4only;
-	if (!pIPv6CheckButton->get_active())
-		on_IPv6CheckButton_clicked();
-}
-
-void CSettingsDlg::on_IPv6CheckButton_clicked()
-{
-	if (pIPv6CheckButton->get_active())
-		data.eNetType = pIPv4CheckButton->get_active() ? EInternetType::dualstack : EInternetType::ipv6only;
-	if (!pIPv4CheckButton->get_active())
-		on_IPv4CheckButton_clicked();
 }
 
 void CSettingsDlg::on_AudioInputComboBox_changed()

@@ -285,6 +285,9 @@ void CM17Gateway::Process()
 			FD_CLR(amfd, &fdset);
 		}
 	}
+	AM2M17.Close();
+	ipv4.Close();
+	ipv6.Close();
 }
 
 void CM17Gateway::SetDestAddress(const std::string &address, uint16_t port)
