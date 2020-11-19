@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<!-- Generated with glade 3.22.2 
+<!-- Generated with glade 3.22.2
 
 Qnet Digital Voice - With an AMBE device, route and link to the D-Star ham radio network.
 Copyright (C) 2019. All rights Reserved.
@@ -33,7 +33,7 @@ Author: Thomas A. Early, N7TAE
     <property name="modal">True</property>
     <property name="type_hint">dialog</property>
     <property name="program_name">M17 Voice</property>
-    <property name="version">Version 201118</property>
+    <property name="version">Version 201119</property>
     <property name="copyright" translatable="yes">Copyright (c) 2020 by Thomas A. Early, N7TAE</property>
     <property name="website">https://github.com/n7tae/mvoice</property>
     <property name="website_label" translatable="yes">MVoice</property>

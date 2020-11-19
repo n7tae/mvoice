@@ -42,6 +42,7 @@ CM17Gateway::~CM17Gateway()
 
 bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
+	mlink.state = ELinkState::unlinked;
 	std::string path(CFG_DIR);
 	path.append("qn.db");
 	if (qnDB.Open(path.c_str()))
