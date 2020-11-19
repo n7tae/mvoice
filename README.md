@@ -44,13 +44,17 @@ make install
 
 All the configuration files are located in ~/etc and the mvoice executable is in ~/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory unless you want to remove *mvoice* from your system.
 
+## Launching mvoice
+
+To download a fresh copy of M17 reflectors that mvoice can use, start mvoice with a script, `./start-mvoice` from your build directory. You can move this script to any place in your search directory so that you just have to type `start-mvoice` from any where. This script will download the latest copy of the M17 reflectors and put it in ~/etc/M17Hosts.csv and then launch mvoice. If you don't need to download a fresh copy of the reflector data, you can launch as mentioned in the next section.
+
 ## Configuring mvoice
 
 Plug in your headset and start *mvoice*: Open a shell and type `mvoice` if ~/bin is in your search path, otherwise, move to your home directory and type `bin/mvoice`. Most log messages will be displayed within the log window of mvoice, but a few messages, especially if there are problems, may also be printed in the shell you launch mvoice from.
 
 Once it launches, click the **Settings** button and make sure to set your callsign and the codec setting on the M17 page. You can usually leave the audio settings on "default". Also enable IPv6 if your internet provider supports it. Click the Okay button and your settings will be saved in your ~/etc/ directory.
 
-On the main window, set your destination callsign and IP address. Once you've entered valid values for both, you can save these for future use. Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a vaild callsign is exactly **nine** characters long, `M17-xxx y` where `xxx` is made up of letters or numbers and `y` is the module, a letter from `A` to `Z`. Note that there is one space before the module. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary.
+On the main window, set your destination callsign and IP address. You can select a reflector from the dropdown list and that will fill the Destination callsign and IP address, or you can type the callsign into the Callsign Entry box. If the IP address can be found from your local data, the IP will be automatically set, otherwise, you will need to know the IP address of your destination. Once you have valid values for both, you can save these for future use, if it's not already in your database. Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a vaild callsign is exactly **seven** characters long, `M17-xxx` where `xxx` is made up of letters or numbers. Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If the reflector you're using is from the `M17Hosts.csv` file, you can open the reflector's dashboard with the `Open Dashboard` button.
 
 For Linking, you can select a reflector. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if the module you are requesting is actually configured and operational, or even if it actually exists.
 
@@ -72,8 +76,8 @@ There are three "transmitting" buttons on *mvoice*:
 
  I would like the Echo Test button to switch back from red as soon as you toggle the button to end your recording, but it does not. This is a bug that may not be fixable based on the gtkmm gui. For now at least, we can say the Echo Test button will stay lit until the playback has completed.
 
- The text buffer for the display window is not truncated in anyway and given enough messages, it will eventually overflow and probably crash *mvoice*, but it will take a very long time. I'll fix this as soon as I decide on a strategy.
+ The text buffer for the display window is not truncated in any way and given enough messages, it will eventually overflow and probably crash *mvoice*, but it will take a very long time. I'll fix this as soon as I decide on a strategy.
 
- I know, auto-scrolling doesn't work as good as it should. I *think* I'm doing everything I'm suppose to be doing. This may be another limitation of gtkmm.
+ I know, auto-scrolling doesn't work as good as it should. I *think* I'm doing everything I'm suppose to be doing. This may be a limitation of gtkmm.
 
 de N7TAE (at) tearly (dot) net
