@@ -472,6 +472,12 @@ void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
 
 void CMainWindow::on_M17LinkButton_clicked()
 {
+	while (cfgdata.sM17SourceCallsign.empty()) {
+		insertLogText("ERROR: Your system is not yet configured!\n");
+		insertLogText("Be sure to save your callsign and internet access in Settings\n");
+		insertLogText("You can usually leave the audio devices as 'default'\n");
+		return;
+	}
 	std::string cmd("M17L");
 	std::string cs;
 	SetDestinationAddress(cs);

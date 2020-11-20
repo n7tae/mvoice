@@ -31,7 +31,10 @@
 #define CFG_DIR "/tmp/"
 #endif
 
-CM17Gateway::CM17Gateway() : CBase() {}
+CM17Gateway::CM17Gateway() : CBase()
+{
+	keep_running = false; // not running initially. this will be set to true in CMainWindow
+}
 
 CM17Gateway::~CM17Gateway()
 {
