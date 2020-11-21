@@ -47,6 +47,7 @@ public:
 
 private:
 	void Read(const char *filename);
+	void ReadJson(const char *filename);
 	std::map<std::string, std::shared_ptr<SHost>> baseMap;
 	mutable std::mutex mux;
 };

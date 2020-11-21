@@ -24,7 +24,7 @@ You might also need to go to the ALSA audio configuration. For Debian Buster, th
 There are several library requirements before you start:
 
 ```bash
-sudo apt install -y git build-essential libgtkmm-3.0-dev libasound2-dev libsqlite3-dev
+sudo apt install -y git build-essential libgtkmm-3.0-dev libasound2-dev libsqlite3-dev libcurl4-gnutls-dev
 
 ```
 
@@ -44,13 +44,11 @@ make install
 
 All the configuration files are located in ~/etc and the mvoice executable is in ~/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory unless you want to remove *mvoice* from your system.
 
-## Launching mvoice
-
-To download a fresh copy of M17 reflectors that mvoice can use, start mvoice with a script, `./start-mvoice` from your build directory. You can move this script to any place in your search directory so that you just have to type `start-mvoice` from any where. This script will download the latest copy of the M17 reflectors and put it in ~/etc/M17Hosts.csv and then launch mvoice. If you don't need to download a fresh copy of the reflector data, you can launch as mentioned in the next section.
-
 ## Configuring mvoice
 
 Plug in your headset and start *mvoice*: Open a shell and type `mvoice` if ~/bin is in your search path, otherwise, move to your home directory and type `bin/mvoice`. Most log messages will be displayed within the log window of mvoice, but a few messages, especially if there are problems, may also be printed in the shell you launch mvoice from.
+
+The first thing *mvoice* will do is to download the list of registered reflectors from the M17project.org website and save it in your configuration directory. It will do this every time you start *mvoice*.
 
 Once it launches, click the **Settings** button and make sure to set your callsign and the codec setting on the M17 page. You can usually leave the audio settings on "default". Also enable IPv6 if your internet provider supports it. Click the Okay button and your settings will be saved in your ~/etc/ directory.
 

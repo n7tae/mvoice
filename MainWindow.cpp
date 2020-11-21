@@ -16,6 +16,7 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <curl/curl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -366,8 +367,6 @@ bool CMainWindow::RelayM172AM(Glib::IOCondition condition)
 		M172AM.Read(m17.magic, sizeof(SM17Frame));
 		if (0 == memcmp(m17.magic, "M17 ", 4))
 			AudioManager.M17_2AudioMgr(m17);
-		else if (0 == memcmp(m17.magic, "PLAY", 4))
-			AudioManager.PlayFile((char *)&m17.streamid);
 	} else {
 		std::cerr << "RelayM17_2AM not a read event!" << std::endl;
 	}
@@ -538,8 +537,86 @@ void CMainWindow::FixM17DestActionButton()
 	pQuickKeyButton->set_sensitive(all);
 }
 
+void CMainWindow::StopM17()
+{
+	if (gateM17.keep_running) {
+		gateM17.keep_running = false;
+		futM17.get();
+	}
+}
+
+char CMainWindow::GetDestinationModule()
+{
+	for (unsigned i=0; i<26; i++) {
+		if (pModuleRadioButton[i]->get_active())
+			return 'A' + i;
+	}
+	return '!';	// ERROR!
+}
+
+// callback function writes data to a std::ostream
+static size_t data_write(void* buf, size_t size, size_t nmemb, void* userp)
+{
+	if(userp)
+	{
+		std::ostream& os = *static_cast<std::ostream*>(userp);
+		std::streamsize len = size * nmemb;
+		if(os.write(static_cast<char*>(buf), len))
+			return len;
+	}
+
+	return 0;
+}
+
+/**
+ * timeout is in seconds
+ **/
+static CURLcode curl_read(const std::string& url, std::ostream& os, long timeout = 30)
+{
+	CURLcode code(CURLE_FAILED_INIT);
+	CURL* curl = curl_easy_init();
+
+	if(curl)
+	{
+		if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
+		{
+			code = curl_easy_perform(curl);
+		}
+		curl_easy_cleanup(curl);
+	}
+	return code;
+}
+
+static void ReadM17Json()
+{
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	std::string path(CFG_DIR);
+	path.append("m17refl.json");
+	std::ofstream ofs(path);
+	if (ofs.is_open()) {
+		const std::string url("https://m17project.org/m17refl.json");
+		if(CURLE_OK == curl_read(url, ofs)) {
+			std::cout << url << " copied to " << path << std::endl;
+		} else {
+			std::cerr << "Could not read " << url << std::endl;
+		}
+	} else {
+		std::cerr << "Could not open " << path << " for writing" << std::endl;
+	}
+
+	curl_global_cleanup();
+}
+
 int main (int argc, char **argv)
 {
+	ReadM17Json();
+
 	theApp = Gtk::Application::create(argc, argv, "net.openquad.DVoice");
 
 	//Load the GtkBuilder file and instantiate its widgets:
@@ -572,21 +649,4 @@ int main (int argc, char **argv)
 	MainWindow.Run();
 
 	return 0;
-}
-
-void CMainWindow::StopM17()
-{
-	if (gateM17.keep_running) {
-		gateM17.keep_running = false;
-		futM17.get();
-	}
-}
-
-char CMainWindow::GetDestinationModule()
-{
-	for (unsigned i=0; i<26; i++) {
-		if (pModuleRadioButton[i]->get_active())
-			return 'A' + i;
-	}
-	return '!';	// ERROR!
 }

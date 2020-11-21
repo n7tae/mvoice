@@ -51,7 +51,6 @@ public:
 	void PlayEchoDataThread();	// for Echo
 	void M17_2AudioMgr(const SM17Frame &m17);
 	void KeyOff();
-	void PlayFile(const char *filetoplay);
 	void QuickKey(const std::string &dest, const std::string &sour);
 	void Link(const std::string &linkcmd);
 

@@ -13,7 +13,7 @@ OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `pkg-config --libs gtkmm-3.0` -lasound -lsqlite3 -pthread
+	g++ -o $@ $^ `pkg-config --libs gtkmm-3.0` -lasound -lsqlite3 -lcurl -pthread
 
 %.o : %.cpp MVoice.glade
 	g++ $(CPPFLAGS) -MMD -MD -c $< -o $@
@@ -27,7 +27,6 @@ clean :
 
 install : $(EXE)
 	mkdir -p $(CFGDIR)
-	/bin/cp -rf $(shell pwd)/announce $(CFGDIR)
 	/bin/ln -f $(shell pwd)/MVoice.glade $(CFGDIR)
 	mkdir -p $(BINDIR)
 	/bin/cp -f $(EXE) $(BINDIR)
@@ -37,6 +36,8 @@ uninstall :
 	/bin/rm -f $(CFGDIR)MVoice.glade
 	/bin/rm -f $(CFGDIR)$(EXE).cfg
 	/bin/rm -f $(CFGDIR)qn.db
+	/bin/rm -f $(CFGDIR)mvoice.cfg
+	/bin/rm -f $(CFGDIR)m17refl.json
 	/bin/rm -f $(BINDIR)$(EXE)
 
 #interactive :
