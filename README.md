@@ -42,7 +42,23 @@ If it builds okay, then you can install it:
 make install
 ```
 
-All the configuration files are located in ~/etc and the mvoice executable is in ~/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory unless you want to remove *mvoice* from your system.
+All the configuration files are located in ~/etc and the mvoice executable is in ~/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory because that's the only way to remove *mvoice* from your system:
+
+```bash
+make uninstall
+```
+
+### Special comments only for the Raspberry Pi
+
+If you want a desktop icon to launch *mvoice* then, from your build directory:
+
+```bash
+cp mvoice.desktop ~/Desktop
+```
+
+If you don't want to answer the question "What do you want to do with it?" every time you double-click the new desktop icon, then in the Raspberry Pi Menu, go to "Accessories->File Manager->Edit->Preference->General and turn on the "Don't ask options..." check box. The mvoice.desktop file will lauch a terminal window to run *mvoice*. If you really don't want to see this terminal window, then change the "Terminal=true" line to "Terminal=false" in your copy of mvoice.desktop in your Desktop folder.
+
+The Raspberry Pi OS has a bug in xdg-open and that's what *mvoice*'s "Open Dashboard" button uses to view a reflector's dashboard. If Chrome isn't running when you click this button, it will freeze the *mvoice* gui. To unfreeze the gui, simple kill Chrome. To get around this bug, launch Chrome before you click this "Open Dashboard" button and a new tab with the dashboard will open without a problem.
 
 ## Configuring mvoice
 

@@ -54,11 +54,11 @@ bool CM17Gateway::Init(const CFGDATA &cfgdata)
 		return true;
 	M172AM.SetUp("m172am");
 	if (cfgdata.eNetType != EInternetType::ipv6only) {
-		if (ipv4.Open(CSockAddress(AF_INET, 17000, "any")))
+		if (ipv4.Open(CSockAddress(AF_INET, 0, "any")))  // use ephemeral port
 			return true;
 	}
 	if (cfgdata.eNetType != EInternetType::ipv4only) {
-		if (ipv6.Open(CSockAddress(AF_INET6, 17000, "any")))
+		if (ipv6.Open(CSockAddress(AF_INET6, 0, "any"))) // use ephemeral port
 			return true;
 	}
 	keep_running = true;

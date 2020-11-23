@@ -83,6 +83,20 @@ bool CUDPSocket::Open(const CSockAddress &addr)
 		return true;
 	}
 
+	if (0 == m_addr.GetPort()) {	// get the assigned port for an ephemeral port request
+		CSockAddress a;
+		socklen_t len = sizeof(struct sockaddr_storage);
+		if (getsockname(m_fd, a.GetPointer(), &len)) {
+			std::cerr << "getsockname error " << m_addr << ", " << strerror(errno) << std::endl;
+			Close();
+			return false;
+		}
+		if (a != m_addr)
+			std::cout << "getsockname didn't return the same address as set: returned " << a.GetAddress() << ", should have been " << m_addr.GetAddress() << std::endl;
+
+		m_addr.SetPort(a.GetPort());
+	}
+
 	return false;
 }
 

@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Encoding=UTF-8
+Name=MVoice
+Comment=MVoice by N7TAE
+Icon=/usr/share/icons/gnome/32x32/devices/audio-headset.png
+Exec=/home/pi/bin/mvoice
+Terminal=true
+Categories=Ham Radio;
