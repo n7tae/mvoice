@@ -27,10 +27,6 @@
 
 #include "M17Gateway.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 #ifndef DOT_DIR
 #define DOT_DIR "$HOME/.mvoice"
 #endif

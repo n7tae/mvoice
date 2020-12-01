@@ -6,7 +6,7 @@ DOTDIR = $(HOME)/.mvoice/
 # choose this if you want debugging help
 #CPPFLAGS=-ggdb -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
 # or, you can choose this for a smaller executable without debugging help
-CPPFLAGS=-W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" -DDOT_DIR=\"$(DOTDIR)\" `pkg-config --cflags gtkmm-3.0`
+CPPFLAGS=-W -Wno-missing-field-initializers -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" -DDOT_DIR=\"$(DOTDIR)\" `pkg-config --cflags gtkmm-3.0`
 
 EXE = mvoice
 SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp)
@@ -33,10 +33,7 @@ install : $(EXE)
 	/bin/cp -f $(EXE) $(BINDIR)
 
 uninstall :
-	/bin/rm -rf $(CFGDIR)announce
 	/bin/rm -f $(CFGDIR)MVoice.glade
-	/bin/rm -f $(CFGDIR)$(EXE).cfg
-	/bin/rm -f $(CFGDIR)mvoice.cfg
 	/bin/rm -f $(BINDIR)$(EXE)
 
 #interactive :
