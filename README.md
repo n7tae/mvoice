@@ -48,6 +48,13 @@ All the configuration files are located in ~/etc and the mvoice executable is in
 make uninstall
 ```
 
+For a complete uninstall, also remove the .mvoice folder from your home directory:
+
+```bash
+cd ~
+rm -rf .mvoice
+```
+
 ### Special comments only for the Raspberry Pi
 
 If you want a desktop icon to launch *mvoice* then, from your build directory:
