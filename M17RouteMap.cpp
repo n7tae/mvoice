@@ -26,6 +26,10 @@
 #define CFG_DIR "/tmp/"
 #endif
 
+#ifndef DOT_DIR
+#define DOT_DIR "$HOME/.mvoice/"
+#endif
+
 CM17RouteMap::~CM17RouteMap()
 {
 	mux.lock();

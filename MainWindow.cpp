@@ -37,6 +37,10 @@
 #define CFG_DIR "/tmp/"
 #endif
 
+#ifndef DOT_DIR
+#define DOT_DIR "$HOME/.mvoice/"
+#endif
+
 static Glib::RefPtr<Gtk::Application> theApp;
 
 CMainWindow::CMainWindow() :
@@ -108,7 +112,7 @@ void CMainWindow::CloseAll()
 
 bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ustring &name)
 {
-	std::string dbname(CFG_DIR);
+	std::string dbname(DOT_DIR);
 	dbname.append("qn.db");
 	if (qnDB.Open(dbname.c_str()))
 		return true;
@@ -596,7 +600,7 @@ static void ReadM17Json()
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 
-	std::string path(CFG_DIR);
+	std::string path(DOT_DIR);
 	path.append("m17refl.json");
 	std::ofstream ofs(path);
 	if (ofs.is_open()) {
@@ -615,6 +619,15 @@ static void ReadM17Json()
 
 int main (int argc, char **argv)
 {
+
+	//Create dotfolder
+	struct stat st = {0};
+
+	if (stat(DOT_DIR, &st) == -1)
+	{
+		mkdir (DOT_DIR, 0755);
+	}
+
 	ReadM17Json();
 
 	theApp = Gtk::Application::create(argc, argv, "net.openquad.DVoice");

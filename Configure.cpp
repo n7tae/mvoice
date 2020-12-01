@@ -28,6 +28,10 @@
 #define CFG_DIR "/tmp/"
 #endif
 
+#ifndef DOT_DIR
+#define DOT_DIR "$HOME/.mvoice/"
+#endif
+
 void CConfigure::SetDefaultValues()
 {
 	// M17
@@ -43,7 +47,7 @@ void CConfigure::SetDefaultValues()
 
 void CConfigure::ReadData()
 {
-	std::string path(CFG_DIR);
+	std::string path(DOT_DIR);
 	path.append("mvoice.cfg");
 
 	std::ifstream cfg(path.c_str(), std::ifstream::in);
@@ -92,7 +96,7 @@ void CConfigure::ReadData()
 void CConfigure::WriteData()
 {
 
-	std::string path(CFG_DIR);
+	std::string path(DOT_DIR);
 	path.append("mvoice.cfg");
 
 	// directory exists, now make the file

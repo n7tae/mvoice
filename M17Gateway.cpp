@@ -31,6 +31,10 @@
 #define CFG_DIR "/tmp/"
 #endif
 
+#ifndef DOT_DIR
+#define DOT_DIR "$HOME/.mvoice"
+#endif
+
 CM17Gateway::CM17Gateway() : CBase()
 {
 	keep_running = false; // not running initially. this will be set to true in CMainWindow
@@ -46,7 +50,7 @@ CM17Gateway::~CM17Gateway()
 bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
 	mlink.state = ELinkState::unlinked;
-	std::string path(CFG_DIR);
+	std::string path(DOT_DIR);
 	path.append("qn.db");
 	if (qnDB.Open(path.c_str()))
 		return true;
