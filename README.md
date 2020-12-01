@@ -42,7 +42,8 @@ If it builds okay, then you can install it:
 sudo make install
 ```
 
-All the configuration files are located in ~/etc and the mvoice executable is in ~/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory because that's the only way to remove *mvoice* from your system:
+All the configuration files are located in ~/.mvoice and the mvoice executable is in /usr/local/bin. Please note that symbolic links are installed, so you can do a `make clean` to get rid of the intermediate object files, but don't delete the build directory because that's the only way to remove *mvoice* from your system:
+
 
 ```bash
 make uninstall
