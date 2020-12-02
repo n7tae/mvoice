@@ -27,7 +27,7 @@ clean :
 
 install : $(EXE)
 	mkdir -p $(CFGDIR)
-	/bin/ln -f $(shell pwd)/MVoice.glade $(CFGDIR)
+	/bin/cp -f $(shell pwd)/MVoice.glade $(CFGDIR)
 	mkdir -p $(BINDIR)
 	/bin/cp -f $(EXE) $(BINDIR)
 
