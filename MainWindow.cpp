@@ -600,7 +600,7 @@ static void ReadM17Json()
 	path.append("m17refl.json");
 	std::ofstream ofs(path);
 	if (ofs.is_open()) {
-		const std::string url("https://m17project.org/m17refl.json");
+		const std::string url("https://reflectors.m17.link/ref-list/json");
 		if(CURLE_OK == curl_read(url, ofs)) {
 			std::cout << url << " copied to " << path << std::endl;
 		} else {

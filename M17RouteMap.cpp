@@ -80,11 +80,11 @@ void CM17RouteMap::ReadAll()
 
 void CM17RouteMap::ReadJson(const char *filename)
 {
-	auto ecs = std::regex("\"(M17-[A-Z0-9]{3,3})\":", std::regex::extended);
-	auto eur = std::regex("\"URL\":[ \t]+\"([^\"]+)\"", std::regex::extended);
-	auto ev4 = std::regex("\"IPV4\":[ \t]+[\"]?(null|[0-9.]+)[\"]?", std::regex::extended);
-	auto ev6 = std::regex("\"IPV6\":[ \t]+[\"]?(null|[0-9a-fA-F:]+)[\"]?", std::regex::extended);
-	auto epo = std::regex("\"Port\":[ \t]+([0-9]+)", std::regex::extended);
+	auto ecs = std::regex(".*\"designator\":\"([A-Z0-9]{3,3})\".*", std::regex::extended);
+	auto eur = std::regex(".*\"url\":\"([^\"]+)\".*", std::regex::extended);
+	auto ev4 = std::regex(".*\"ipv4\":[\"]?(null|[0-9.]+)[\"]?.*", std::regex::extended);
+	auto ev6 = std::regex(".*\"ipv6\":[\"]?(null|[0-9a-fA-F:]+)[\"]?.*", std::regex::extended);
+	auto epo = std::regex(".*\"port\":([0-9]+).*", std::regex::extended);
 	bool cs, ur, v4, v6, po;
 	cs = ur = v4 = v6 = po = false;
 	std::string scs, sur, sv4, sv6, spo;
@@ -94,14 +94,20 @@ void CM17RouteMap::ReadJson(const char *filename)
 	while (f.good()) {
 		std::string s;
 		std::smatch m;
-		std::getline(f, s);
+		std::getline(f, s, ',');
 		if (! cs && std::regex_search(s, m, ecs)) {
-			scs = m[1].str();
+			scs.assign("M17-");
+			scs.append(m[1].str());
 			cs = true;
 			ur = v4 = v6 = po = false;
 		}
 		else if (! ur && std::regex_search(s, m, eur)) {
 			sur = m[1].str();
+			auto pos = sur.find('\\');
+			while (pos != std::string::npos) {
+				sur.erase(pos, 1);
+				pos = sur.find('\\');
+			}
 			ur = true;
 		}
 		else if (! v4 && std::regex_search(s, m, ev4)) {
