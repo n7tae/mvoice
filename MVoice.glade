@@ -34,7 +34,7 @@ Author: Thomas A. Early, N7TAE
     <property name="type_hint">dialog</property>
     <property name="program_name">M17 Voice</property>
     <property name="version">Version 210116</property>
-    <property name="copyright" translatable="yes">Copyright (c) 2020 by Thomas A. Early, N7TAE</property>
+    <property name="copyright" translatable="yes">Copyright (c) 2021 by Thomas A. Early, N7TAE</property>
     <property name="website">https://github.com/n7tae/mvoice</property>
     <property name="website_label" translatable="yes">MVoice</property>
     <property name="logo_icon_name">audio-headset</property>
