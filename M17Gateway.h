@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2020-2021 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -28,7 +28,6 @@
 #include "Callsign.h"
 #include "Timer.h"
 #include "Packet.h"
-#include "QnetDB.h"
 #include "Base.h"
 #include "CRC.h"
 
@@ -40,7 +39,7 @@ using SM17Link = struct sm17link_tag
 	CSockAddress addr;
 	CCallsign cs;
 	char from_mod;
-	ELinkState state;
+	std::atomic<ELinkState> state;
 	CTimer receivePingTimer;
 };
 
@@ -58,12 +57,12 @@ public:
 	bool Init(const CFGDATA &cfgdata);
 	void Process();
 	void SetDestAddress(const std::string &address, uint16_t port);
+	ELinkState GetLinkState() const { return mlink.state; }
 
 	std::atomic<bool> keep_running;
 
 private:
 	CFGDATA cfg;
-	CQnetDB qnDB;
 	CCRC crc;
 	CUnixDgramReader AM2M17;
 	CUnixDgramWriter M172AM;

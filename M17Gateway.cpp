@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2020-2021 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -48,8 +48,6 @@ bool CM17Gateway::Init(const CFGDATA &cfgdata)
 	mlink.state = ELinkState::unlinked;
 	std::string path(CFG_DIR);
 	path.append("qn.db");
-	if (qnDB.Open(path.c_str()))
-		return true;
 	if (AM2M17.Open("am2m17"))
 		return true;
 	M172AM.SetUp("m172am");
@@ -73,7 +71,6 @@ void CM17Gateway::LinkCheck()
 	if (mlink.receivePingTimer.time() > 30) { // is the reflector okay?
 		// looks like we lost contact
 		SendLog("Unlinked from %s, TIMEOUT...\n", mlink.cs.GetCS().c_str());
-		qnDB.DeleteLS(mlink.addr.GetAddress());
 		mlink.state = ELinkState::unlinked;
 		mlink.addr.Clear();
 	}
@@ -207,7 +204,6 @@ void CM17Gateway::Process()
 					if (0 == memcmp(buf, "ACKN", 4)) {
 						mlink.state = ELinkState::linked;
 						SendLog("Linked to %s\n", mlink.cs.GetCS().c_str());
-						qnDB.UpdateLS(mlink.addr.GetAddress(), mlink.from_mod, mlink.cs.GetCS(8).c_str(), mlink.cs.GetModule(), time(NULL));
 						mlink.receivePingTimer.start();
 					} else if (0 == memcmp(buf, "NACK", 4)) {
 						mlink.state = ELinkState::unlinked;
@@ -215,7 +211,6 @@ void CM17Gateway::Process()
 						mlink.state = ELinkState::unlinked;
 					} else if (0 == memcmp(buf, "DISC", 4)) {
 						SendLog("Unlinked from %s\n", mlink.cs.GetCS().c_str());
-						qnDB.DeleteLS(mlink.addr.GetAddress());
 						mlink.state = ELinkState::unlinked;
 					} else {
 						is_packet = false;
@@ -231,7 +226,6 @@ void CM17Gateway::Process()
 						mlink.receivePingTimer.start();
 					} else if (0 == memcmp(buf, "DISC", 4)) {
 						mlink.state = ELinkState::unlinked;
-						qnDB.DeleteLS(mlink.addr.GetAddress());
 					} else {
 						is_packet = false;
 					}
@@ -282,7 +276,6 @@ void CM17Gateway::Process()
 				CCallsign call(s);
 				call.CodeOut(disc.cscode);
 				Write(disc.magic, 10, mlink.addr);
-				qnDB.DeleteLS(mlink.addr.GetAddress());
 			} else {
 				Write(frame.magic, sizeof(SM17Frame), destination);
 			}

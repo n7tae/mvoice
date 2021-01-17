@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2019-2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2019-2021 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -25,7 +25,6 @@
 
 #include "Configure.h"
 #include "M17Gateway.h"
-#include "QnetDB.h"
 #include "SettingsDlg.h"
 #include "AboutDlg.h"
 #include "AudioManager.h"
@@ -50,7 +49,6 @@ private:
 	// classes
 	CSettingsDlg SettingsDlg;
 	CAboutDlg AboutDlg;
-	CQnetDB qnDB;
 	CM17RouteMap routeMap;
 	CM17Gateway gateM17;
 

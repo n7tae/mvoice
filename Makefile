@@ -1,4 +1,4 @@
-# Copyright (c) 2019-2020 by Thomas A. Early N7TAE
+# Copyright (c) 2019-2021 by Thomas A. Early N7TAE
 CFGDIR = $(HOME)/etc/
 BINDIR = $(HOME)/bin/
 
@@ -13,7 +13,7 @@ OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `pkg-config --libs gtkmm-3.0` -lasound -lsqlite3 -lcurl -pthread
+	g++ -o $@ $^ `pkg-config --libs gtkmm-3.0` -lasound -lcurl -pthread
 
 %.o : %.cpp MVoice.glade
 	g++ $(CPPFLAGS) -MMD -MD -c $< -o $@

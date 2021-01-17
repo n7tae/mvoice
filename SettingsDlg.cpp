@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2019-2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2019-2021 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -24,7 +24,6 @@
 #include "AudioManager.h"
 #include "WaitCursor.h"
 #include "SettingsDlg.h"
-#include "QnetDB.h"
 #include "MainWindow.h"
 
 CSettingsDlg::CSettingsDlg() : pMainWindow(nullptr), pDlg(nullptr)

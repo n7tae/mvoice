@@ -24,7 +24,7 @@ You might also need to go to the ALSA audio configuration. For Debian Buster, th
 There are several library requirements before you start:
 
 ```bash
-sudo apt install -y git build-essential libgtkmm-3.0-dev libasound2-dev libsqlite3-dev libcurl4-gnutls-dev
+sudo apt install -y git build-essential libgtkmm-3.0-dev libasound2-dev libcurl4-gnutls-dev
 
 ```
 

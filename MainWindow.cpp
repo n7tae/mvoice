@@ -110,10 +110,6 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 {
 	std::string dbname(CFG_DIR);
 	dbname.append("qn.db");
-	if (qnDB.Open(dbname.c_str()))
-		return true;
-	qnDB.ClearLH();
-	qnDB.ClearLS();
 
 	if (M172AM.Open("m172am")) {
 		CloseAll();
@@ -396,17 +392,7 @@ bool CMainWindow::GetLogInput(Glib::IOCondition condition)
 
 bool CMainWindow::TimeoutProcess()
 {
-	std::list<CLink> linkstatus;
-	if (qnDB.FindLS(cfgdata.cModule, linkstatus))	// get the link status list of our module (there should only be one, or none if it's not linked)
-		return true;
-
-	std::string call;
-	if (linkstatus.size()) {	// extract the linked module from the returned list, if the list is empty, it means our module is not linked!
-		CLink ls(linkstatus.front());
-		call.assign(ls.callsign);
-	}
-
-	if (call.empty()) {
+	if (ELinkState::linked != gateM17.GetLinkState()) {
 		pM17UnlinkButton->set_sensitive(false);
 		std::string s(pM17DestCallsignEntry->get_text().c_str());
 		pM17LinkButton->set_sensitive(std::regex_match(s, M17RefRegEx));
