@@ -508,8 +508,7 @@ void CMainWindow::FixM17DestActionButton()
 			}
 		} else {
 			// cs is not found in map
-			host = routeMap.Find(cs);
-			if (bDestIP && host && host->url.empty()) { // is the IP okay and is the not from the csv file?
+			if (bDestIP) { // is the IP okay and is the not from the csv file?
 				SetDestActionButton(true, "Save");
 			} else {
 				SetDestActionButton(false, "");
