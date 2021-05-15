@@ -22,6 +22,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <thread>
 
 #include "MainWindow.h"
 #include "AudioManager.h"
