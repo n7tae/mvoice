@@ -205,11 +205,14 @@ void CSettingsDlg::on_AudioRescanButton_clicked()
 	refAudioOutListModel->clear();
 	while (*n != NULL) {
 		char *name = snd_device_name_get_hint(*n, "NAME");
-		if (NULL == name)
+		if (NULL == name) {
+			n++;
 			continue;
+		}
 		char *desc = snd_device_name_get_hint(*n, "DESC");
 		if (NULL == desc) {
 			free(name);
+			n++;
 			continue;
 		}
 
