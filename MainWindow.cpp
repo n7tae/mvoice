@@ -51,7 +51,7 @@ CMainWindow::CMainWindow() :
 	// allowed M17 " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."
 	IPv4RegEx = std::regex("^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3,3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9]){1,1}$", std::regex::extended);
 	IPv6RegEx = std::regex("^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}(:[0-9a-fA-F]{1,4}){1,1}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|([0-9a-fA-F]{1,4}:){1,1}(:[0-9a-fA-F]{1,4}){1,6}|:((:[0-9a-fA-F]{1,4}){1,7}|:))$", std::regex::extended);
-	M17RefRegEx = std::regex("^M17-([A-Z0-9]){3,3}$", std::regex::extended);
+	M17RefRegEx = std::regex("^(M17-|URF)([A-Z0-9]){3,3}$", std::regex::extended);
 	M17CallRegEx = std::regex("^[0-9]{0,1}[A-Z]{1,2}[0-9][A-Z]{1,4}(()|[ ]*[A-Z]|([-/\\.][A-Z0-9]*))$", std::regex::extended);
 }
 
@@ -395,17 +395,17 @@ bool CMainWindow::TimeoutProcess()
 	if (ELinkState::linked != gateM17.GetLinkState()) {
 		pM17UnlinkButton->set_sensitive(false);
 		std::string s(pM17DestCallsignEntry->get_text().c_str());
-		pM17LinkButton->set_sensitive(std::regex_match(s, M17RefRegEx));
+		pM17LinkButton->set_sensitive(std::regex_match(s, M17RefRegEx) && bDestIP);
 	} else {
 		pM17LinkButton->set_sensitive(false);
-		pM17UnlinkButton->set_sensitive(true);
+		pM17UnlinkButton->set_sensitive(true && bDestIP);
 	}
 	return true;
 }
 
 void CMainWindow::SetModuleSensitive(const std::string &dest)
 {
-	const bool state = (0 == dest.compare(0,4, "M17-")) ? true : false;
+	const bool state = (0==dest.compare(0, 4, "M17-") || 0==dest.compare(0, 3, "URF")) ? true : false;
 	for (unsigned i=0; i<26; i++)
 		pModuleRadioButton[i]->set_sensitive(state);
 }
