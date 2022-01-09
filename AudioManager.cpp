@@ -455,7 +455,6 @@ void CAudioManager::KeyOff()
 void CAudioManager::Link(const std::string &linkcmd)
 {
 	if (0 == linkcmd.compare(0, 3, "M17")) { //it's an M17 link/unlink command
-		//std::cout << "got Link cmd '" << linkcmd << "'" << std::endl;
 		SM17Frame frame;
 		if ('L' == linkcmd.at(3)) {
 			if (13 == linkcmd.size()) {

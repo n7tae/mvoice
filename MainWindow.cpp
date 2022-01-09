@@ -331,7 +331,7 @@ void CMainWindow::SetDestinationAddress(std::string &cs)
 	if (host)
 		port = host->port;
 	gateM17.SetDestAddress(ip, port);
-	if (0 == cs.compare(0, 4, "M17-")) {
+	if (0==cs.compare(0, 4, "M17-") || 0==cs.compare(0, 3, "URF")) {
 		cs.resize(8, ' ');
 		cs.append(1, GetDestinationModule());
 	}

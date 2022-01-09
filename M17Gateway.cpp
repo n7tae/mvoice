@@ -60,6 +60,7 @@ bool CM17Gateway::Init(const CFGDATA &cfgdata)
 			return true;
 	}
 	keep_running = true;
+	currentStream.header.streamid = 0;
 	CConfigure config;
 	config.CopyFrom(cfgdata);
 	config.CopyTo(cfg);
@@ -248,7 +249,7 @@ void CM17Gateway::Process()
 			const CCallsign dest(frame.lich.addr_dst);
 			//printf("DEST=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), frame.lich.addr_dst[0], frame.lich.addr_dst[1], frame.lich.addr_dst[2], frame.lich.addr_dst[3], frame.lich.addr_dst[4], frame.lich.addr_dst[5]);
 			//std::cout << "Read " << length << " bytes with dest='" << dest.GetCS() << "'" << std::endl;
-			if (0 == dest.GetCS(3).compare("M17")) { // Linking a reflector
+			if (0==dest.GetCS(3).compare("M17") || 0==dest.GetCS(3).compare("URF")) { // Linking a reflector
 				switch (mlink.state) {
 				case ELinkState::linked:
 					if (mlink.cs == dest) { // this is heading in to the correct desination
