@@ -21,7 +21,40 @@
 #include <queue>
 #include <string>
 
-#include "HostQueue.h"
+template <class T> class CTQueue
+{
+public:
+	~CTQueue()
+	{
+		Clear();
+	}
+
+	void Push(T item)
+	{
+		queue.push(item);
+	}
+
+	T Pop()
+	{
+		T item = queue.front();
+		queue.pop();
+		return item;
+	}
+
+	bool Empty()
+	{
+		return queue.empty();
+	}
+
+	void Clear()
+	{
+		while (queue.size())
+			queue.pop();
+	}
+
+private:
+	std::queue<T> queue;
+};
 
 template <class T, class U, int N> class CTFrame
 {
