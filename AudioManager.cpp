@@ -54,10 +54,13 @@ bool CAudioManager::Init(CMainWindow *pMain)
 void CAudioManager::RecordMicThread(E_PTT_Type for_who, const std::string &urcall)
 {
 	// wait on audio queue to empty
+	unsigned int count = 0u;
 	while (! audio_is_empty()) {
-		std::cout << "Tailgating detected! Wait on empty audio queue" << std::endl;
 		std::this_thread::sleep_for(std::chrono::milliseconds(20));
+		count++;
 	}
+	if (count > 0)
+		std::cout << "Tailgating detected! Waited " << count*20 << "ms for audio queue to clear." << std::endl;
 
 	auto data = pMainWindow->cfg.GetData();
 	hot_mic = true;
