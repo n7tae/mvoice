@@ -24,12 +24,9 @@
 #include <iomanip>
 #include <fstream>
 #include <cstring>
+#include <gtkmm.h>
 
 #include "M17Gateway.h"
-
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
 
 CM17Gateway::CM17Gateway() : CBase()
 {
@@ -46,7 +43,8 @@ CM17Gateway::~CM17Gateway()
 bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
 	mlink.state = ELinkState::unlinked;
-	std::string path(CFG_DIR);
+	std::string path = Glib::get_user_config_dir() + G_DIR_SEPARATOR_S + "mvoice";
+	path.append(G_DIR_SEPARATOR_S);
 	path.append("qn.db");
 	if (AM2M17.Open("am2m17"))
 		return true;

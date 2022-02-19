@@ -33,10 +33,6 @@
 #include "Utilities.h"
 #include "TemplateClasses.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 static Glib::RefPtr<Gtk::Application> theApp;
 
 CMainWindow::CMainWindow() :
@@ -108,7 +104,8 @@ void CMainWindow::CloseAll()
 
 bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ustring &name)
 {
-	std::string dbname(CFG_DIR);
+	std::string dbname = Glib::get_user_config_dir() + G_DIR_SEPARATOR_S + "mvoice";
+	dbname.append(G_DIR_SEPARATOR_S);
 	dbname.append("qn.db");
 
 	if (M172AM.Open("m172am")) {
@@ -581,7 +578,8 @@ static void ReadM17Json()
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 
-	std::string path(CFG_DIR);
+	std::string path = Glib::get_user_config_dir() + G_DIR_SEPARATOR_S + "mvoice";
+	path.append(G_DIR_SEPARATOR_S);
 	path.append("m17refl.json");
 	std::ofstream ofs(path);
 	if (ofs.is_open()) {
@@ -600,6 +598,9 @@ static void ReadM17Json()
 
 int main (int argc, char **argv)
 {
+        // Define a standard place for config files
+        std::string path = Glib::get_user_config_dir() + G_DIR_SEPARATOR_S + "mvoice";
+        g_mkdir_with_parents(path.c_str(), S_IRWXU);
 	ReadM17Json();
 
 	theApp = Gtk::Application::create(argc, argv, "net.openquad.DVoice");
@@ -608,13 +609,15 @@ int main (int argc, char **argv)
 	Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
 	try
 	{
-		std::string path(CFG_DIR);
-		builder->add_from_file(path + "MVoice.glade");
+	        builder->add_from_file(path + G_DIR_SEPARATOR_S + "MVoice.glade");
 	}
 	catch (const Glib::FileError& ex)
 	{
-		std::cerr << "FileError: " << ex.what() << std::endl;
-		return 1;
+	        if (0 == builder->add_from_resource("/n7tae/mvoice/MVoice.glade"))
+		  {
+		    std::cerr << "FileError: " << ex.what() << std::endl;
+		    return 1;
+		  }
 	}
 	catch (const Glib::MarkupError& ex)
 	{

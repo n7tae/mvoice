@@ -1,14 +1,14 @@
 # Copyright (c) 2019-2021 by Thomas A. Early N7TAE
-CFGDIR = $(HOME)/etc/
+CFGDIR = $(HOME)/.config/mvoice
 BINDIR = $(HOME)/bin/
 
 # choose this if you want debugging help
-#CPPFLAGS=-ggdb -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
+#CPPFLAGS=-ggdb -W -Wall -std=c++11 -Icodec2 `pkg-config --cflags gtkmm-3.0`
 # or, you can choose this for a smaller executable without debugging help
-CPPFLAGS=-W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
+CPPFLAGS=-W -Wall -std=c++11 -Icodec2 `pkg-config --cflags gtkmm-3.0`
 
 EXE = mvoice
-SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp)
+SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp) resources.cpp
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
@@ -17,6 +17,10 @@ $(EXE) : $(OBJS)
 
 %.o : %.cpp MVoice.glade
 	g++ $(CPPFLAGS) -MMD -MD -c $< -o $@
+
+resources.cpp: mvoice.gresources.xml
+	glib-compile-resources mvoice.gresources.xml \
+        --target=resources.cpp --generate-source
 
 .PHONY : clean
 
