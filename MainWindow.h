@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2019-2021 by Thomas A. Early N7TAE
+ *   Copyright (c) 2019-2022 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -18,15 +18,13 @@
 
 #pragma once
 
-#include <gtkmm.h>
-
 #include <regex>
 #include <future>
 
+#include "FLTK-GUI.h"
 #include "Configure.h"
 #include "M17Gateway.h"
 #include "SettingsDlg.h"
-#include "AboutDlg.h"
 #include "AudioManager.h"
 #include "M17RouteMap.h"
 
@@ -39,7 +37,7 @@ public:
 	CConfigure cfg;
 	CAudioManager AudioManager;
 
-	bool Init(const Glib::RefPtr<Gtk::Builder>, const Glib::ustring &);
+	bool Init();
 	void Run();
 	void Receive(bool is_rx);
 	// regular expression for testing stuff
@@ -48,21 +46,21 @@ public:
 private:
 	// classes
 	CSettingsDlg SettingsDlg;
-	CAboutDlg AboutDlg;
 	CM17RouteMap routeMap;
 	CM17Gateway gateM17;
 
 	// widgets
-	Gtk::Window *pWin;
-	Gtk::Button *pQuitButton, *pSettingsButton, *pQuickKeyButton, *pM17DestActionButton, *pM17LinkButton, *pM17UnlinkButton, *pDashboardButton;
-	Gtk::ComboBoxText *pM17DestCallsignComboBox;
-	Gtk::RadioButton *pModuleRadioButton[26];
-	Gtk::Entry *pM17DestCallsignEntry, *pM17DestIPEntry;
-	Gtk::ToggleButton *pEchoTestButton, *pPTTButton;
-	Gtk::MenuItem *pAboutMenuItem;
-	Glib::RefPtr<Gtk::TextBuffer> pLogTextBuffer;
-	Gtk::ScrolledWindow *pScrolledWindow;
-	Gtk::TextView *pLogTextView;
+	Fl_Double_Window *pWin;
+	Fl_Button *pPTTButton, *pEchoTestButton, *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
+	Fl_Input *pDestCallsignInput, *pDestIPInput;
+	Fl_Choice *pDestinationChoice;
+	Fl_Box *pModuleLabel;
+	Fl_Group *pModuleGroup;
+	Fl_Round_Button *pModuleRadioButton[26];
+	Fl_Menu_Bar *pMenuBar;
+	Fl_Menu_Item *pSettingsMenuItem;
+	Fl_Text_Display *pTextDisplay;
+	Fl_Text_Buffer  *pTextBuffer;
 
 	// state data
 	CFGDATA cfgdata;
@@ -96,8 +94,8 @@ private:
 	void on_M17LinkButton_clicked();
 	void on_M17UnlinkButton_clicked();
 	void on_DashboardButton_clicked();
-	bool RelayM172AM(Glib::IOCondition condition);
-	bool GetLogInput(Glib::IOCondition condition);
+	bool RelayM172AM();
+	bool GetLogInput();
 	bool TimeoutProcess();
 
 	bool bDestCS, bDestIP, bTransOK;

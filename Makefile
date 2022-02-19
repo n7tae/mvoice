@@ -1,11 +1,10 @@
-# Copyright (c) 2019-2021 by Thomas A. Early N7TAE
+# Copyright (c) 2019-2022 by Thomas A. Early N7TAE
 CFGDIR = $(HOME)/etc/
 BINDIR = $(HOME)/bin/
 
-# choose this if you want debugging help
-#CPPFLAGS=-ggdb -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
-# or, you can choose this for a smaller executable without debugging help
-CPPFLAGS=-W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `pkg-config --cflags gtkmm-3.0`
+CPPFLAGS = -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `fltk-config --cxxflags`
+# uncomment the next line if you want debugging support
+#CPPFLAGS += =-ggdb
 
 EXE = mvoice
 SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp)
@@ -13,9 +12,9 @@ OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `pkg-config --libs gtkmm-3.0` -lasound -lcurl -pthread
+	g++ -o $@ $^ `fltk-config --ldflags` -lasound -lcurl -pthread
 
-%.o : %.cpp MVoice.glade
+%.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -MD -c $< -o $@
 
 .PHONY : clean

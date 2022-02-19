@@ -29,7 +29,6 @@
 #include <chrono>
 
 #include "MainWindow.h"
-#include "WaitCursor.h"
 #include "Utilities.h"
 #include "TemplateClasses.h"
 
@@ -37,12 +36,9 @@
 #define CFG_DIR "/tmp/"
 #endif
 
-static Glib::RefPtr<Gtk::Application> theApp;
-
 CMainWindow::CMainWindow() :
 	pWin(nullptr),
-	pQuitButton(nullptr),
-	pSettingsButton(nullptr),
+	pSettingsMenuItem(nullptr),
 	bDestCS(false),
 	bDestIP(false),
 	bTransOK(true)
@@ -76,28 +72,28 @@ void CMainWindow::SetState()
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 
 	// set up the destination combo box
-	const auto current = pM17DestCallsignEntry->get_text();
-	pM17DestCallsignComboBox->remove_all();
+	const std::string current(pDestCallsignInput->value());
+	pDestinationChoice->clear();
 	for (const auto &cs : routeMap.GetKeys()) {
 		const auto host = routeMap.Find(cs);
 		if (host) {
 			switch (cfgdata.eNetType) {
 				case EInternetType::ipv6only:
 					if (! host->ip6addr.empty())
-						pM17DestCallsignComboBox->append(cs);
+						pDestinationChoice->add(cs.c_str());
 					break;
 				case EInternetType::ipv4only:
 					if (! host->ip4addr.empty())
-						pM17DestCallsignComboBox->append(cs);
+						pDestinationChoice->add(cs.c_str());
 					break;
 				default:
-					pM17DestCallsignComboBox->append(cs);
+					pDestinationChoice->add(cs.c_str());
 					break;
 			}
 		}
 	}
 	if (routeMap.Find(current))
-		pM17DestCallsignComboBox->set_active_text(current);
+		pDestinationChoice->value(pDestinationChoice->find_index(current.c_str()));
 }
 
 void CMainWindow::CloseAll()
@@ -106,8 +102,15 @@ void CMainWindow::CloseAll()
 	LogInput.Close();
 }
 
-bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ustring &name)
+bool CMainWindow::Init()
 {
+	bool menu__i18n_done = false;
+	Fl_Menu_Item menu_[] = {
+ 		{ "Settings...", 0, 0, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 20, 0 },
+		{ "About...",    0, 0, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 20, 0 },
+		{ 0,             0, 0, 0, 0,                      0, 0,  0, 0 }
+	};
+
 	std::string dbname(CFG_DIR);
 	dbname.append("qn.db");
 
@@ -126,47 +129,61 @@ bool CMainWindow::Init(const Glib::RefPtr<Gtk::Builder> builder, const Glib::ust
 		return true;
 	}
 
- 	builder->get_widget(name, pWin);
-	if (nullptr == pWin) {
-		CloseAll();
-		std::cerr << "Failed to Initialize MainWindow!" << std::endl;
-		return true;
-	}
-
-	//setup our css context and provider
-	Glib::RefPtr<Gtk::CssProvider> css = Gtk::CssProvider::create();
-	Glib::RefPtr<Gtk::StyleContext> style = Gtk::StyleContext::create();
-
-	//load our red clicked style (applies to Gtk::ToggleButton)
-	if (css->load_from_data("button:checked { background: red; }")) {
-		style->add_provider_for_screen(pWin->get_screen(), css, GTK_STYLE_PROVIDER_PRIORITY_USER);
-	}
-
-	if (SettingsDlg.Init(builder, "SettingsDialog", pWin, this)) {
+	if (SettingsDlg.Init()) {
 		CloseAll();
 		return true;
 	}
 
-	if (AboutDlg.Init(builder, pWin)) {
-		CloseAll();
-		return true;
+	pWin = new Fl_Double_Window(900, 640, gettext("mvoice"));
+	pWin->box(FL_BORDER_BOX);
+
+	pTextBuffer = new Fl_Text_Buffer();
+	pTextDisplay = new Fl_Text_Display(16, 30, 872, 314);
+	pTextDisplay->buffer(pTextBuffer);
+
+	pMenuBar = new Fl_Menu_Bar(0, 0, 900, 30);
+	pMenuBar->labelsize(16);
+	if (! menu__i18n_done)
+	{
+		int i = 0;
+		while (menu_[i].label())
+		{
+			menu_[i].label(gettext(menu_[i].label()));
+			i++;
+		}
+		menu__i18n_done = true;
+	}
+	pMenuBar->menu(menu_);
+
+	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, gettext("Destination Callsign:"));
+	pDestCallsignInput->tooltip(gettext("A reflector or user callsign"));
+	pDestCallsignInput->color((Fl_Color)1);
+	pDestCallsignInput->labelsize(20);
+	pDestCallsignInput->textsize(20);
+
+	pDestIPInput = new Fl_Input(599, 360, 324, 30, gettext("Destination IP:"));
+	pDestIPInput->tooltip(gettext("The IP of the reflector or user"));
+	pDestIPInput->color((Fl_Color)1);
+	pDestIPInput->labelsize(20);
+	pDestIPInput->textsize(20);
+
+	pModuleLabel = new Fl_Box(68, 414, 77,25, gettext("Module:"));
+	pModuleLabel->labelsize(20);
+	pModuleGroup = new Fl_Group(150, 400, 640, 60);
+	pModuleGroup->tooltip(gettext("Select a module for the reflector or repeater"));
+	pModuleGroup->labeltype(FL_NO_LABEL);
+	for (int y=0; y<2; y++)
+	{
+		for (int x=0; x<13; x++)
+		{
+			const int i = 13 * y + x;
+			const std::string label(1, 'A'+i);
+			pModuleRadioButton[i] = new Fl_Round_Button(x*50+150, y*40+400, 50, 25, label.c_str());
+			pModuleRadioButton[i]->down_box(FL_ROUND_DOWN_BOX);
+			pModuleRadioButton[i]->labelsize(18);
+		}
 	}
 
-	builder->get_widget("QuitButton", pQuitButton);
-	builder->get_widget("SettingsButton", pSettingsButton);
-	builder->get_widget("EchoTestButton", pEchoTestButton);
-	builder->get_widget("PTTButton", pPTTButton);
-	builder->get_widget("QuickKeyButton", pQuickKeyButton);
-	builder->get_widget("ScrolledWindow", pScrolledWindow);
-	builder->get_widget("LogTextView", pLogTextView);
-	builder->get_widget("AboutMenuItem", pAboutMenuItem);
-	builder->get_widget("M17DestActionButton", pM17DestActionButton);
-	builder->get_widget("M17DestCallsignEntry", pM17DestCallsignEntry);
-	builder->get_widget("M17DestIPEntry", pM17DestIPEntry);
-	builder->get_widget("M17DestCallsignComboBox", pM17DestCallsignComboBox);
-	builder->get_widget("M17LinkButton", pM17LinkButton);
-	builder->get_widget("M17UnlinkButton", pM17UnlinkButton);
-	builder->get_widget("DashboardButton", pDashboardButton);
 	for (unsigned i=0; i<26; i++) {
 		std::string name("RadioButton");
 		name.append(1, 'A'+i);
@@ -602,33 +619,8 @@ int main (int argc, char **argv)
 {
 	ReadM17Json();
 
-	theApp = Gtk::Application::create(argc, argv, "net.openquad.DVoice");
-
-	//Load the GtkBuilder file and instantiate its widgets:
-	Glib::RefPtr<Gtk::Builder> builder = Gtk::Builder::create();
-	try
-	{
-		std::string path(CFG_DIR);
-		builder->add_from_file(path + "MVoice.glade");
-	}
-	catch (const Glib::FileError& ex)
-	{
-		std::cerr << "FileError: " << ex.what() << std::endl;
-		return 1;
-	}
-	catch (const Glib::MarkupError& ex)
-	{
-		std::cerr << "MarkupError: " << ex.what() << std::endl;
-		return 1;
-	}
-	catch (const Gtk::BuilderError& ex)
-	{
-		std::cerr << "BuilderError: " << ex.what() << std::endl;
-		return 1;
-	}
-
 	CMainWindow MainWindow;
-	if (MainWindow.Init(builder, "AppWindow"))
+	if (MainWindow.Init())
 		return 1;
 
 	MainWindow.Run();

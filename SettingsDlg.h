@@ -18,7 +18,7 @@
 
 #pragma once
 
-#include <gtkmm.h>
+#include "FLTK-GUI.h"
 
 #include "Configure.h"
 
@@ -29,7 +29,7 @@ class CSettingsDlg
 public:
     CSettingsDlg();
     ~CSettingsDlg();
-    bool Init(const Glib::RefPtr<Gtk::Builder>, const Glib::ustring &, Gtk::Window *, CMainWindow *);
+    bool Init();
     CFGDATA *Show();	// returns a pointer to the private CFGDATA if okay is pressed, otherwise a nullptr
 
 protected:
