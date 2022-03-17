@@ -20,6 +20,7 @@
 
 #include <regex>
 #include <future>
+#include <atomic>
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -38,8 +39,14 @@ public:
 	CAudioManager AudioManager;
 
 	bool Init();
-	void Run();
+	void Run(int argc, char *argv[]);
 	void Receive(bool is_rx);
+	void NewSettings(CFGDATA *newdata);
+	void IdleProcess();
+
+	// helpers
+	bool ToUpper(std::string &s);
+
 	// regular expression for testing stuff
 	std::regex IPv4RegEx, IPv6RegEx, M17CallRegEx, M17RefRegEx;
 
@@ -51,7 +58,8 @@ private:
 
 	// widgets
 	Fl_Double_Window *pWin;
-	Fl_Button *pPTTButton, *pEchoTestButton, *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
+	Fl_Button *pPTTButton, *pEchoTestButton;
+	Fl_Button *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Choice *pDestinationChoice;
 	Fl_Box *pModuleLabel;
@@ -66,12 +74,14 @@ private:
 	CFGDATA cfgdata;
 
 	// helpers
-	void FixM17DestActionButton();
+	void FixDestActionButton();
 	void SetDestActionButton(const bool sensitive, const char *label);
 	std::future<void> futM17;
+	std::future<void> futReadThread;
 	void SetState();
 	void RunM17();
 	void StopM17();
+	void ReadThread();
 	CUnixDgramReader Gate2AM, Link2AM, M172AM, LogInput;
 	void CloseAll();
 	void insertLogText(const char *line);
@@ -80,23 +90,35 @@ private:
 	void SetDestinationAddress(std::string &cs);
 	void SetModuleSensitive(const std::string &dest);
 
-	// events
-	void on_QuitButton_clicked();
-	void on_SettingsButton_clicked();
-	void on_EchoTestButton_toggled();
-	void on_PTTButton_toggled();
-	void on_QuickKeyButton_clicked();
-	void on_AboutMenuItem_activate();
-	void on_M17DestCallsignEntry_changed();
-	void on_M17DestIPEntry_changed();
-	void on_M17DestCallsignComboBox_changed();
-	void on_M17DestActionButton_clicked();
-	void on_M17LinkButton_clicked();
-	void on_M17UnlinkButton_clicked();
-	void on_DashboardButton_clicked();
-	bool RelayM172AM();
-	bool GetLogInput();
-	bool TimeoutProcess();
+	// Actual Callbacks
+	void Quit();
+	void SettingsDialog();
+	void AboutDialog();
+	void EchoButton();
+	void PTTButton();
+	void QuickKeyButton();
+	void DestCallsignInput();
+	void DestIpInput();
+	void DestChoice();
+	void ActionButton();
+	void LinkButton();
+	void UnlinkButton();
+	void DashboardButton();
+	// Static wrapper for callbacks
+	static void QuitCB(Fl_Widget *p, void *v);
+	static void SettingsDialogCB(Fl_Widget *p, void *v);
+	static void AboutDialogCB(Fl_Widget *p, void *v);
+	static void EchoButtonCB(Fl_Widget *p, void *v);
+	static void PTTButtonCB(Fl_Widget *p, void *v);
+	static void QuickKeyButttonCB(Fl_Widget *, void *);
+	static void DestCallsignInputCB(Fl_Widget *p, void *v);
+	static void DestIPInputCB(Fl_Widget *p, void *v);
+	static void DestChoiceCB(Fl_Widget *p, void *v);
+	static void ActionButtonCB(Fl_Widget *p, void *v);
+	static void LinkButtonCB(Fl_Widget *p, void *v);
+	static void UnlinkButtonCB(Fl_Widget *p, void *v);
+	static void DashboardButtonCB(Fl_Widget *p, void *v);
 
 	bool bDestCS, bDestIP, bTransOK;
+	std::atomic<bool> keep_running;
 };

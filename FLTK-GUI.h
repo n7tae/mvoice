@@ -28,6 +28,7 @@
 #include <FL/Fl_Round_Button.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Button.H>
+#include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Tabs.H>
 
 extern unsigned char menu__i18n_done;

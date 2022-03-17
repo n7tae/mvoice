@@ -18,8 +18,9 @@
 
 #pragma once
 
-#include "FLTK-GUI.h"
+#include <map>
 
+#include "FLTK-GUI.h"
 #include "Configure.h"
 
 class CMainWindow;
@@ -29,21 +30,11 @@ class CSettingsDlg
 public:
     CSettingsDlg();
     ~CSettingsDlg();
-    bool Init();
-    CFGDATA *Show();	// returns a pointer to the private CFGDATA if okay is pressed, otherwise a nullptr
+    bool Init(Fl_Double_Window *pWin, CMainWindow *pMain);
+    void Show();
 
-protected:
-	class AudioColumns : public Gtk::ListStore::ColumnRecord
-	{
-	public:
-		AudioColumns() { add(short_name); add(name); add(desc); };
-		Gtk::TreeModelColumn<Glib::ustring> short_name;
-		Gtk::TreeModelColumn<Glib::ustring> name;
-		Gtk::TreeModelColumn<Glib::ustring> desc;
-	};
-	AudioColumns audio_columns;
-	Glib::RefPtr<Gtk::ListStore> refAudioInListModel, refAudioOutListModel;
 private:
+	std::map<std::string, std::pair<std::string, std::string>> AudioInMap, AudioOutMap;
 	// persistance
 	void SaveWidgetStates(CFGDATA &d);
 	void SetWidgetStates(const CFGDATA &d);
@@ -53,18 +44,29 @@ private:
 	bool bM17Source;
 	// Windows
 	CMainWindow *pMainWindow;
-    Gtk::Dialog *pDlg;
+    Fl_Double_Window *pDlg;
 	// widgets
-	Gtk::Button *pOkayButton, *pAudioRescanButton;
-	Gtk::ComboBox *pAudioInputComboBox, *pAudioOutputComboBox;
-	Gtk::Entry *pM17SourceCallsignEntry;
-	Gtk::RadioButton *pM17VoiceOnlyRadioButton, *pM17VoiceDataRadioButton;
-	Gtk::RadioButton *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
-	Gtk::Label *pInputDescLabel, *pOutputDescLabel;
-	Gtk::Notebook *pSettingsNotebook;
-	// events
-	void on_M17SourceCallsignEntry_changed();
-	void on_AudioRescanButton_clicked();
-	void on_AudioInputComboBox_changed();
-	void on_AudioOutputComboBox_changed();
+	Fl_Tabs *pTabs;
+	Fl_Button *pOkayButton, *pCancelButton, *pAudioRescanButton;
+	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice;
+	Fl_Input *pSourceCallsignInput;
+	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pGUIGroup, *pCodecGroup;
+	Fl_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
+	Fl_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
+	Fl_Round_Button *pPTTRadioButton, *pTTTRadioButton;
+	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;
+	// Callback wrapper
+	static void SourceCallsignInputCB(Fl_Widget *p, void *v);
+	static void AudioRescanButtonCB(Fl_Widget *p, void *v);
+	static void AudioInputChoiceCB(Fl_Widget *p, void *v);
+	static void AudioOutputChoiceCB(Fl_Widget *p, void *v);
+	static void OkayButtonCB(Fl_Widget *p, void *v);
+	static void CancelButtonCB(Fl_Widget *p, void *v);
+	// the actual callbacks
+	void SourceCallsignInput();
+	void AudioRescanButton();
+	void AudioInputChoice();
+	void AudioOutputChoice();
+	void OkayButton();
+	void CancelButton();
 };

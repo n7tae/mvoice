@@ -27,6 +27,7 @@
 #include <fstream>
 #include <thread>
 #include <chrono>
+#include <cmath>
 
 #include "MainWindow.h"
 #include "Utilities.h"
@@ -35,6 +36,12 @@
 #ifndef CFG_DIR
 #define CFG_DIR "/tmp/"
 #endif
+
+static void MyIdleProcess(void *p)
+{
+	CMainWindow *pMainWindow = (CMainWindow *)p;
+	pMainWindow->IdleProcess();
+}
 
 CMainWindow::CMainWindow() :
 	pWin(nullptr),
@@ -53,6 +60,11 @@ CMainWindow::CMainWindow() :
 
 CMainWindow::~CMainWindow()
 {
+	if (futReadThread.valid())
+	{
+		keep_running = false;
+		futReadThread.get();
+	}
 	StopM17();
 	if (pWin)
 		delete pWin;
@@ -104,11 +116,14 @@ void CMainWindow::CloseAll()
 
 bool CMainWindow::Init()
 {
+	keep_running = true;
+	futReadThread = std::async(std::launch::async, &CMainWindow::ReadThread, this);
+
 	bool menu__i18n_done = false;
 	Fl_Menu_Item menu_[] = {
- 		{ "Settings...", 0, 0, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 20, 0 },
-		{ "About...",    0, 0, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 20, 0 },
-		{ 0,             0, 0, 0, 0,                      0, 0,  0, 0 }
+ 		{ "&Settings...", FL_CONTROL+'s', &CMainWindow::SettingsDialogCB, 0, 0, (uchar)FL_NORMAL_LABEL, 0, 20, 0 },
+		{ "&About...",    FL_CONTROL+'a', &CMainWindow::AboutDialogCB,    0, 0, (uchar)FL_NORMAL_LABEL, 0, 20, 0 },
+		{ 0,              0,              0,                              0, 0, 0,                      0,  0, 0 }
 	};
 
 	std::string dbname(CFG_DIR);
@@ -129,17 +144,21 @@ bool CMainWindow::Init()
 		return true;
 	}
 
-	if (SettingsDlg.Init()) {
+	pWin = new Fl_Double_Window(900, 640, gettext("mvoice"));
+	pWin->box(FL_BORDER_BOX);
+	pWin->callback(&CMainWindow::QuitCB, this);
+	Fl::visual(FL_DOUBLE|FL_INDEX);
+
+	if (SettingsDlg.Init(pWin, this)) {
 		CloseAll();
 		return true;
 	}
 
-	pWin = new Fl_Double_Window(900, 640, gettext("mvoice"));
-	pWin->box(FL_BORDER_BOX);
 
 	pTextBuffer = new Fl_Text_Buffer();
 	pTextDisplay = new Fl_Text_Display(16, 30, 872, 314);
 	pTextDisplay->buffer(pTextBuffer);
+	pTextDisplay->resizable(pTextDisplay);
 
 	pMenuBar = new Fl_Menu_Bar(0, 0, 900, 30);
 	pMenuBar->labelsize(16);
@@ -160,18 +179,21 @@ bool CMainWindow::Init()
 	pDestCallsignInput->color((Fl_Color)1);
 	pDestCallsignInput->labelsize(20);
 	pDestCallsignInput->textsize(20);
+	pDestCallsignInput->callback(&CMainWindow::DestCallsignInputCB, this);
 
 	pDestIPInput = new Fl_Input(599, 360, 324, 30, gettext("Destination IP:"));
 	pDestIPInput->tooltip(gettext("The IP of the reflector or user"));
 	pDestIPInput->color((Fl_Color)1);
 	pDestIPInput->labelsize(20);
 	pDestIPInput->textsize(20);
+	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
 
 	pModuleLabel = new Fl_Box(68, 414, 77,25, gettext("Module:"));
 	pModuleLabel->labelsize(20);
 	pModuleGroup = new Fl_Group(150, 400, 640, 60);
 	pModuleGroup->tooltip(gettext("Select a module for the reflector or repeater"));
 	pModuleGroup->labeltype(FL_NO_LABEL);
+	pModuleGroup->begin();
 	for (int y=0; y<2; y++)
 	{
 		for (int x=0; x<13; x++)
@@ -183,52 +205,84 @@ bool CMainWindow::Init()
 			pModuleRadioButton[i]->labelsize(18);
 		}
 	}
+	pModuleGroup->end();
+	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, gettext("Destination:"));
+	pDestinationChoice->tooltip(gettext("Select a saved contact (reflector or user)"));
+	pDestinationChoice->down_box(FL_BORDER_BOX);
+	pDestinationChoice->labelsize(20);
+	pDestinationChoice->textsize(20);
+	pDestinationChoice->callback(&CMainWindow::DestChoiceCB, this);
 
-	for (unsigned i=0; i<26; i++) {
-		std::string name("RadioButton");
-		name.append(1, 'A'+i);
-		builder->get_widget(name.c_str(), pModuleRadioButton[i]);
-	}
+	pActionButton = new Fl_Button(455, 472, 80, 30, gettext("Action"));
+	pActionButton->tooltip(gettext("Update or delete an existing contact,,or save a new contact"));
+	pActionButton->labelsize(20);
+	pActionButton->deactivate();
+	pActionButton->callback(&CMainWindow::ActionButtonCB, this);
 
-	pLogTextBuffer = pLogTextView->get_buffer();
+	pDashboardButton = new Fl_Button(600, 474, 201, 30, gettext("Open Dashboard"));
+	pDashboardButton->tooltip(gettext("Open a reflector dashboard, if available"));
+	pDashboardButton->labelsize(20);
+	pDashboardButton->deactivate();
+	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
 
-	// events
-	pM17DestCallsignEntry->signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::on_M17DestCallsignEntry_changed));
-	pM17DestIPEntry->signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::on_M17DestIPEntry_changed));
-	pM17DestCallsignComboBox->signal_changed().connect(sigc::mem_fun(*this, &CMainWindow::on_M17DestCallsignComboBox_changed));
-	pM17DestActionButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_M17DestActionButton_clicked));
-	pM17LinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_M17LinkButton_clicked));
-	pM17UnlinkButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_M17UnlinkButton_clicked));
-	pSettingsButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_SettingsButton_clicked));
-	pDashboardButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_DashboardButton_clicked));
-	pQuitButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_QuitButton_clicked));
-	pEchoTestButton->signal_toggled().connect(sigc::mem_fun(*this, &CMainWindow::on_EchoTestButton_toggled));
-	pPTTButton->signal_toggled().connect(sigc::mem_fun(*this, &CMainWindow::on_PTTButton_toggled));
-	pQuickKeyButton->signal_clicked().connect(sigc::mem_fun(*this, &CMainWindow::on_QuickKeyButton_clicked));
-	pAboutMenuItem->signal_activate().connect(sigc::mem_fun(*this, &CMainWindow::on_AboutMenuItem_activate));
+	pLinkButton = new Fl_Button(358, 514, 80, 30, gettext("Link"));
+	pLinkButton->tooltip(gettext("Connect to an M17 Reflector"));
+	pLinkButton->labelsize(20);
+	pLinkButton->deactivate();
+	pLinkButton->callback(&CMainWindow::LinkButtonCB, this);
+
+	pUnlinkButton = new Fl_Button(456, 514, 80, 30, gettext("Unlink"));
+	pUnlinkButton->tooltip(gettext("Disconnected from a reflector"));
+	pUnlinkButton->labelsize(20);
+	pUnlinkButton->deactivate();
+	pUnlinkButton->callback(&CMainWindow::UnlinkButtonCB, this);
+
+	pEchoTestButton = new Fl_Light_Button(50, 574, 144, 40, gettext("Echo Test"));
+	pEchoTestButton->tooltip(gettext("Push to record a test that will be played back"));
+	pEchoTestButton->labelsize(20);
+	pEchoTestButton->type(FL_TOGGLE_BUTTON);
+	pEchoTestButton->selection_color(FL_YELLOW);
+	pEchoTestButton->callback(&CMainWindow::EchoButtonCB, this);
+
+	pPTTButton = new Fl_Light_Button(250, 557, 400, 60, gettext("PTT"));
+	pPTTButton->tooltip(gettext("Push to talk"));
+	pPTTButton->labelsize(22);
+	pPTTButton->deactivate();
+	pPTTButton->type(FL_TOGGLE_BUTTON);
+	pPTTButton->selection_color(FL_YELLOW);
+	pPTTButton->callback(&CMainWindow::PTTButtonCB, this);
+
+	pQuickKeyButton = new Fl_Button(700, 574, 150, 40, gettext("Quick Key"));
+	pQuickKeyButton->tooltip(gettext("Send a short, silent voice stream"));
+	pQuickKeyButton->labelsize(20);
+	pQuickKeyButton->deactivate();
+	pQuickKeyButton->callback(QuickKeyButttonCB, this);
+
+	pWin->end();
 
 	routeMap.ReadAll();
 	Receive(false);
 	SetState();
-	on_M17DestCallsignComboBox_changed();
+	DestChoice();
 
-	// i/o events
-	Glib::signal_io().connect(sigc::mem_fun(*this, &CMainWindow::RelayM172AM),  M172AM.GetFD(), Glib::IO_IN);
-	Glib::signal_io().connect(sigc::mem_fun(*this, &CMainWindow::GetLogInput), LogInput.GetFD(), Glib::IO_IN);
 	// idle processing
-	Glib::signal_timeout().connect(sigc::mem_fun(*this, &CMainWindow::TimeoutProcess), 1000);
+	Fl::add_idle(MyIdleProcess, this);
 
 	return false;
 }
 
-void CMainWindow::Run()
+void CMainWindow::Run(int argc, char *argv[])
 {
-	theApp->run(*pWin);
+	pWin->show(argc, argv);
 }
 
-void CMainWindow::on_QuitButton_clicked()
+void CMainWindow::QuitCB(Fl_Widget *, void *This)
 {
-	CWaitCursor wait;
+	((CMainWindow *)This)->Quit();
+}
+
+void CMainWindow::Quit()
+{
 	AudioManager.KeyOff();
 	StopM17();
 
@@ -236,16 +290,29 @@ void CMainWindow::on_QuitButton_clicked()
 		pWin->hide();
 }
 
-void CMainWindow::on_AboutMenuItem_activate()
+void CMainWindow::AboutDialogCB(Fl_Widget *, void *This)
 {
-	AboutDlg.Show();
+	((CMainWindow *)This)->AboutDialog();
 }
 
-void CMainWindow::on_SettingsButton_clicked()
+void CMainWindow::AboutDialog()
 {
-	auto newdata = SettingsDlg.Show();
+
+}
+
+void CMainWindow::SettingsDialogCB(Fl_Widget *, void *This)
+{
+	((CMainWindow *)This)->SettingsDialog();
+}
+
+void CMainWindow::SettingsDialog()
+{
+	SettingsDlg.Show();
+}
+
+void CMainWindow::NewSettings(CFGDATA *newdata)
+{
 	if (newdata) {	// the user clicked okay so if anything changed. We'll shut things down and let SetState start things up again
-		CWaitCursor wait;
 		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->eNetType!=cfgdata.eNetType) {
 			StopM17();
 		}
@@ -254,53 +321,69 @@ void CMainWindow::on_SettingsButton_clicked()
 	SetState();
 }
 
-void CMainWindow::on_M17DestCallsignComboBox_changed()
+void CMainWindow::DestChoiceCB(Fl_Widget *, void *This)
 {
-	auto cs = pM17DestCallsignComboBox->get_active_text();
-	pM17DestCallsignEntry->set_text(cs);
-	auto host = routeMap.Find(cs.c_str());
-	if (host) {
-		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
-			// if we're not in IPv4-only mode && there is an IPv6 address for this host
-			pM17DestIPEntry->set_text(host->ip6addr);
-		else
-			pM17DestIPEntry->set_text(host->ip4addr);
+	((CMainWindow *)This)->DestChoice();
+}
+
+void CMainWindow::DestChoice()
+{
+	auto i = pDestinationChoice->value();
+	if (i >= 0)
+	{
+		auto cs = pDestinationChoice->text(i);
+		pDestCallsignInput->value(cs);
+		auto host = routeMap.Find(cs);
+		if (host) {
+			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
+				// if we're not in IPv4-only mode && there is an IPv6 address for this host
+				pDestIPInput->value(host->ip6addr.c_str());
+			else
+				pDestIPInput->value(host->ip4addr.c_str());
+		}
 	}
 }
 
-void CMainWindow::on_M17DestActionButton_clicked()
+void CMainWindow::ActionButtonCB(Fl_Widget *, void *This)
 {
-	auto label = pM17DestActionButton->get_label();
-	auto cs = pM17DestCallsignEntry->get_text();
+	((CMainWindow *)This)->ActionButton();
+}
+
+void CMainWindow::ActionButton()
+{
+	const std::string label(pActionButton->label());
+	auto cs = pDestCallsignInput->value();
 	if (0 == label.compare("Save")) {
-		std::string a = pM17DestIPEntry->get_text();
+		const std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
 			routeMap.Update(cs, "", a, "");
 		else
 			routeMap.Update(cs, "", "", a);
-		pM17DestCallsignComboBox->remove_all();
+		pDestinationChoice->clear();
 		for (const auto &member : routeMap.GetKeys())
-			pM17DestCallsignComboBox->append(member);
-		pM17DestCallsignComboBox->set_active_text(cs);
+			pDestinationChoice->add(member.c_str());
+		auto i = pDestinationChoice->find_index(cs);
+		if (i >= 0)
+			pDestinationChoice->value(i);
 	} else if (0 == label.compare("Delete")) {
-		int index = pM17DestCallsignComboBox->get_active_row_number();
-		pM17DestCallsignComboBox->remove_text(index);
+		auto index = pDestinationChoice->value();
+		pDestinationChoice->remove(index);
 		routeMap.Erase(cs);
 		if (index >= int(routeMap.Size()))
 			index--;
 		if (index < 0) {
-			pM17DestCallsignComboBox->unset_active();
-			pM17DestIPEntry->set_text("");
+			pDestinationChoice->value(-1);
+			pDestIPInput->value("");
 		} else
-			pM17DestCallsignComboBox->set_active(index);
+			pDestinationChoice->value(index);
 	} else if (0 == label.compare("Update")) {
-		std::string a = pM17DestIPEntry->get_text();
+		std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
 			routeMap.Update(cs, "", a, "");
 		else
 			routeMap.Update(cs, "", "", a);
 	}
-	FixM17DestActionButton();
+	FixDestActionButton();
 	routeMap.Save();
 }
 
@@ -316,9 +399,14 @@ void CMainWindow::AudioSummary(const char *title)
 		insertLogText(line);
 }
 
-void CMainWindow::on_EchoTestButton_toggled()
+void CMainWindow::EchoButtonCB(Fl_Widget *, void *This)
 {
-	if (pEchoTestButton->get_active()) {
+	((CMainWindow *)This)->EchoButton();
+}
+
+void CMainWindow::EchoButton()
+{
+	if (pEchoTestButton->value()) {
 		// record the mic to a queue
 		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
 	} else {
@@ -331,18 +419,30 @@ void CMainWindow::on_EchoTestButton_toggled()
 void CMainWindow::Receive(bool is_rx)
 {
 	bTransOK = ! is_rx;
-	bool ppt_okay = bTransOK && bDestCS && bDestIP;
-	pPTTButton->set_sensitive(ppt_okay);
-	pEchoTestButton->set_sensitive(bTransOK);
-	pQuickKeyButton->set_sensitive(ppt_okay);
+	if (bTransOK && bDestCS && bDestIP)
+	{
+		pPTTButton->activate();
+		pQuickKeyButton->activate();
+	}
+	else
+	{
+		pPTTButton->deactivate();
+		pQuickKeyButton->deactivate();
+	}
+
+	if (bTransOK)
+		pEchoTestButton->activate();
+	else
+		pEchoTestButton->deactivate();
+
 	if (bTransOK && AudioManager.volStats.count)
 		AudioSummary("RX Audio");
 }
 
 void CMainWindow::SetDestinationAddress(std::string &cs)
 {
-	cs.assign(pM17DestCallsignEntry->get_text().c_str());
-	const std::string ip(pM17DestIPEntry->get_text().c_str());
+	cs.assign(pDestCallsignInput->value());
+	const std::string ip(pDestIPInput->value());
 	uint16_t port = 17000;	// we need to get the port from the routeMap in case it's not 17000
 	auto host = routeMap.Find(cs);
 	if (host)
@@ -354,9 +454,14 @@ void CMainWindow::SetDestinationAddress(std::string &cs)
 	}
 }
 
-void CMainWindow::on_PTTButton_toggled()
+void CMainWindow::PTTButtonCB(Fl_Widget *, void *This)
 {
-	if (pPTTButton->get_active()) {
+	((CMainWindow *)This)->PTTButton();
+}
+
+void CMainWindow::PTTButton()
+{
+	if (pPTTButton->value()) {
 		std::string cs;
 		SetDestinationAddress(cs);
 		AudioManager.RecordMicThread(E_PTT_Type::m17, cs);
@@ -366,92 +471,149 @@ void CMainWindow::on_PTTButton_toggled()
 	}
 }
 
-void CMainWindow::on_QuickKeyButton_clicked()
+void CMainWindow::QuickKeyButton()
 {
 	std::string cs;
 	SetDestinationAddress(cs);
 	AudioManager.QuickKey(cs, cfgdata.sM17SourceCallsign);
 }
 
-bool CMainWindow::RelayM172AM(Glib::IOCondition condition)
+void CMainWindow::QuickKeyButttonCB(Fl_Widget *, void *This)
 {
-	if (condition & Glib::IO_IN) {
-		SM17Frame m17;
-		M172AM.Read(m17.magic, sizeof(SM17Frame));
-		if (0 == memcmp(m17.magic, "M17 ", 4))
-			AudioManager.M17_2AudioMgr(m17);
-	} else {
-		std::cerr << "RelayM17_2AM not a read event!" << std::endl;
+	((CMainWindow *)This)->QuickKeyButton();
+}
+
+void CMainWindow::ReadThread()
+{
+	while (keep_running)
+	{
+		auto gatefd = M172AM.GetFD();
+		auto logfd  = LogInput.GetFD();
+		auto fdmax = gatefd;
+		if (logfd > fdmax)
+			fdmax = logfd;
+		fd_set fdset;
+		FD_ZERO(&fdset);
+		FD_SET(gatefd, &fdset);
+		FD_SET(logfd, &fdset);
+		timeval tv;
+		tv.tv_sec = 0;
+		tv.tv_usec = 100000;	// wait up to 100 ms for something
+
+		auto ret = select(fdmax+1, &fdset, 0, 0, &tv);
+		if (ret < 0)
+		{
+			std::cout << "M17Relay select() error - " << strerror(errno) << std::endl;
+		}
+		else if (ret > 0)
+		{
+			if (FD_ISSET(gatefd, &fdset))
+			{
+				SM17Frame frame;
+				M172AM.Read(frame.magic, sizeof(SM17Frame));
+				if (0 == memcmp(frame.magic, "M17 ", 4))
+					AudioManager.M17_2AudioMgr(frame);
+			}
+			if (FD_ISSET(logfd, &fdset))
+			{
+				char line[256] = { 0 };
+				LogInput.Read(line, 256);
+				insertLogText(line);
+			}
+		}
 	}
-	return true;
 }
 
 void CMainWindow::insertLogText(const char *line)
 {
-	static auto it = pLogTextBuffer->begin();
-	if (strlen(line)) {
-		it = pLogTextBuffer->insert(it, line);
-		pLogTextView->scroll_to(it, 0.0, 0.0, 0.0);
-	}
+	pTextBuffer->append(line);
 }
 
-bool CMainWindow::GetLogInput(Glib::IOCondition condition)
-{
-	if (condition & Glib::IO_IN) {
-		char line[256] = { 0 };
-		LogInput.Read(line, 256);
-		insertLogText(line);
-	} else {
-		std::cerr << "GetLogInput is not a read event!" << std::endl;
-	}
-	return true;
-}
-
-bool CMainWindow::TimeoutProcess()
+void CMainWindow::IdleProcess()
 {
 	if (ELinkState::linked != gateM17.GetLinkState()) {
-		pM17UnlinkButton->set_sensitive(false);
-		std::string s(pM17DestCallsignEntry->get_text().c_str());
-		pM17LinkButton->set_sensitive(std::regex_match(s, M17RefRegEx) && bDestIP);
+		pUnlinkButton->deactivate();
+		std::string s(pDestCallsignInput->value());
+		if (std::regex_match(s, M17RefRegEx) && bDestIP)
+			pLinkButton->activate();
+		else
+			pLinkButton->deactivate();
 	} else {
-		pM17LinkButton->set_sensitive(false);
-		pM17UnlinkButton->set_sensitive(true && bDestIP);
+		pLinkButton->deactivate();
+		if (bDestIP)
+			pUnlinkButton->activate();
+		else
+			pUnlinkButton->deactivate();
 	}
-	return true;
 }
 
 void CMainWindow::SetModuleSensitive(const std::string &dest)
 {
 	const bool state = (0==dest.compare(0, 4, "M17-") || 0==dest.compare(0, 3, "URF")) ? true : false;
 	for (unsigned i=0; i<26; i++)
-		pModuleRadioButton[i]->set_sensitive(state);
+	{
+		if (state)
+			pModuleRadioButton[i]->activate();
+		else
+			pModuleRadioButton[i]->deactivate();
+	}
 }
 
-void CMainWindow::on_M17DestCallsignEntry_changed()
+bool CMainWindow::ToUpper(std::string &s)
 {
-	auto pos = pM17DestCallsignEntry->get_position();
-	auto s = pM17DestCallsignEntry->get_text().uppercase();
+	bool rval = false;
+	for (auto it=s.begin(); it!=s.end(); it++)
+	{
+		if (islower(*it))
+		{
+			rval = true;
+			*it = toupper(*it);
+		}
+	}
+	return rval;
+}
+
+void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
+{
+	((CMainWindow *)This)->DestCallsignInput();
+}
+
+void CMainWindow::DestCallsignInput()
+{
+	auto pos = pDestCallsignInput->position();
+	std::string s(pDestCallsignInput->value());
+	if (ToUpper(s))
+	{
+		pDestCallsignInput->value(s.c_str());
+		pDestCallsignInput->position(pos);
+	}
 	SetModuleSensitive(s.c_str());
-	pM17DestCallsignEntry->set_text(s);
-	pM17DestCallsignEntry->set_position(pos);
 	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
 	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
 	const auto host = routeMap.Find(s);
 	if (host) {
 		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
-			pM17DestIPEntry->set_text(host->ip6addr);
+			pDestIPInput->value(host->ip6addr.c_str());
 		else if (!host->ip4addr.empty())
-			pM17DestIPEntry->set_text(host->ip4addr);
+			pDestIPInput->value(host->ip4addr.c_str());
 	}
-	pDashboardButton->set_sensitive(is_valid_reflector && host && !host->url.empty());
-	pM17DestCallsignEntry->set_icon_from_icon_name(bDestCS ? "gtk-ok" : "gtk-cancel");
-	FixM17DestActionButton();
+	if (is_valid_reflector && host && !host->url.empty())
+		pDashboardButton->activate();
+	else
+		pDashboardButton->deactivate();
+	pDestCallsignInput->color(bDestCS ? 2 : 1);
+	FixDestActionButton();
 }
 
-void CMainWindow::on_M17DestIPEntry_changed()
+void CMainWindow::DestIPInputCB(Fl_Widget *, void *This)
 {
-	auto bIP4 = std::regex_match(pM17DestIPEntry->get_text().c_str(), IPv4RegEx);
-	auto bIP6 = std::regex_match(pM17DestIPEntry->get_text().c_str(), IPv6RegEx);
+	((CMainWindow *)This)->DestIpInput();
+}
+
+void CMainWindow::DestIpInput()
+{
+	auto bIP4 = std::regex_match(pDestIPInput->value(), IPv4RegEx);
+	auto bIP6 = std::regex_match(pDestIPInput->value(), IPv6RegEx);
 	switch (cfgdata.eNetType) {
 		case EInternetType::ipv4only:
 			bDestIP = bIP4;
@@ -462,17 +624,25 @@ void CMainWindow::on_M17DestIPEntry_changed()
 		default:
 			bDestIP = (bIP4 || bIP6);
 	}
-	pM17DestIPEntry->set_icon_from_icon_name(bDestIP ? "gtk-ok" : "gtk-cancel");
-	FixM17DestActionButton();
+	pDestIPInput->color(bDestIP ? 2 : 1);
+	FixDestActionButton();
 }
 
 void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
 {
-	pM17DestActionButton->set_sensitive(sensitive);
-	pM17DestActionButton->set_label(label);
+	if (sensitive)
+		pActionButton->activate();
+	else
+		pActionButton->deactivate();
+	pActionButton->label(label);
 }
 
-void CMainWindow::on_M17LinkButton_clicked()
+void CMainWindow::LinkButtonCB(Fl_Widget *, void *This)
+{
+	((CMainWindow *)This)->LinkButton();
+}
+
+void CMainWindow::LinkButton()
 {
 	while (cfgdata.sM17SourceCallsign.empty()) {
 		insertLogText("ERROR: Your system is not yet configured!\n");
@@ -487,15 +657,25 @@ void CMainWindow::on_M17LinkButton_clicked()
 	AudioManager.Link(cmd);
 }
 
-void CMainWindow::on_M17UnlinkButton_clicked()
+void CMainWindow::UnlinkButtonCB(Fl_Widget *, void *This)
+{
+	((CMainWindow *)This)->UnlinkButton();
+}
+
+void CMainWindow::UnlinkButton()
 {
 	std::string cmd("M17U");
 	AudioManager.Link(cmd);
 }
 
-void CMainWindow::on_DashboardButton_clicked()
+void CMainWindow::DashboardButtonCB(Fl_Widget *, void *This)
 {
-	auto host = routeMap.Find(pM17DestCallsignEntry->get_text().c_str());
+	((CMainWindow *)This)->DashboardButton();
+}
+
+void CMainWindow::DashboardButton()
+{
+	auto host = routeMap.Find(pDestCallsignInput->value());
 	if (host && ! host->url.empty()) {
 		std::string opencmd("xdg-open ");
 		opencmd.append(host->url);
@@ -503,10 +683,10 @@ void CMainWindow::on_DashboardButton_clicked()
 	}
 }
 
-void CMainWindow::FixM17DestActionButton()
+void CMainWindow::FixDestActionButton()
 {
-	const std::string cs(pM17DestCallsignEntry->get_text().c_str());
-	const std::string ip(pM17DestIPEntry->get_text().c_str());
+	const std::string cs(pDestCallsignInput->value());
+	const std::string ip(pDestIPInput->value());
 	if (bDestCS) {	// is the destination c/s valid?
 		auto host = routeMap.Find(cs);	// look for it
 		if (host) {
@@ -518,7 +698,9 @@ void CMainWindow::FixM17DestActionButton()
 				} else {
 					// perfect match
 					SetDestActionButton(true, "Delete");
-					pM17DestCallsignComboBox->set_active_text(cs);
+					auto index = pDestinationChoice->find_index(cs.c_str());
+					if (index >= 0)
+						pDestinationChoice->value(index);
 				}
 			} else {
 				SetDestActionButton(false, "");
@@ -534,13 +716,23 @@ void CMainWindow::FixM17DestActionButton()
 	} else {
 		SetDestActionButton(false, "");
 	}
-	bool all = (bTransOK && bDestCS && bDestIP);
-	pPTTButton->set_sensitive(all);
-	pQuickKeyButton->set_sensitive(all);
+	if (bTransOK && bDestCS && bDestIP)
+	{
+		pPTTButton->activate();
+		pQuickKeyButton->activate();
+	}
+	else
+	{
+		pPTTButton->deactivate();
+		pQuickKeyButton->deactivate();
+	}
 }
 
 void CMainWindow::StopM17()
 {
+	keep_running = false;
+	if (futReadThread.valid())
+		futReadThread.get();
 	if (gateM17.keep_running) {
 		gateM17.keep_running = false;
 		futM17.get();
@@ -550,7 +742,7 @@ void CMainWindow::StopM17()
 char CMainWindow::GetDestinationModule()
 {
 	for (unsigned i=0; i<26; i++) {
-		if (pModuleRadioButton[i]->get_active())
+		if (pModuleRadioButton[i]->value())
 			return 'A' + i;
 	}
 	return '!';	// ERROR!
@@ -623,7 +815,7 @@ int main (int argc, char **argv)
 	if (MainWindow.Init())
 		return 1;
 
-	MainWindow.Run();
-
+	MainWindow.Run(argc, argv);
+	Fl::run();
 	return 0;
 }
