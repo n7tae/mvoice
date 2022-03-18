@@ -30,7 +30,7 @@ class CSettingsDlg
 public:
     CSettingsDlg();
     ~CSettingsDlg();
-    bool Init(Fl_Double_Window *pWin, CMainWindow *pMain);
+    bool Init(CMainWindow *pMain);
     void Show();
 
 private:

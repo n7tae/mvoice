@@ -31,7 +31,8 @@ using CFGDATA = struct CFGData_struct {
 	char cModule;
 };
 
-class CConfigure {
+class CConfigure
+{
 public:
 	CConfigure() { ReadData(); }
 

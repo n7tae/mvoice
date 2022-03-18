@@ -44,12 +44,13 @@ void CConfigure::SetDefaultValues()
 
 void CConfigure::ReadData()
 {
+	SetDefaultValues();
 	std::string path(CFG_DIR);
 	path.append("mvoice.cfg");
 
 	std::ifstream cfg(path.c_str(), std::ifstream::in);
 	if (! cfg.is_open()) {
-		SetDefaultValues();
+		std::cerr << path << "was not found!" << std::endl;
 		return;
 	}
 

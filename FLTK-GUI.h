@@ -25,11 +25,8 @@
 #include <FL/Fl_Input.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Group.H>
-#include <FL/Fl_Round_Button.H>
+#include <FL/Fl_Radio_Round_Button.H>
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Tabs.H>
-
-extern unsigned char menu__i18n_done;
-extern Fl_Menu_Item menu_[];

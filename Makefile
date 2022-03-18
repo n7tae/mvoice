@@ -4,7 +4,7 @@ BINDIR = $(HOME)/bin/
 
 CPPFLAGS = -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" `fltk-config --cxxflags`
 # uncomment the next line if you want debugging support
-#CPPFLAGS += =-ggdb
+#CPPFLAGS += -ggdb
 
 EXE = mvoice
 SRCS = $(wildcard *.cpp) $(wildcard codec2/*.cpp)
@@ -38,6 +38,3 @@ uninstall :
 	/bin/rm -f $(CFGDIR)mvoice.cfg
 	/bin/rm -f $(CFGDIR)m17refl.json
 	/bin/rm -f $(BINDIR)$(EXE)
-
-#interactive :
-#	GTK_DEBUG=interactive ./$(EXE)
