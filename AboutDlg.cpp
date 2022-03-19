@@ -16,19 +16,43 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#pragma once
+#include <string>
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Text_Display.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Tabs.H>
-#include <FL/Fl_PNG_Image.H>
-#include <FL/fl_ask.H>
+#include "AboutDlg.h"
+
+CAboutDlg::CAboutDlg() {}
+
+CAboutDlg::~CAboutDlg() {}
+
+bool CAboutDlg::Init(Fl_PNG_Image *pIcon)
+{
+	pDlg = new Fl_Double_Window(400, 200, "About MVoice");
+
+	pIconBox = new Fl_Box(176, 30, 48, 48);
+	pIconBox->image(pIcon);
+
+	pVersionBox = new Fl_Box(0, 100, 400, 30, "MVoice Version #220319");
+
+	pCopyrightBox = new Fl_Box(0, 150, 400, 30, "Copyright (c) 2022 by Thomas A. Early N7TAE");
+
+	pDlg->end();
+	pDlg->callback(&CAboutDlg::WindowCallbackCB, this);
+	pDlg->set_modal();
+
+	return false;
+}
+
+void CAboutDlg::Show()
+{
+	pDlg->show();
+}
+
+void CAboutDlg::WindowCallbackCB(Fl_Widget *, void *ptr)
+{
+	((CAboutDlg *)ptr)->WindowCallback();
+}
+
+void CAboutDlg::WindowCallback()
+{
+	pDlg->hide();
+}

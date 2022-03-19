@@ -121,13 +121,25 @@ bool CMainWindow::Init()
 
 	bool menu__i18n_done = false;
 	Fl_Menu_Item theMenu[] = {
- 		{ "&Settings...", FL_CONTROL+'s', &CMainWindow::SettingsDialogCB, this, 0, 0, 0, 0, 0 },
-		{ "&About...",    FL_CONTROL+'a', &CMainWindow::AboutDialogCB,    this, 0, 0, 0, 0, 0 },
-		{ 0,              0,              0,                                 0, 0, 0, 0, 0, 0 }
+ 		{ "&Settings...", FL_CONTROL+'s', &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
+		{ "&About...",    FL_CONTROL+'a', &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
+		{ 0,              0,              0,                                     0, 0, 0, 0, 0, 0 }
 	};
 
-	std::string dbname(CFG_DIR);
-	dbname.append("qn.db");
+	std::string iconpath(CFG_DIR);
+	iconpath.append("mvoice48.png");
+	pIcon = new Fl_PNG_Image(iconpath.c_str());
+
+	switch( pIcon->fail())
+	{
+	case Fl_Image::ERR_NO_IMAGE:
+	case Fl_Image::ERR_FILE_ACCESS:
+		fl_alert("%s: %s", iconpath.c_str(), strerror(errno));    // shows actual os error to user
+		return true;
+	case Fl_Image::ERR_FORMAT:
+		fl_alert("%s: couldn't decode image", iconpath.c_str());
+		return true;
+	}
 
 	if (M172AM.Open("m172am")) {
 		CloseAll();
@@ -145,6 +157,7 @@ bool CMainWindow::Init()
 	}
 
 	pWin = new Fl_Double_Window(900, 640, gettext("mvoice"));
+	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);
 	pWin->callback(&CMainWindow::QuitCB, this);
 	//Fl::visual(FL_DOUBLE|FL_INDEX);
@@ -255,7 +268,14 @@ bool CMainWindow::Init()
 
 	pWin->end();
 
-	if (SettingsDlg.Init(this)) {
+	if (SettingsDlg.Init(this))
+	{
+		CloseAll();
+		return true;
+	}
+
+	if (AboutDlg.Init(pIcon))
+	{
 		CloseAll();
 		return true;
 	}
@@ -290,22 +310,22 @@ void CMainWindow::Quit()
 		pWin->hide();
 }
 
-void CMainWindow::AboutDialogCB(Fl_Widget *, void *This)
+void CMainWindow::ShowAboutDialogCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->AboutDialog();
+	((CMainWindow *)This)->ShowAboutDialog();
 }
 
-void CMainWindow::AboutDialog()
+void CMainWindow::ShowAboutDialog()
 {
-
+	AboutDlg.Show();
 }
 
-void CMainWindow::SettingsDialogCB(Fl_Widget *, void *This)
+void CMainWindow::ShowSettingsDialogCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->SettingsDialog();
+	((CMainWindow *)This)->ShowSettingsDialog();
 }
 
-void CMainWindow::SettingsDialog()
+void CMainWindow::ShowSettingsDialog()
 {
 	SettingsDlg.Show();
 }

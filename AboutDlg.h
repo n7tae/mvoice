@@ -16,19 +16,22 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#pragma once
+ #pragma once
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Text_Display.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Tabs.H>
-#include <FL/Fl_PNG_Image.H>
-#include <FL/fl_ask.H>
+ #include "FLTK-GUI.h"
+
+ class CAboutDlg
+ {
+public:
+	CAboutDlg();
+	~CAboutDlg();
+	bool Init(Fl_PNG_Image *);
+	void Show();
+
+protected:
+	Fl_Double_Window *pDlg;
+	Fl_PNG_Image *pIcon;
+	Fl_Box *pIconBox, *pVersionBox, *pCopyrightBox;
+	static void WindowCallbackCB(Fl_Widget *, void *);
+	void WindowCallback();
+ };

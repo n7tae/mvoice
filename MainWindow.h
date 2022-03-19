@@ -26,6 +26,7 @@
 #include "Configure.h"
 #include "M17Gateway.h"
 #include "SettingsDlg.h"
+#include "AboutDlg.h"
 #include "AudioManager.h"
 #include "M17RouteMap.h"
 
@@ -53,6 +54,7 @@ public:
 private:
 	// classes
 	CSettingsDlg SettingsDlg;
+	CAboutDlg AboutDlg;
 	CM17RouteMap routeMap;
 	CM17Gateway gateM17;
 
@@ -69,6 +71,7 @@ private:
 	Fl_Menu_Item *pSettingsMenuItem;
 	Fl_Text_Display *pTextDisplay;
 	Fl_Text_Buffer  *pTextBuffer;
+	Fl_PNG_Image *pIcon;
 
 	// state data
 	CFGDATA cfgdata;
@@ -92,8 +95,8 @@ private:
 
 	// Actual Callbacks
 	void Quit();
-	void SettingsDialog();
-	void AboutDialog();
+	void ShowSettingsDialog();
+	void ShowAboutDialog();
 	void EchoButton();
 	void PTTButton();
 	void QuickKeyButton();
@@ -106,8 +109,8 @@ private:
 	void DashboardButton();
 	// Static wrapper for callbacks
 	static void QuitCB(Fl_Widget *p, void *v);
-	static void SettingsDialogCB(Fl_Widget *p, void *v);
-	static void AboutDialogCB(Fl_Widget *p, void *v);
+	static void ShowSettingsDialogCB(Fl_Widget *p, void *v);
+	static void ShowAboutDialogCB(Fl_Widget *p, void *v);
 	static void EchoButtonCB(Fl_Widget *p, void *v);
 	static void PTTButtonCB(Fl_Widget *p, void *v);
 	static void QuickKeyButttonCB(Fl_Widget *, void *);

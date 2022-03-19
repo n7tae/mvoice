@@ -12,7 +12,7 @@ OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `fltk-config --ldflags` -lasound -lcurl -pthread
+	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread
 
 %.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -MD -c $< -o $@
