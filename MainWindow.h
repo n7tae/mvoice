@@ -43,7 +43,7 @@ public:
 	void Run(int argc, char *argv[]);
 	void Receive(bool is_rx);
 	void NewSettings(CFGDATA *newdata);
-	void IdleProcess();
+	void ManageLinkState();
 
 	// helpers
 	bool ToUpper(std::string &s);

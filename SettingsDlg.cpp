@@ -147,6 +147,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pSourceCallsignInput->color(FL_RED);
 	pSourceCallsignInput->labelsize(16);
 	pSourceCallsignInput->textsize(16);
+	pSourceCallsignInput->when(FL_WHEN_CHANGED);
 	pSourceCallsignInput->callback(&CSettingsDlg::SourceCallsignInputCB, this);
 
 	pCodecGroup = new Fl_Group(110, 118, 245, 105, gettext("Codec:"));
@@ -267,6 +268,7 @@ void CSettingsDlg::SourceCallsignInput()
 		pSourceCallsignInput->color(FL_RED);
 		pSourceCallsignInput->deactivate();
 	}
+	pSourceCallsignInput->damage(FL_DAMAGE_ALL);
 }
 
 void CSettingsDlg::AudioInputChoiceCB(Fl_Widget *, void *This)

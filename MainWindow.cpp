@@ -40,7 +40,8 @@
 static void MyIdleProcess(void *p)
 {
 	CMainWindow *pMainWindow = (CMainWindow *)p;
-	pMainWindow->IdleProcess();
+	pMainWindow->ManageLinkState();
+	Fl::repeat_timeout(1.0, MyIdleProcess, pMainWindow);
 }
 
 CMainWindow::CMainWindow() :
@@ -179,21 +180,24 @@ bool CMainWindow::Init()
 	pTextBuffer = new Fl_Text_Buffer();
 	pTextDisplay = new Fl_Text_Display(16, 30, 872, 314);
 	pTextDisplay->buffer(pTextBuffer);
-	pTextDisplay->resizable(pTextDisplay);
 	pTextDisplay->end();
+
+	pWin->resizable(pTextDisplay);
 
 	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, gettext("Destination Callsign:"));
 	pDestCallsignInput->tooltip(gettext("A reflector or user callsign"));
-	pDestCallsignInput->color((Fl_Color)1);
+	pDestCallsignInput->color(FL_RED);
 	pDestCallsignInput->labelsize(16);
 	pDestCallsignInput->textsize(16);
+	pDestCallsignInput->when(FL_WHEN_CHANGED);
 	pDestCallsignInput->callback(&CMainWindow::DestCallsignInputCB, this);
 
-	pDestIPInput = new Fl_Input(560, 360, 324, 30, gettext("Destination IP:"));
+	pDestIPInput = new Fl_Input(460, 360, 424, 30, gettext("IP:"));
 	pDestIPInput->tooltip(gettext("The IP of the reflector or user"));
-	pDestIPInput->color((Fl_Color)1);
+	pDestIPInput->color(FL_RED);
 	pDestIPInput->labelsize(16);
 	pDestIPInput->textsize(16);
+	pDestIPInput->when(FL_WHEN_CHANGED);
 	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
 
 	pModuleLabel = new Fl_Box(68, 414, 77,25, gettext("Module:"));
@@ -286,7 +290,7 @@ bool CMainWindow::Init()
 	DestChoice();
 
 	// idle processing
-	//Fl::add_idle(MyIdleProcess, this);
+	Fl::add_timeout(1.0, MyIdleProcess, this);
 
 	return false;
 }
@@ -549,7 +553,7 @@ void CMainWindow::insertLogText(const char *line)
 	pTextBuffer->append(line);
 }
 
-void CMainWindow::IdleProcess()
+void CMainWindow::ManageLinkState()
 {
 	if (ELinkState::linked != gateM17.GetLinkState()) {
 		pUnlinkButton->deactivate();
@@ -611,7 +615,8 @@ void CMainWindow::DestCallsignInput()
 	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
 	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
 	const auto host = routeMap.Find(s);
-	if (host) {
+	if (host)
+	{
 		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
 			pDestIPInput->value(host->ip6addr.c_str());
 		else if (!host->ip4addr.empty())
@@ -623,6 +628,8 @@ void CMainWindow::DestCallsignInput()
 		pDashboardButton->deactivate();
 	pDestCallsignInput->color(bDestCS ? 2 : 1);
 	FixDestActionButton();
+	pDestCallsignInput->damage(FL_DAMAGE_ALL);
+	DestIpInput();
 }
 
 void CMainWindow::DestIPInputCB(Fl_Widget *, void *This)
@@ -646,6 +653,7 @@ void CMainWindow::DestIpInput()
 	}
 	pDestIPInput->color(bDestIP ? 2 : 1);
 	FixDestActionButton();
+	pDestIPInput->damage(FL_DAMAGE_ALL);
 }
 
 void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
