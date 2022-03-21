@@ -218,6 +218,7 @@ bool CMainWindow::Init()
 		}
 	}
 	pModuleGroup->end();
+	pModuleRadioButton[0]->setonly();
 	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, gettext("Destination:"));
 	pDestinationChoice->tooltip(gettext("Select a saved contact (reflector or user)"));
 	pDestinationChoice->down_box(FL_BORDER_BOX);
@@ -486,12 +487,23 @@ void CMainWindow::PTTButtonCB(Fl_Widget *, void *This)
 void CMainWindow::PTTButton()
 {
 	if (pPTTButton->value()) {
-		std::string cs;
-		SetDestinationAddress(cs);
-		AudioManager.RecordMicThread(E_PTT_Type::m17, cs);
-	} else {
+		if (gateM17.TryLock())
+		{
+			std::string cs;
+			SetDestinationAddress(cs);
+			AudioManager.RecordMicThread(E_PTT_Type::m17, cs);
+		}
+		else
+		{
+			pPTTButton->value(0);
+			pPTTButton->damage(FL_DAMAGE_ALL);
+		}
+	}
+	else
+	{
 		AudioManager.KeyOff();
 		AudioSummary("PTT");
+		gateM17.ReleaseLock();
 	}
 }
 
@@ -551,6 +563,8 @@ void CMainWindow::ReadThread()
 void CMainWindow::insertLogText(const char *line)
 {
 	pTextBuffer->append(line);
+	pTextDisplay->insert_position(pTextBuffer->length());
+	pTextDisplay->show_insert_position();
 }
 
 void CMainWindow::ManageLinkState()

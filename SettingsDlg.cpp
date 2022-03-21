@@ -111,6 +111,7 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 	else
 		pVoiceDataRadioButton->setonly();
 	pSourceCallsignInput->value(d.sM17SourceCallsign.c_str());
+	SourceCallsignInput();
 	// internet
 	switch (d.eNetType) {
 		case EInternetType::ipv6only:

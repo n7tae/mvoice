@@ -20,6 +20,7 @@
 
 #include <atomic>
 #include <string>
+#include <mutex>
 
 #include "UnixDgramSocket.h"
 #include "SockAddress.h"
@@ -58,6 +59,8 @@ public:
 	void Process();
 	void SetDestAddress(const std::string &address, uint16_t port);
 	ELinkState GetLinkState() const { return mlink.state; }
+	bool TryLock();
+	void ReleaseLock();
 
 	std::atomic<bool> keep_running;
 
@@ -70,6 +73,7 @@ private:
 	SM17Link mlink;
 	CTimer linkingTime;
 	SStream currentStream;
+	std::mutex streamLock;
 	std::string qnvoice_file;
 	CSockAddress from17k, destination;
 
