@@ -64,7 +64,6 @@ private:
 	Fl_Button *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Choice *pDestinationChoice;
-	Fl_Box *pModuleLabel;
 	Fl_Group *pModuleGroup;
 	Fl_Round_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;
