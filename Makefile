@@ -26,15 +26,14 @@ clean :
 
 install : $(EXE)
 	mkdir -p $(CFGDIR)
-	/bin/cp -f $(shell pwd)/MVoice.glade $(CFGDIR)
+	/bin/cp -f $(shell pwd)/images/mvoice48.png $(CFGDIR)
 	mkdir -p $(BINDIR)
 	/bin/cp -f $(EXE) $(BINDIR)
 
 uninstall :
 	/bin/rm -rf $(CFGDIR)announce
-	/bin/rm -f $(CFGDIR)MVoice.glade
+	/bin/rm -f $(CFGDIR)mvoice48.png
 	/bin/rm -f $(CFGDIR)$(EXE).cfg
-	/bin/rm -f $(CFGDIR)qn.db
 	/bin/rm -f $(CFGDIR)mvoice.cfg
 	/bin/rm -f $(CFGDIR)m17refl.json
 	/bin/rm -f $(BINDIR)$(EXE)

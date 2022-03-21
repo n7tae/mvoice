@@ -122,9 +122,9 @@ bool CMainWindow::Init()
 
 	bool menu__i18n_done = false;
 	Fl_Menu_Item theMenu[] = {
- 		{ "&Settings...", FL_CONTROL+'s', &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
-		{ "&About...",    FL_CONTROL+'a', &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
-		{ 0,              0,              0,                                     0, 0, 0, 0, 0, 0 }
+ 		{ "Settings...", 0, &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
+		{ "About...",    0, &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
+		{ 0,             0, 0,                                     0, 0, 0, 0, 0, 0 }
 	};
 
 	std::string iconpath(CFG_DIR);
@@ -157,9 +157,10 @@ bool CMainWindow::Init()
 		return true;
 	}
 
-	pWin = new Fl_Double_Window(900, 640, gettext("mvoice"));
+	pWin = new Fl_Double_Window(900, 640, "mvoice");
 	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);
+	pWin->size_range(640, 440);
 	pWin->callback(&CMainWindow::QuitCB, this);
 	//Fl::visual(FL_DOUBLE|FL_INDEX);
 
@@ -170,7 +171,7 @@ bool CMainWindow::Init()
 		int i = 0;
 		while (theMenu[i].label())
 		{
-			theMenu[i].label(gettext(theMenu[i].label()));
+			theMenu[i].label(theMenu[i].label());
 			i++;
 		}
 		menu__i18n_done = true;
@@ -184,26 +185,26 @@ bool CMainWindow::Init()
 
 	pWin->resizable(pTextDisplay);
 
-	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, gettext("Destination Callsign:"));
-	pDestCallsignInput->tooltip(gettext("A reflector or user callsign"));
+	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, "Destination Callsign:");
+	pDestCallsignInput->tooltip("A reflector or user callsign");
 	pDestCallsignInput->color(FL_RED);
 	pDestCallsignInput->labelsize(16);
 	pDestCallsignInput->textsize(16);
 	pDestCallsignInput->when(FL_WHEN_CHANGED);
 	pDestCallsignInput->callback(&CMainWindow::DestCallsignInputCB, this);
 
-	pDestIPInput = new Fl_Input(460, 360, 424, 30, gettext("IP:"));
-	pDestIPInput->tooltip(gettext("The IP of the reflector or user"));
+	pDestIPInput = new Fl_Input(460, 360, 424, 30, "IP:");
+	pDestIPInput->tooltip("The IP of the reflector or user");
 	pDestIPInput->color(FL_RED);
 	pDestIPInput->labelsize(16);
 	pDestIPInput->textsize(16);
 	pDestIPInput->when(FL_WHEN_CHANGED);
 	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
 
-	pModuleLabel = new Fl_Box(68, 414, 77,25, gettext("Module:"));
+	pModuleLabel = new Fl_Box(68, 414, 77,25, "Module:");
 	pModuleLabel->labelsize(16);
 	pModuleGroup = new Fl_Group(150, 400, 640, 60);
-	pModuleGroup->tooltip(gettext("Select a module for the reflector or repeater"));
+	pModuleGroup->tooltip("Select a module for the reflector or repeater");
 	pModuleGroup->labeltype(FL_NO_LABEL);
 	pModuleGroup->begin();
 	static const char *modlabel[26] = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
@@ -214,59 +215,59 @@ bool CMainWindow::Init()
 			const int i = 13 * y + x;
 			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*50+150, y*40+400, 50, 25, modlabel[i]);
 			pModuleRadioButton[i]->down_box(FL_ROUND_DOWN_BOX);
-			pModuleRadioButton[i]->labelsize(18);
+			pModuleRadioButton[i]->labelsize(16);
 		}
 	}
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
-	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, gettext("Destination:"));
-	pDestinationChoice->tooltip(gettext("Select a saved contact (reflector or user)"));
+	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, "Destination:");
+	pDestinationChoice->tooltip("Select a saved contact (reflector or user)");
 	pDestinationChoice->down_box(FL_BORDER_BOX);
 	pDestinationChoice->labelsize(16);
 	pDestinationChoice->textsize(16);
 	pDestinationChoice->callback(&CMainWindow::DestChoiceCB, this);
 
-	pActionButton = new Fl_Button(455, 472, 80, 30, gettext("Action"));
-	pActionButton->tooltip(gettext("Update or delete an existing contact,,or save a new contact"));
+	pActionButton = new Fl_Button(455, 472, 80, 30, "Action");
+	pActionButton->tooltip("Update or delete an existing contact,,or save a new contact");
 	pActionButton->labelsize(16);
 	pActionButton->deactivate();
 	pActionButton->callback(&CMainWindow::ActionButtonCB, this);
 
-	pDashboardButton = new Fl_Button(600, 474, 201, 30, gettext("Open Dashboard"));
-	pDashboardButton->tooltip(gettext("Open a reflector dashboard, if available"));
+	pDashboardButton = new Fl_Button(600, 474, 201, 30, "Open Dashboard");
+	pDashboardButton->tooltip("Open a reflector dashboard, if available");
 	pDashboardButton->labelsize(16);
 	pDashboardButton->deactivate();
 	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
 
-	pLinkButton = new Fl_Button(358, 514, 80, 30, gettext("Link"));
-	pLinkButton->tooltip(gettext("Connect to an M17 Reflector"));
+	pLinkButton = new Fl_Button(358, 514, 80, 30, "Link");
+	pLinkButton->tooltip("Connect to an M17 Reflector");
 	pLinkButton->labelsize(16);
 	pLinkButton->deactivate();
 	pLinkButton->callback(&CMainWindow::LinkButtonCB, this);
 
-	pUnlinkButton = new Fl_Button(456, 514, 80, 30, gettext("Unlink"));
-	pUnlinkButton->tooltip(gettext("Disconnected from a reflector"));
+	pUnlinkButton = new Fl_Button(456, 514, 80, 30, "Unlink");
+	pUnlinkButton->tooltip("Disconnected from a reflector");
 	pUnlinkButton->labelsize(16);
 	pUnlinkButton->deactivate();
 	pUnlinkButton->callback(&CMainWindow::UnlinkButtonCB, this);
 
-	pEchoTestButton = new Fl_Button(50, 574, 144, 40, gettext("Echo Test"));
-	pEchoTestButton->tooltip(gettext("Push to record a test that will be played back"));
+	pEchoTestButton = new Fl_Button(50, 574, 144, 40, "Echo Test");
+	pEchoTestButton->tooltip("Push to record a test that will be played back");
 	pEchoTestButton->labelsize(16);
 	pEchoTestButton->type(FL_TOGGLE_BUTTON);
 	pEchoTestButton->selection_color(FL_YELLOW);
 	pEchoTestButton->callback(&CMainWindow::EchoButtonCB, this);
 
-	pPTTButton = new Fl_Button(250, 557, 400, 60, gettext("PTT"));
-	pPTTButton->tooltip(gettext("Push to talk"));
+	pPTTButton = new Fl_Button(250, 557, 400, 60, "PTT");
+	pPTTButton->tooltip("Push to talk");
 	pPTTButton->labelsize(22);
 	pPTTButton->deactivate();
 	pPTTButton->type(FL_TOGGLE_BUTTON);
 	pPTTButton->selection_color(FL_YELLOW);
 	pPTTButton->callback(&CMainWindow::PTTButtonCB, this);
 
-	pQuickKeyButton = new Fl_Button(700, 574, 150, 40, gettext("Quick Key"));
-	pQuickKeyButton->tooltip(gettext("Send a short, silent voice stream"));
+	pQuickKeyButton = new Fl_Button(700, 574, 150, 40, "Quick Key");
+	pQuickKeyButton->tooltip("Send a short, silent voice stream");
 	pQuickKeyButton->labelsize(16);
 	pQuickKeyButton->deactivate();
 	pQuickKeyButton->callback(QuickKeyButttonCB, this);

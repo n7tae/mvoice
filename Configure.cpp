@@ -39,7 +39,6 @@ void CConfigure::SetDefaultValues()
 	// audio
 	data.sAudioIn.assign("default");
 	data.sAudioOut.assign("default");
-	data.bIsPTT = false;
 }
 
 void CConfigure::ReadData()
@@ -86,8 +85,6 @@ void CConfigure::ReadData()
 			data.sM17SourceCallsign.assign(val);
 		} else if (0 == strcmp(key, "M17VoiceOnly")) {
 			data.bVoiceOnlyEnable = IS_TRUE(*val);
-		} else if (0 == strcmp(key, "IsPTT")) {
-			data.bIsPTT = IS_TRUE(*val);
 		}
 	}
 	cfg.close();
@@ -122,7 +119,6 @@ void CConfigure::WriteData()
 	// audio
 	file << "AudioInput='" << data.sAudioIn << "'" << std::endl;
 	file << "AudioOutput='" << data.sAudioOut << "'" << std::endl;
-	file << "IsPTT=" << (data.bIsPTT ? "true" : "false") << std::endl;
 
 	file.close();
 }
@@ -138,8 +134,6 @@ void CConfigure::CopyFrom(const CFGDATA &from)
 	// audio
 	data.sAudioIn.assign(from.sAudioIn);
 	data.sAudioOut.assign(from.sAudioOut);
-	// interface
-	data.bIsPTT = from.bIsPTT;
 }
 
 void CConfigure::CopyTo(CFGDATA &to)
@@ -153,8 +147,6 @@ void CConfigure::CopyTo(CFGDATA &to)
 	// audio
 	to.sAudioIn.assign(data.sAudioIn);
 	to.sAudioOut.assign(data.sAudioOut);
-	// interface
-	to.bIsPTT = data.bIsPTT;
 }
 
 bool CConfigure::IsOkay()
