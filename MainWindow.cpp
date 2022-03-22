@@ -394,13 +394,7 @@ void CMainWindow::ActionButton()
 		auto index = pDestinationChoice->value();
 		pDestinationChoice->remove(index);
 		routeMap.Erase(cs);
-		if (index >= int(routeMap.Size()))
-			index--;
-		if (index < 0) {
-			pDestinationChoice->value(-1);
-			pDestIPInput->value("");
-		} else
-			pDestinationChoice->value(index);
+		pDestinationChoice->value(-1);
 	} else if (0 == label.compare("Update")) {
 		std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
@@ -641,6 +635,8 @@ void CMainWindow::DestCallsignInput()
 		else if (!host->ip4addr.empty())
 			pDestIPInput->value(host->ip4addr.c_str());
 	}
+	else
+		pDestinationChoice->value(-1);
 	if (is_valid_reflector && host && !host->url.empty())
 		pDashboardButton->activate();
 	else
