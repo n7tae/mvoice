@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 by Thomas A. Early N7TAE
+ *   Copyright (c) 2019-2022 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,20 +16,34 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#pragma once
+#include "TransmitButton.h"
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Text_Display.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Toggle_Button.H>
-#include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Tabs.H>
-#include <FL/Fl_PNG_Image.H>
-#include <FL/fl_ask.H>
+CTransmitButton::CTransmitButton(int X, int Y, int W, int H, const char *L) : Fl_Toggle_Button(X, Y, W, H, L), defaultlabel(L)
+{
+}
+
+void CTransmitButton::toggle()
+{
+	if (Fl_Button::value())
+	{
+		timer.start();
+	}
+	UpdateLabel();
+}
+
+void CTransmitButton::UpdateLabel()
+{
+	if (Fl_Button::value())
+	{
+		auto t = int(timer.time());
+		auto s = t % 60;
+		auto m = t / 60;
+		snprintf(tlabel, 16, "%d:%02d", m, s);
+		Fl_Toggle_Button::label(tlabel);
+	}
+	else
+	{
+		Fl_Toggle_Button::label(defaultlabel);
+	}
+	Fl_Button::draw();
+}

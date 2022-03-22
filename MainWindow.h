@@ -29,6 +29,7 @@
 #include "AboutDlg.h"
 #include "AudioManager.h"
 #include "M17RouteMap.h"
+#include "TransmitButton.h"
 
 class CMainWindow
 {
@@ -43,7 +44,7 @@ public:
 	void Run(int argc, char *argv[]);
 	void Receive(bool is_rx);
 	void NewSettings(CFGDATA *newdata);
-	void ManageLinkState();
+	void UpdateGUI();
 
 	// helpers
 	bool ToUpper(std::string &s);
@@ -60,7 +61,7 @@ private:
 
 	// widgets
 	Fl_Double_Window *pWin;
-	Fl_Button *pPTTButton, *pEchoTestButton;
+	CTransmitButton *pPTTButton, *pEchoTestButton;
 	Fl_Button *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Choice *pDestinationChoice;

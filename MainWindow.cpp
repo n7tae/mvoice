@@ -40,7 +40,8 @@
 static void MyIdleProcess(void *p)
 {
 	CMainWindow *pMainWindow = (CMainWindow *)p;
-	pMainWindow->ManageLinkState();
+	pMainWindow->UpdateGUI();
+
 	Fl::repeat_timeout(1.0, MyIdleProcess, pMainWindow);
 }
 
@@ -251,18 +252,16 @@ bool CMainWindow::Init()
 	pUnlinkButton->deactivate();
 	pUnlinkButton->callback(&CMainWindow::UnlinkButtonCB, this);
 
-	pEchoTestButton = new Fl_Button(50, 574, 144, 40, "Echo Test");
+	pEchoTestButton = new CTransmitButton(50, 574, 144, 40, "Echo Test");
 	pEchoTestButton->tooltip("Push to record a test that will be played back");
 	pEchoTestButton->labelsize(16);
-	pEchoTestButton->type(FL_TOGGLE_BUTTON);
 	pEchoTestButton->selection_color(FL_YELLOW);
 	pEchoTestButton->callback(&CMainWindow::EchoButtonCB, this);
 
-	pPTTButton = new Fl_Button(250, 557, 400, 60, "PTT");
+	pPTTButton = new CTransmitButton(250, 557, 400, 60, "PTT");
 	pPTTButton->tooltip("Push to talk");
 	pPTTButton->labelsize(22);
 	pPTTButton->deactivate();
-	pPTTButton->type(FL_TOGGLE_BUTTON);
 	pPTTButton->selection_color(FL_YELLOW);
 	pPTTButton->callback(&CMainWindow::PTTButtonCB, this);
 
@@ -432,13 +431,16 @@ void CMainWindow::EchoButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::EchoButton()
 {
+	pEchoTestButton->toggle();
 	if (pEchoTestButton->value()) {
 		// record the mic to a queue
 		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
 	} else {
+		// pEchoTestButton->deactivate();	// don't allow user to try to start a new test when it's still playing the current test
 		AudioSummary("Echo");
 		// play back the queue
 		AudioManager.PlayEchoDataThread();
+		// pEchoTestButton->activate();
 	}
 }
 
@@ -487,6 +489,7 @@ void CMainWindow::PTTButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::PTTButton()
 {
+	pPTTButton->toggle();
 	if (pPTTButton->value()) {
 		if (gateM17.TryLock())
 		{
@@ -497,7 +500,6 @@ void CMainWindow::PTTButton()
 		else
 		{
 			pPTTButton->value(0);
-			pPTTButton->damage(FL_DAMAGE_ALL);
 		}
 	}
 	else
@@ -568,7 +570,7 @@ void CMainWindow::insertLogText(const char *line)
 	pTextDisplay->show_insert_position();
 }
 
-void CMainWindow::ManageLinkState()
+void CMainWindow::UpdateGUI()
 {
 	if (ELinkState::linked != gateM17.GetLinkState()) {
 		pUnlinkButton->deactivate();
@@ -584,6 +586,8 @@ void CMainWindow::ManageLinkState()
 		else
 			pUnlinkButton->deactivate();
 	}
+	pPTTButton->UpdateLabel();
+	pEchoTestButton->UpdateLabel();
 }
 
 void CMainWindow::SetModuleSensitive(const std::string &dest)
