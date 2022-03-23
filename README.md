@@ -50,7 +50,7 @@ sudo make install
 Then you can download and build MVoice:
 
 ```bash
-git clone git://github.com/n7tae/MVoice.git
+git clone https://github.com/n7tae/MVoice.git
 cd MVoice
 make
 ```
