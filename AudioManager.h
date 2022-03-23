@@ -30,6 +30,10 @@
 #include "UnixDgramSocket.h"
 #include "CRC.h"
 
+#ifdef USE44100
+#include "Resampler.h"
+#endif
+
 using M17PacketQueue = CTQueue<SM17Frame>;
 using SVolStats = struct volstats_tag
 {
@@ -66,6 +70,11 @@ private:
 	std::mutex audio_mutex, data_mutex;
 	std::future<void> r1, r2, r3, p1, p2;
 	bool link_open;
+#ifdef USE44100
+	SDATA expand, shrink;
+	float expand_in[160], expand_out[882];
+	float shrink_in[882], shrink_out[160];
+#endif
 
 	// Unix sockets
 	CUnixDgramWriter AM2M17, LogInput;
@@ -74,6 +83,11 @@ private:
 	CRandom random;
 	std::vector<unsigned long> speak;
 	CCRC crc;
+#ifdef USE44100
+	// the Rational Resamplers
+	CResampler RSExpand, RSShrink;
+#endif
+
 	// methods
 	bool audio_is_empty();
 	bool codec_is_empty();

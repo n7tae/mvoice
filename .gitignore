@@ -44,5 +44,8 @@ DPlus_Hosts.txt
 DCS_Hosts.txt
 My_Hosts.txt
 
+# custom makefile
+makefile
+
 # Executable
 mvoice
