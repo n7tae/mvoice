@@ -63,17 +63,6 @@ void CSettingsDlg::OkayButton()
 	pMainWindow->NewSettings(&newstate);
 }
 
-void CSettingsDlg::CancelButtonCB(Fl_Widget *, void *This)
-{
-	((CSettingsDlg *)This)->CancelButton();
-}
-
-void CSettingsDlg::CancelButton()
-{
-	//pDlg->hide();
-	pDlg->default_callback(pDlg, 0);
-}
-
 void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 {
 	// M17
@@ -82,9 +71,9 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	// station
 	d.cModule = data.cModule;
 	// Internet
-	if (pIPv4RadioButton->active())
+	if (pIPv4RadioButton->value())
 		d.eNetType = EInternetType::ipv4only;
-	else if (pIPv6RadioButton->active())
+	else if (pIPv6RadioButton->value())
 		d.eNetType = EInternetType::ipv6only;
 	else
 		d.eNetType = EInternetType::dualstack;
@@ -150,13 +139,15 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pCodecGroup->box(FL_THIN_UP_BOX);
 	pCodecGroup->labelsize(16);
 
-	pVoiceOnlyRadioButton = new Fl_Round_Button(160, 135, 150, 30, "Voice-only");
+	pVoiceOnlyRadioButton = new Fl_Radio_Button(160, 135, 150, 30, "Voice-only");
 	pVoiceOnlyRadioButton->tooltip("This is the higher quality, 3200 bits/s codec");
+	pVoiceOnlyRadioButton->box(FL_ROUND_UP_BOX);
 	pVoiceOnlyRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pVoiceOnlyRadioButton->labelsize(16);
 
-	pVoiceDataRadioButton = new Fl_Round_Button(160, 175, 150, 30, "Voice+Data");
+	pVoiceDataRadioButton = new Fl_Radio_Button(160, 175, 150, 30, "Voice+Data");
 	pVoiceDataRadioButton->tooltip("This is the 1600 bits/s codec");
+	pVoiceDataRadioButton->box(FL_ROUND_UP_BOX);
 	pVoiceDataRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
@@ -199,15 +190,18 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pInternetGroup = new Fl_Group(20, 30, 410, 210, "Internet");
 	pInternetGroup->labelsize(16);
 
-	pIPv4RadioButton = new Fl_Round_Button(145, 60, 200, 30, "IPv4 Only");
+	pIPv4RadioButton = new Fl_Radio_Button(145, 60, 200, 30, "IPv4 Only");
+	pIPv4RadioButton->box(FL_ROUND_UP_BOX);
 	pIPv4RadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pIPv4RadioButton->labelsize(16);
 
-	pIPv6RadioButton = new Fl_Round_Button(145, 110, 200, 30, "IPv6 Only");
+	pIPv6RadioButton = new Fl_Radio_Button(145, 110, 200, 30, "IPv6 Only");
+	pIPv6RadioButton->box(FL_ROUND_UP_BOX);
 	pIPv6RadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pIPv6RadioButton->labelsize(16);
 
-	pDualStackRadioButton = new Fl_Round_Button(145, 160, 200, 30, "IPv4 && IPv6");
+	pDualStackRadioButton = new Fl_Radio_Button(145, 160, 200, 30, "IPv4 && IPv6");
+	pDualStackRadioButton->box(FL_ROUND_UP_BOX);
 	pDualStackRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pDualStackRadioButton->labelsize(16);
 
@@ -216,13 +210,9 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 
 	pTabs->end();
 
-	pOkayButton = new Fl_Return_Button(310, 280, 120, 44, "Okay");
+	pOkayButton = new Fl_Return_Button(310, 280, 120, 44, "Update");
 	pOkayButton->labelsize(16);
 	pOkayButton->callback(&CSettingsDlg::OkayButtonCB, this);
-
-	pCancelButton = new Fl_Button(150, 280, 120, 44, "Cancel");
-	pCancelButton->labelsize(16);
-	pCancelButton->callback(&CSettingsDlg::CancelButtonCB, this);
 
 	pDlg->end();
 	pDlg->set_modal();
@@ -248,10 +238,12 @@ void CSettingsDlg::SourceCallsignInput()
 	if (bM17Source)
 	{
 		pSourceCallsignInput->color(FL_GREEN);
+		pOkayButton->activate();
 	}
 	else
 	{
 		pSourceCallsignInput->color(FL_RED);
+		pOkayButton->deactivate();
 	}
 	pSourceCallsignInput->damage(FL_DAMAGE_ALL);
 }

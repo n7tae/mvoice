@@ -47,12 +47,12 @@ private:
     Fl_Double_Window *pDlg;
 	// widgets
 	Fl_Tabs *pTabs;
-	Fl_Button *pOkayButton, *pCancelButton, *pAudioRescanButton;
+	Fl_Button *pOkayButton, *pAudioRescanButton;
 	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice;
 	Fl_Input *pSourceCallsignInput;
 	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup;
-	Fl_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
-	Fl_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
+	Fl_Radio_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
+	Fl_Radio_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;
 	// Callback wrapper
 	static void SourceCallsignInputCB(Fl_Widget *p, void *v);
@@ -60,12 +60,10 @@ private:
 	static void AudioInputChoiceCB(Fl_Widget *p, void *v);
 	static void AudioOutputChoiceCB(Fl_Widget *p, void *v);
 	static void OkayButtonCB(Fl_Widget *p, void *v);
-	static void CancelButtonCB(Fl_Widget *p, void *v);
 	// the actual callbacks
 	void SourceCallsignInput();
 	void AudioRescanButton();
 	void AudioInputChoice();
 	void AudioOutputChoice();
 	void OkayButton();
-	void CancelButton();
 };

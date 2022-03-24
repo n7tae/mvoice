@@ -66,7 +66,7 @@ private:
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Choice *pDestinationChoice;
 	Fl_Group *pModuleGroup;
-	Fl_Round_Button *pModuleRadioButton[26];
+	Fl_Radio_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;
 	Fl_Menu_Item *pSettingsMenuItem;
 	Fl_Text_Display *pTextDisplay;

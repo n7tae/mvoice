@@ -214,7 +214,8 @@ bool CMainWindow::Init()
 		for (int x=0; x<13; x++)
 		{
 			const int i = 13 * y + x;
-			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*42+177, y*30+402, 40, 25, modlabel[i]);
+			pModuleRadioButton[i] = new Fl_Radio_Button(x*42+177, y*30+402, 40, 25, modlabel[i]);
+			pModuleRadioButton[i]->box(FL_ROUND_UP_BOX);
 			pModuleRadioButton[i]->down_box(FL_ROUND_DOWN_BOX);
 			pModuleRadioButton[i]->labelsize(16);
 		}
