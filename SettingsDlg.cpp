@@ -40,9 +40,9 @@ void CSettingsDlg::Show()
 	CConfigure cfg;
 	cfg.CopyTo(data);	// get the saved config data (MainWindow has alread read it)
 	SetWidgetStates(data);
+	pDlg->show();
 	pTabs->value(pStationGroup);
 	AudioRescanButtonCB(nullptr, this);	// re-read the audio PCM devices
-	pDlg->show();
 }
 
 void CSettingsDlg::OkayButtonCB(Fl_Widget *, void *This)
@@ -70,7 +70,8 @@ void CSettingsDlg::CancelButtonCB(Fl_Widget *, void *This)
 
 void CSettingsDlg::CancelButton()
 {
-	pDlg->hide();
+	//pDlg->hide();
+	pDlg->default_callback(pDlg, 0);
 }
 
 void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
@@ -128,14 +129,14 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 bool CSettingsDlg::Init(CMainWindow *pMain)
 {
 	pMainWindow = pMain;
-	pDlg = new Fl_Double_Window(450, 345, "Settings");
+	pDlg = new Fl_Double_Window(450, 350, "Settings");
 
-	pTabs = new Fl_Tabs(24, 15, 406, 250);
+	pTabs = new Fl_Tabs(10, 10, 430, 240);
 	pTabs->labelsize(16);
 
-	pStationGroup = new Fl_Group(24, 34, 401, 195, "Station");
+	//////////////////////////////////////////////////////////////////////////
+	pStationGroup = new Fl_Group(20, 30, 410, 210, "Station");
 	pStationGroup->labelsize(16);
-	pStationGroup->hide();
 
 	pSourceCallsignInput = new Fl_Input(218, 51, 127, 30, "My Callsign:");
 	pSourceCallsignInput->tooltip("Input your callsign, up to 8 characters");
@@ -149,66 +150,69 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pCodecGroup->box(FL_THIN_UP_BOX);
 	pCodecGroup->labelsize(16);
 
-	pVoiceOnlyRadioButton = new Fl_Round_Button(159, 149, 175, 25, "Voice-only");
+	pVoiceOnlyRadioButton = new Fl_Round_Button(160, 135, 150, 30, "Voice-only");
 	pVoiceOnlyRadioButton->tooltip("This is the higher quality, 3200 bits/s codec");
 	pVoiceOnlyRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pVoiceOnlyRadioButton->labelsize(16);
 
-	pVoiceDataRadioButton = new Fl_Round_Button(159, 180, 160, 33, "Voice+Data");
+	pVoiceDataRadioButton = new Fl_Round_Button(160, 175, 150, 30, "Voice+Data");
 	pVoiceDataRadioButton->tooltip("This is the 1600 bits/s codec");
 	pVoiceDataRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
 	pStationGroup->end();
+	pTabs->add(pStationGroup);
 
-	pAudioGroup = new Fl_Group(24, 35, 401, 226, "Audio");
+	//////////////////////////////////////////////////////////////////////////
+	pAudioGroup = new Fl_Group(20, 30, 410, 210, "Audio");
 	pAudioGroup->tooltip("Select the audio Input device");
 	pAudioGroup->labelsize(16);
-	pAudioGroup->hide();
 
-	pAudioInputChoice = new Fl_Choice(134, 51, 260, 24, "Input:");
+	pAudioInputChoice = new Fl_Choice(135, 50, 260, 24, "Input:");
 	pAudioInputChoice->tooltip("Select your audio input device, usually \"default\"");
 	pAudioInputChoice->down_box(FL_BORDER_BOX);
 	pAudioInputChoice->labelsize(16);
 	pAudioInputChoice->textsize(16);
 	pAudioInputChoice->callback(&CSettingsDlg::AudioInputChoiceCB, this);
 
-	pAudioInputDescBox = new Fl_Box(45, 82, 355, 28, "input description");
+	pAudioInputDescBox = new Fl_Box(30, 80, 390, 25, "input description");
 	pAudioInputDescBox->labelsize(12);
 
-	pAudioOutputChoice = new Fl_Choice(134, 122, 260, 24, "Output:");
+	pAudioOutputChoice = new Fl_Choice(135, 120, 260, 24, "Output:");
 	pAudioOutputChoice->tooltip("Select the audio output device, usually \"default\"");
 	pAudioOutputChoice->down_box(FL_BORDER_BOX);
 	pAudioOutputChoice->labelsize(16);
 	pAudioOutputChoice->textsize(16);
 	pAudioOutputChoice->callback(&CSettingsDlg::AudioOutputChoiceCB, this);
 
-	pAudioOutputDescBox = new Fl_Box(45, 156, 360, 33, "output description");
+	pAudioOutputDescBox = new Fl_Box(30, 150, 390, 25, "output description");
 	pAudioOutputDescBox->labelsize(12);
 
-	pAudioRescanButton = new Fl_Button(192, 198, 90, 43, "Rescan");
+	pAudioRescanButton = new Fl_Button(192, 186, 90, 40, "Rescan");
 	pAudioRescanButton->tooltip("Rescan for new audio devices");
 	pAudioRescanButton->labelsize(16);
 
 	pAudioGroup->end();
+	pTabs->add(pAudioGroup);
 
-	pInternetGroup = new Fl_Group(30, 45, 400, 220, "Internet");
+	//////////////////////////////////////////////////////////////////////////
+	pInternetGroup = new Fl_Group(20, 30, 410, 210, "Internet");
 	pInternetGroup->labelsize(16);
-	pInternetGroup->hide();
 
-	pIPv4RadioButton = new Fl_Round_Button(146, 59, 218, 34, "IPv4 Only");
+	pIPv4RadioButton = new Fl_Round_Button(145, 60, 200, 30, "IPv4 Only");
 	pIPv4RadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pIPv4RadioButton->labelsize(16);
 
-	pIPv6RadioButton = new Fl_Round_Button(146, 113, 218, 34, "IPv6 Only");
+	pIPv6RadioButton = new Fl_Round_Button(145, 110, 200, 30, "IPv6 Only");
 	pIPv6RadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pIPv6RadioButton->labelsize(16);
 
-	pDualStackRadioButton = new Fl_Round_Button(146, 170, 218, 34, "IPv4 && IPv6");
+	pDualStackRadioButton = new Fl_Round_Button(145, 160, 200, 30, "IPv4 && IPv6");
 	pDualStackRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pDualStackRadioButton->labelsize(16);
 
 	pInternetGroup->end();
+	pTabs->add(pInternetGroup);
 
 	pTabs->end();
 

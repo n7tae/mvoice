@@ -161,7 +161,7 @@ bool CMainWindow::Init()
 	pWin = new Fl_Double_Window(900, 640, "mvoice");
 	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);
-	pWin->size_range(718, 440);
+	pWin->size_range(720, 440);
 	pWin->callback(&CMainWindow::QuitCB, this);
 	//Fl::visual(FL_DOUBLE|FL_INDEX);
 
@@ -202,10 +202,11 @@ bool CMainWindow::Init()
 	pDestIPInput->when(FL_WHEN_CHANGED);
 	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
 
-	pModuleGroup = new Fl_Group(177, 400, 546, 60, "Module:");
+	pModuleGroup = new Fl_Group(170, 400, 560, 60, "Module:");
 	pModuleGroup->tooltip("Select a module for the reflector or repeater");
 	pModuleGroup->labelsize(16);
 	pModuleGroup->align(FL_ALIGN_LEFT);
+	pModuleGroup->box(FL_THIN_UP_BOX);
 	pModuleGroup->begin();
 	static const char *modlabel[26] = { "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L", "M", "N", "O", "P", "Q", "R", "S", "T", "U", "V", "W", "X", "Y", "Z" };
 	for (int y=0; y<2; y++)
@@ -213,7 +214,7 @@ bool CMainWindow::Init()
 		for (int x=0; x<13; x++)
 		{
 			const int i = 13 * y + x;
-			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*42+177, y*30+400, 30, 25, modlabel[i]);
+			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*42+177, y*30+402, 40, 25, modlabel[i]);
 			pModuleRadioButton[i]->down_box(FL_ROUND_DOWN_BOX);
 			pModuleRadioButton[i]->labelsize(16);
 		}
