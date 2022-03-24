@@ -31,7 +31,7 @@ bool CAboutDlg::Init(Fl_PNG_Image *pIcon)
 	pIconBox = new Fl_Box(176, 30, 48, 48);
 	pIconBox->image(pIcon);
 
-	pVersionBox = new Fl_Box(0, 100, 400, 30, "MVoice Version #220323");
+	pVersionBox = new Fl_Box(0, 100, 400, 30, "MVoice Version # 0.1.0");
 
 	pCopyrightBox = new Fl_Box(0, 150, 400, 30, "Copyright (c) 2022 by Thomas A. Early N7TAE");
 

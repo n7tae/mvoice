@@ -38,11 +38,11 @@ CSettingsDlg::~CSettingsDlg()
 void CSettingsDlg::Show()
 {
 	CConfigure cfg;
-	cfg.CopyTo(data);	// get the saved config data (MainWindow has alread read it)
+	pMainWindow->cfg.CopyTo(data);	// get the saved config data (MainWindow has alread read it)
 	SetWidgetStates(data);
 	pDlg->show();
 	pTabs->value(pStationGroup);
-	AudioRescanButtonCB(nullptr, this);	// re-read the audio PCM devices
+	AudioRescanButton();	// re-read the audio PCM devices
 }
 
 void CSettingsDlg::OkayButtonCB(Fl_Widget *, void *This)
@@ -55,10 +55,10 @@ void CSettingsDlg::OkayButton()
 	CFGDATA newstate;						// the user clicked okay, time to look at what's changed
 	SaveWidgetStates(newstate);				// newstate is now the current contents of the Settings Dialog
 	pMainWindow->cfg.CopyFrom(newstate);	// and it is now in the global cfg object
-	pMainWindow->cfg.WriteData();			// and it's saved in ~/.config/qdv/qdv.cfg
+	pMainWindow->cfg.WriteData();			// and it's saved in the config dir
 
 	// reconfigure current environment if anything changed
-	// pMainWindow->cfg.CopyTo(data);	// we need to return to the MainWindow a pointer to the new state
+	pMainWindow->cfg.CopyTo(data);
 	pDlg->hide();
 	pMainWindow->NewSettings(&newstate);
 }
@@ -82,13 +82,13 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	auto itin = AudioInMap.find(in);
 	if (AudioInMap.end() != itin)
 	{
-		data.sAudioIn.assign(itin->second.first);
+		d.sAudioIn.assign(itin->second.first);
 	}
 	const std::string out(pAudioInputChoice->text());
 	auto itout = AudioOutMap.find(out);
 	if (AudioOutMap.end() != itout)
 	{
-		data.sAudioOut.assign(itout->second.first);
+		d.sAudioOut.assign(itout->second.first);
 	}
 }
 
@@ -299,10 +299,12 @@ void CSettingsDlg::AudioRescanButtonCB(Fl_Widget *, void *This)
 
 void CSettingsDlg::AudioRescanButton()
 {
-	if (0 == data.sAudioIn.size())
-		data.sAudioIn.assign("default");
-	if (0 == data.sAudioOut.size())
-		data.sAudioOut.assign("default");
+	auto inchoice = pAudioInputChoice->value();
+	if (inchoice < 0)
+		inchoice = 0;
+	auto outchoice = pAudioOutputChoice->value();
+	if (outchoice < 0)
+		outchoice = 0;
 	void **hints;
 	if (snd_device_name_hint(-1, "pcm", &hints) < 0)
 		return;
@@ -378,6 +380,8 @@ void CSettingsDlg::AudioRescanButton()
 		n++;
 	}
 	snd_device_name_free_hint(hints);
-	pAudioInputChoice->value(0);
-	pAudioOutputChoice->value(0);
+	pAudioInputChoice->value(inchoice);
+	AudioInputChoice();
+	pAudioOutputChoice->value(outchoice);
+	AudioOutputChoice();
 }
