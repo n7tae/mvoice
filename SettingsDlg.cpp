@@ -139,16 +139,12 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pCodecGroup->box(FL_THIN_UP_BOX);
 	pCodecGroup->labelsize(16);
 
-	pVoiceOnlyRadioButton = new Fl_Radio_Button(160, 135, 150, 30, "Voice-only");
+	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(160, 135, 150, 30, "Voice-only");
 	pVoiceOnlyRadioButton->tooltip("This is the higher quality, 3200 bits/s codec");
-	pVoiceOnlyRadioButton->box(FL_ROUND_UP_BOX);
-	pVoiceOnlyRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pVoiceOnlyRadioButton->labelsize(16);
 
-	pVoiceDataRadioButton = new Fl_Radio_Button(160, 175, 150, 30, "Voice+Data");
+	pVoiceDataRadioButton = new Fl_Radio_Round_Button(160, 175, 150, 30, "Voice+Data");
 	pVoiceDataRadioButton->tooltip("This is the 1600 bits/s codec");
-	pVoiceDataRadioButton->box(FL_ROUND_UP_BOX);
-	pVoiceDataRadioButton->down_box(FL_ROUND_DOWN_BOX);
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
 	pStationGroup->end();
@@ -190,19 +186,13 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pInternetGroup = new Fl_Group(20, 30, 410, 210, "Internet");
 	pInternetGroup->labelsize(16);
 
-	pIPv4RadioButton = new Fl_Radio_Button(145, 60, 200, 30, "IPv4 Only");
-	pIPv4RadioButton->box(FL_ROUND_UP_BOX);
-	pIPv4RadioButton->down_box(FL_ROUND_DOWN_BOX);
+	pIPv4RadioButton = new Fl_Radio_Round_Button(145, 60, 200, 30, "IPv4 Only");
 	pIPv4RadioButton->labelsize(16);
 
-	pIPv6RadioButton = new Fl_Radio_Button(145, 110, 200, 30, "IPv6 Only");
-	pIPv6RadioButton->box(FL_ROUND_UP_BOX);
-	pIPv6RadioButton->down_box(FL_ROUND_DOWN_BOX);
+	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, "IPv6 Only");
 	pIPv6RadioButton->labelsize(16);
 
-	pDualStackRadioButton = new Fl_Radio_Button(145, 160, 200, 30, "IPv4 && IPv6");
-	pDualStackRadioButton->box(FL_ROUND_UP_BOX);
-	pDualStackRadioButton->down_box(FL_ROUND_DOWN_BOX);
+	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, "IPv4 && IPv6");
 	pDualStackRadioButton->labelsize(16);
 
 	pInternetGroup->end();

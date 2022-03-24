@@ -52,8 +52,8 @@ private:
 	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice;
 	Fl_Input *pSourceCallsignInput;
 	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup;
-	Fl_Radio_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
-	Fl_Radio_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
+	Fl_Radio_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
+	Fl_Radio_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;
 	// Callback wrapper
 	static void SourceCallsignInputCB(Fl_Widget *p, void *v);

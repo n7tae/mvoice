@@ -158,7 +158,7 @@ bool CMainWindow::Init()
 		return true;
 	}
 
-	pWin = new Fl_Double_Window(900, 640, "mvoice");
+	pWin = new Fl_Double_Window(900, 640, "MVoice");
 	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);
 	pWin->size_range(720, 440);
@@ -202,7 +202,7 @@ bool CMainWindow::Init()
 	pDestIPInput->when(FL_WHEN_CHANGED);
 	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
 
-	pModuleGroup = new Fl_Group(170, 400, 560, 60, "Module:");
+	pModuleGroup = new Fl_Group(170, 400, 560, 60, "Reflector Module:");
 	pModuleGroup->tooltip("Select a module for the reflector or repeater");
 	pModuleGroup->labelsize(16);
 	pModuleGroup->align(FL_ALIGN_LEFT);
@@ -214,9 +214,7 @@ bool CMainWindow::Init()
 		for (int x=0; x<13; x++)
 		{
 			const int i = 13 * y + x;
-			pModuleRadioButton[i] = new Fl_Radio_Button(x*42+177, y*30+402, 40, 25, modlabel[i]);
-			pModuleRadioButton[i]->box(FL_ROUND_UP_BOX);
-			pModuleRadioButton[i]->down_box(FL_ROUND_DOWN_BOX);
+			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*42+177, y*30+402, 40, 25, modlabel[i]);
 			pModuleRadioButton[i]->labelsize(16);
 		}
 	}
