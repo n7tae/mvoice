@@ -47,7 +47,8 @@ private:
     Fl_Double_Window *pDlg;
 	// widgets
 	Fl_Tabs *pTabs;
-	Fl_Button *pOkayButton, *pAudioRescanButton;
+	Fl_Return_Button *pOkayButton;
+	Fl_Button *pAudioRescanButton;
 	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice;
 	Fl_Input *pSourceCallsignInput;
 	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup;
