@@ -49,7 +49,7 @@ void CConfigure::ReadData()
 
 	std::ifstream cfg(path.c_str(), std::ifstream::in);
 	if (! cfg.is_open()) {
-		std::cerr << path << "was not found!" << std::endl;
+		std::cerr << path << " was not found!" << std::endl;
 		return;
 	}
 

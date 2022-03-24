@@ -54,8 +54,8 @@ void CSettingsDlg::OkayButton()
 {
 	CFGDATA newstate;						// the user clicked okay, time to look at what's changed
 	SaveWidgetStates(newstate);				// newstate is now the current contents of the Settings Dialog
-	// pMainWindow->cfg.CopyFrom(newstate);	// and it is now in the global cfg object
-	// pMainWindow->cfg.WriteData();			// and it's saved in ~/.config/qdv/qdv.cfg
+	pMainWindow->cfg.CopyFrom(newstate);	// and it is now in the global cfg object
+	pMainWindow->cfg.WriteData();			// and it's saved in ~/.config/qdv/qdv.cfg
 
 	// reconfigure current environment if anything changed
 	// pMainWindow->cfg.CopyTo(data);	// we need to return to the MainWindow a pointer to the new state
@@ -244,12 +244,10 @@ void CSettingsDlg::SourceCallsignInput()
 	if (bM17Source)
 	{
 		pSourceCallsignInput->color(FL_GREEN);
-		pSourceCallsignInput->activate();
 	}
 	else
 	{
 		pSourceCallsignInput->color(FL_RED);
-		pSourceCallsignInput->deactivate();
 	}
 	pSourceCallsignInput->damage(FL_DAMAGE_ALL);
 }
