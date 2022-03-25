@@ -86,7 +86,9 @@ void CMainWindow::SetState()
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 
 	// set up the destination combo box
+	Fl::lock();
 	const std::string current(pDestCallsignInput->value());
+	Fl::unlock();
 	pDestinationChoice->clear();
 	for (const auto &cs : routeMap.GetKeys()) {
 		const auto host = routeMap.Find(cs);
@@ -357,7 +359,9 @@ void CMainWindow::DestChoice()
 	if (i >= 0)
 	{
 		auto cs = pDestinationChoice->text(i);
+		Fl::lock();
 		pDestCallsignInput->value(cs);
+		Fl::unlock();
 		auto host = routeMap.Find(cs);
 		if (host) {
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
@@ -377,7 +381,9 @@ void CMainWindow::ActionButtonCB(Fl_Widget *, void *This)
 void CMainWindow::ActionButton()
 {
 	const std::string label(pActionButton->label());
+	Fl::lock();
 	auto cs = pDestCallsignInput->value();
+	Fl::unlock();
 	if (0 == label.compare("Save")) {
 		const std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
@@ -425,22 +431,24 @@ void CMainWindow::EchoButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::EchoButton()
 {
+	Fl::lock();
 	pEchoTestButton->toggle();
-	if (pEchoTestButton->value()) {
+	auto onchar = pEchoTestButton->value();
+	Fl::unlock();
+	if (onchar) {
 		// record the mic to a queue
 		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
 	} else {
-		// pEchoTestButton->deactivate();	// don't allow user to try to start a new test when it's still playing the current test
 		AudioSummary("Echo");
 		// play back the queue
 		AudioManager.PlayEchoDataThread();
-		// pEchoTestButton->activate();
 	}
 }
 
 void CMainWindow::Receive(bool is_rx)
 {
 	bTransOK = ! is_rx;
+	Fl::lock();
 	if (bTransOK && bDestCS && bDestIP)
 	{
 		pPTTButton->activate();
@@ -457,13 +465,16 @@ void CMainWindow::Receive(bool is_rx)
 	else
 		pEchoTestButton->deactivate();
 
+	Fl::unlock();
 	if (bTransOK && AudioManager.volStats.count)
 		AudioSummary("RX Audio");
 }
 
 void CMainWindow::SetDestinationAddress(std::string &cs)
 {
+	Fl::lock();
 	cs.assign(pDestCallsignInput->value());
+	Fl::unlock();
 	const std::string ip(pDestIPInput->value());
 	uint16_t port = 17000;	// we need to get the port from the routeMap in case it's not 17000
 	auto host = routeMap.Find(cs);
@@ -483,8 +494,11 @@ void CMainWindow::PTTButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::PTTButton()
 {
+	Fl::lock();
 	pPTTButton->toggle();
-	if (pPTTButton->value()) {
+	auto onchar = pPTTButton->value();
+	Fl::unlock();
+	if (onchar) {
 		if (gateM17.TryLock())
 		{
 			std::string cs;
@@ -493,7 +507,9 @@ void CMainWindow::PTTButton()
 		}
 		else
 		{
+			Fl::lock();
 			pPTTButton->value(0);
+			Fl::unlock();
 		}
 	}
 	else
@@ -566,7 +582,9 @@ void CMainWindow::insertLogText(const char *line)
 
 void CMainWindow::UpdateGUI()
 {
-	if (ELinkState::linked != gateM17.GetLinkState()) {
+	auto currentstate = gateM17.GetLinkState();
+	Fl::lock();
+	if (ELinkState::linked != currentstate) {
 		pUnlinkButton->deactivate();
 		std::string s(pDestCallsignInput->value());
 		if (std::regex_match(s, M17RefRegEx) && bDestIP)
@@ -582,6 +600,7 @@ void CMainWindow::UpdateGUI()
 	}
 	pPTTButton->UpdateLabel();
 	pEchoTestButton->UpdateLabel();
+	Fl::unlock();
 }
 
 void CMainWindow::SetModuleSensitive(const std::string &dest)
@@ -617,6 +636,7 @@ void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 
 void CMainWindow::DestCallsignInput()
 {
+	Fl::lock();
 	auto pos = pDestCallsignInput->position();
 	std::string s(pDestCallsignInput->value());
 	if (ToUpper(s))
@@ -624,6 +644,7 @@ void CMainWindow::DestCallsignInput()
 		pDestCallsignInput->value(s.c_str());
 		pDestCallsignInput->position(pos);
 	}
+	Fl::unlock();
 	SetModuleSensitive(s.c_str());
 	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
 	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
@@ -641,9 +662,12 @@ void CMainWindow::DestCallsignInput()
 		pDashboardButton->activate();
 	else
 		pDashboardButton->deactivate();
-	pDestCallsignInput->color(bDestCS ? 2 : 1);
+
 	FixDestActionButton();
+	Fl::lock();
+	pDestCallsignInput->color(bDestCS ? 2 : 1);
 	pDestCallsignInput->damage(FL_DAMAGE_ALL);
+	Fl::unlock();
 	DestIpInput();
 }
 
@@ -718,7 +742,10 @@ void CMainWindow::DashboardButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::DashboardButton()
 {
-	auto host = routeMap.Find(pDestCallsignInput->value());
+	Fl::lock();
+	auto dciv = pDestCallsignInput->value();
+	Fl::unlock();
+	auto host = routeMap.Find(dciv);
 	if (host && ! host->url.empty()) {
 		std::string opencmd("xdg-open ");
 		opencmd.append(host->url);
@@ -728,7 +755,9 @@ void CMainWindow::DashboardButton()
 
 void CMainWindow::FixDestActionButton()
 {
+	Fl::lock();
 	const std::string cs(pDestCallsignInput->value());
+	Fl::unlock();
 	const std::string ip(pDestIPInput->value());
 	if (bDestCS) {	// is the destination c/s valid?
 		auto host = routeMap.Find(cs);	// look for it
@@ -761,12 +790,16 @@ void CMainWindow::FixDestActionButton()
 	}
 	if (bTransOK && bDestCS && bDestIP)
 	{
+		Fl::lock();
 		pPTTButton->activate();
+		Fl::unlock();
 		pQuickKeyButton->activate();
 	}
 	else
 	{
+		Fl::lock();
 		pPTTButton->deactivate();
+		Fl::unlock();
 		pQuickKeyButton->deactivate();
 	}
 }
@@ -858,7 +891,7 @@ int main (int argc, char **argv)
 	if (MainWindow.Init())
 		return 1;
 
-	//Fl::lock();
+	Fl::lock();
 	MainWindow.Run(argc, argv);
 	Fl::run();
 	return 0;
