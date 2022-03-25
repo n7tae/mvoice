@@ -45,5 +45,4 @@ void CTransmitButton::UpdateLabel()
 	{
 		Fl_Toggle_Button::label(defaultlabel);
 	}
-	Fl_Button::draw();
 }
