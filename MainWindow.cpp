@@ -657,18 +657,19 @@ void CMainWindow::DestCallsignInput()
 			pDestIPInput->value(host->ip4addr.c_str());
 	}
 	else
+	{
 		pDestinationChoice->value(-1);
+	}
 	if (is_valid_reflector && host && !host->url.empty())
 		pDashboardButton->activate();
 	else
 		pDashboardButton->deactivate();
 
-	FixDestActionButton();
+	DestIpInput();
 	Fl::lock();
 	pDestCallsignInput->color(bDestCS ? 2 : 1);
 	pDestCallsignInput->damage(FL_DAMAGE_ALL);
 	Fl::unlock();
-	DestIpInput();
 }
 
 void CMainWindow::DestIPInputCB(Fl_Widget *, void *This)
@@ -775,6 +776,9 @@ void CMainWindow::FixDestActionButton()
 						pDestinationChoice->value(index);
 				}
 			} else {
+				auto index = pDestinationChoice->find_index(cs.c_str());
+				if (index >= 0)
+					pDestinationChoice->value(index);
 				SetDestActionButton(false, "");
 			}
 		} else {
