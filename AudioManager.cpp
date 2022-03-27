@@ -30,10 +30,6 @@
 #include "codec2.h"
 #include "Callsign.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 CAudioManager::CAudioManager() : hot_mic(false), play_file(false), m17_sid_in(0U)
 {
 	link_open = true;
@@ -59,7 +55,6 @@ CAudioManager::CAudioManager() : hot_mic(false), play_file(false), m17_sid_in(0U
 bool CAudioManager::Init(CMainWindow *pMain)
 {
 	pMainWindow = pMain;
-	std::string index(CFG_DIR);
 
 	AM2M17.SetUp("am2m17");
 	LogInput.SetUp("log_input");
