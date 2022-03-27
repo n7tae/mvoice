@@ -37,6 +37,13 @@
 #define CFG_DIR "/tmp/"
 #endif
 
+#define _(STRING) STRING
+
+static const char *pttstr    = _("PTT");
+static const char *savestr   = _("Save");
+static const char *deletestr = _("Delete");
+static const char *updatestr = _("Delete");
+
 static void MyIdleProcess(void *p)
 {
 	CMainWindow *pMainWindow = (CMainWindow *)p;
@@ -125,8 +132,8 @@ bool CMainWindow::Init()
 
 	bool menu__i18n_done = false;
 	Fl_Menu_Item theMenu[] = {
- 		{ "Settings...", 0, &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
-		{ "About...",    0, &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
+ 		{ _("Settings..."), 0, &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
+		{ _("About..."),    0, &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
 		{ 0,             0, 0,                                     0, 0, 0, 0, 0, 0 }
 	};
 
@@ -141,7 +148,7 @@ bool CMainWindow::Init()
 		fl_alert("%s: %s", iconpath.c_str(), strerror(errno));    // shows actual os error to user
 		return true;
 	case Fl_Image::ERR_FORMAT:
-		fl_alert("%s: couldn't decode image", iconpath.c_str());
+		fl_alert(_("%s: couldn't decode image"), iconpath.c_str());
 		return true;
 	}
 
@@ -188,24 +195,24 @@ bool CMainWindow::Init()
 
 	pWin->resizable(pTextDisplay);
 
-	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, "Destination Callsign:");
-	pDestCallsignInput->tooltip("A reflector or user callsign");
+	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, _("Destination Callsign:"));
+	pDestCallsignInput->tooltip(_("A reflector or user callsign"));
 	pDestCallsignInput->color(FL_RED);
 	pDestCallsignInput->labelsize(16);
 	pDestCallsignInput->textsize(16);
 	pDestCallsignInput->when(FL_WHEN_CHANGED);
 	pDestCallsignInput->callback(&CMainWindow::DestCallsignInputCB, this);
 
-	pDestIPInput = new Fl_Input(460, 360, 424, 30, "IP:");
-	pDestIPInput->tooltip("The IP of the reflector or user");
+	pDestIPInput = new Fl_Input(460, 360, 424, 30, _("IP:"));
+	pDestIPInput->tooltip(_("The IP of the reflector or user"));
 	pDestIPInput->color(FL_RED);
 	pDestIPInput->labelsize(16);
 	pDestIPInput->textsize(16);
 	pDestIPInput->when(FL_WHEN_CHANGED);
 	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
 
-	pModuleGroup = new Fl_Group(170, 400, 560, 60, "Reflector Module:");
-	pModuleGroup->tooltip("Select a module for the reflector or repeater");
+	pModuleGroup = new Fl_Group(170, 400, 560, 60, _("Reflector Module:"));
+	pModuleGroup->tooltip(_("Select a module for the reflector or repeater"));
 	pModuleGroup->labelsize(16);
 	pModuleGroup->align(FL_ALIGN_LEFT);
 	pModuleGroup->box(FL_THIN_UP_BOX);
@@ -223,52 +230,52 @@ bool CMainWindow::Init()
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
 
-	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, "Destination:");
-	pDestinationChoice->tooltip("Select a saved contact (reflector or user)");
+	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, _("Destination:"));
+	pDestinationChoice->tooltip(_("Select a saved contact (reflector or user)"));
 	pDestinationChoice->down_box(FL_BORDER_BOX);
 	pDestinationChoice->labelsize(16);
 	pDestinationChoice->textsize(16);
 	pDestinationChoice->callback(&CMainWindow::DestChoiceCB, this);
 
 	pActionButton = new Fl_Button(455, 472, 80, 30, "Action");
-	pActionButton->tooltip("Update or delete an existing contact,,or save a new contact");
+	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
 	pActionButton->labelsize(16);
 	pActionButton->deactivate();
 	pActionButton->callback(&CMainWindow::ActionButtonCB, this);
 
-	pDashboardButton = new Fl_Button(600, 474, 201, 30, "Open Dashboard");
-	pDashboardButton->tooltip("Open a reflector dashboard, if available");
+	pDashboardButton = new Fl_Button(600, 474, 201, 30, _("Open Dashboard"));
+	pDashboardButton->tooltip(_("Open a reflector dashboard, if available"));
 	pDashboardButton->labelsize(16);
 	pDashboardButton->deactivate();
 	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
 
-	pLinkButton = new Fl_Button(358, 514, 80, 30, "Link");
-	pLinkButton->tooltip("Connect to an M17 Reflector");
+	pLinkButton = new Fl_Button(358, 514, 80, 30, _("Link"));
+	pLinkButton->tooltip(_("Connect to an M17 Reflector"));
 	pLinkButton->labelsize(16);
 	pLinkButton->deactivate();
 	pLinkButton->callback(&CMainWindow::LinkButtonCB, this);
 
-	pUnlinkButton = new Fl_Button(456, 514, 80, 30, "Unlink");
-	pUnlinkButton->tooltip("Disconnected from a reflector");
+	pUnlinkButton = new Fl_Button(456, 514, 80, 30, _("Unlink"));
+	pUnlinkButton->tooltip(_("Disconnected from a reflector"));
 	pUnlinkButton->labelsize(16);
 	pUnlinkButton->deactivate();
 	pUnlinkButton->callback(&CMainWindow::UnlinkButtonCB, this);
 
-	pEchoTestButton = new CTransmitButton(50, 574, 144, 40, "Echo Test");
-	pEchoTestButton->tooltip("Push to record a test that will be played back");
+	pEchoTestButton = new CTransmitButton(50, 574, 144, 40, _("Echo Test"));
+	pEchoTestButton->tooltip(_("Push to record a test that will be played back"));
 	pEchoTestButton->labelsize(16);
 	pEchoTestButton->selection_color(FL_YELLOW);
 	pEchoTestButton->callback(&CMainWindow::EchoButtonCB, this);
 
-	pPTTButton = new CTransmitButton(250, 557, 400, 60, "PTT");
-	pPTTButton->tooltip("Push to talk");
+	pPTTButton = new CTransmitButton(250, 557, 400, 60, pttstr);
+	pPTTButton->tooltip(_("Push to talk. This is actually a toggle button"));
 	pPTTButton->labelsize(22);
 	pPTTButton->deactivate();
 	pPTTButton->selection_color(FL_YELLOW);
 	pPTTButton->callback(&CMainWindow::PTTButtonCB, this);
 
-	pQuickKeyButton = new Fl_Button(700, 574, 150, 40, "Quick Key");
-	pQuickKeyButton->tooltip("Send a short, silent voice stream");
+	pQuickKeyButton = new Fl_Button(700, 574, 150, 40, _("Quick Key"));
+	pQuickKeyButton->tooltip(_("Send a short, silent voice stream"));
 	pQuickKeyButton->labelsize(16);
 	pQuickKeyButton->deactivate();
 	pQuickKeyButton->callback(QuickKeyButttonCB, this);
@@ -384,7 +391,7 @@ void CMainWindow::ActionButton()
 	Fl::lock();
 	auto cs = pDestCallsignInput->value();
 	Fl::unlock();
-	if (0 == label.compare("Save")) {
+	if (0 == label.compare(savestr)) {
 		const std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
 			routeMap.Update(cs, "", a, "");
@@ -396,12 +403,12 @@ void CMainWindow::ActionButton()
 		auto i = pDestinationChoice->find_index(cs);
 		if (i >= 0)
 			pDestinationChoice->value(i);
-	} else if (0 == label.compare("Delete")) {
+	} else if (0 == label.compare(deletestr)) {
 		auto index = pDestinationChoice->value();
 		pDestinationChoice->remove(index);
 		routeMap.Erase(cs);
 		pDestinationChoice->value(-1);
-	} else if (0 == label.compare("Update")) {
+	} else if (0 == label.compare(updatestr)) {
 		std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
 			routeMap.Update(cs, "", a, "");
@@ -420,7 +427,7 @@ void CMainWindow::AudioSummary(const char *title)
 		// 65 db subtration for "reasonable volume", an arbitrary reference point
 		double d = 20.0 * log10(sqrt(AudioManager.volStats.ss/(0.5 * AudioManager.volStats.count))) - 65.0;
 		double c = 100.0 * AudioManager.volStats.clip / AudioManager.volStats.count;
-		snprintf(line, 64, "%s Time=%.1fs Vol=%.0fdB Clip=%.0f%%\n", title, t, d, c);
+		snprintf(line, 64, _("%s Time=%.1fs Vol=%.0fdB Clip=%.0f%%\n"), title, t, d, c);
 		insertLogText(line);
 }
 
@@ -439,7 +446,7 @@ void CMainWindow::EchoButton()
 		// record the mic to a queue
 		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
 	} else {
-		AudioSummary("Echo");
+		AudioSummary(_("Echo"));
 		// play back the queue
 		AudioManager.PlayEchoDataThread();
 	}
@@ -467,7 +474,7 @@ void CMainWindow::Receive(bool is_rx)
 
 	Fl::unlock();
 	if (bTransOK && AudioManager.volStats.count)
-		AudioSummary("RX Audio");
+		AudioSummary(_("RX Audio"));
 }
 
 void CMainWindow::SetDestinationAddress(std::string &cs)
@@ -515,7 +522,7 @@ void CMainWindow::PTTButton()
 	else
 	{
 		AudioManager.KeyOff();
-		AudioSummary("PTT");
+		AudioSummary(pttstr);
 		gateM17.ReleaseLock();
 	}
 }
@@ -713,9 +720,9 @@ void CMainWindow::LinkButtonCB(Fl_Widget *, void *This)
 void CMainWindow::LinkButton()
 {
 	while (cfgdata.sM17SourceCallsign.empty()) {
-		insertLogText("ERROR: Your system is not yet configured!\n");
-		insertLogText("Be sure to save your callsign and internet access in Settings\n");
-		insertLogText("You can usually leave the audio devices as 'default'\n");
+		insertLogText(_("ERROR: Your system is not yet configured!\n"));
+		insertLogText(_("Be sure to save your callsign and internet access in Settings\n"));
+		insertLogText(_("You can usually leave the audio devices as 'default'\n"));
 		return;
 	}
 	std::string cmd("M17L");
@@ -767,10 +774,10 @@ void CMainWindow::FixDestActionButton()
 			if (bDestIP && host->url.empty()) { // is the IP okay and is this not from the csv file?
 				if (ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) {
 					// the ip in the IPEntry is different
-					SetDestActionButton(true, "Update");
+					SetDestActionButton(true, updatestr);
 				} else {
 					// perfect match
-					SetDestActionButton(true, "Delete");
+					SetDestActionButton(true, deletestr);
 					auto index = pDestinationChoice->find_index(cs.c_str());
 					if (index >= 0)
 						pDestinationChoice->value(index);
@@ -784,7 +791,7 @@ void CMainWindow::FixDestActionButton()
 		} else {
 			// cs is not found in map
 			if (bDestIP) { // is the IP okay and is the not from the csv file?
-				SetDestActionButton(true, "Save");
+				SetDestActionButton(true, savestr);
 			} else {
 				SetDestActionButton(false, "");
 			}
@@ -889,6 +896,11 @@ static void ReadM17Json()
 
 int main (int argc, char **argv)
 {
+	// internationalization
+	// setlocale(LC_ALL, "");
+	// bindtextdomain("mvoice", CFG_DIR);
+	// textdomain("mvoice");
+
 	ReadM17Json();
 
 	CMainWindow MainWindow;

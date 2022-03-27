@@ -16,9 +16,14 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+//#include <libintl.h>
 #include <string>
 
 #include "AboutDlg.h"
+
+#define _(STRING) STRING
+
+#define VERSION "0.1.0"
 
 CAboutDlg::CAboutDlg() {}
 
@@ -26,14 +31,17 @@ CAboutDlg::~CAboutDlg() {}
 
 bool CAboutDlg::Init(Fl_PNG_Image *pIcon)
 {
-	pDlg = new Fl_Double_Window(400, 200, "About MVoice");
+	pDlg = new Fl_Double_Window(400, 200, _("About MVoice"));
 
 	pIconBox = new Fl_Box(176, 30, 48, 48);
 	pIconBox->image(pIcon);
 
-	pVersionBox = new Fl_Box(0, 100, 400, 30, "MVoice Version # 0.1.0");
+	std::string v(_("MVoice version # "));
+	v.append(VERSION);
 
-	pCopyrightBox = new Fl_Box(0, 150, 400, 30, "Copyright (c) 2022 by Thomas A. Early N7TAE");
+	pVersionBox = new Fl_Box(0, 100, 400, 30, v.c_str());
+
+	pCopyrightBox = new Fl_Box(0, 150, 400, 30, _("Copyright (c) 2022 by Thomas A. Early N7TAE"));
 
 	pDlg->end();
 	pDlg->callback(&CAboutDlg::WindowCallbackCB, this);

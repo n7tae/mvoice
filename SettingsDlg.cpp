@@ -25,6 +25,10 @@
 #include "SettingsDlg.h"
 #include "MainWindow.h"
 
+#define _(STRING) STRING
+
+static const char *notfoundstr = _(" not found");
+
 CSettingsDlg::CSettingsDlg() : pMainWindow(nullptr), pDlg(nullptr)
 {
 }
@@ -118,17 +122,17 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 bool CSettingsDlg::Init(CMainWindow *pMain)
 {
 	pMainWindow = pMain;
-	pDlg = new Fl_Double_Window(450, 350, "Settings");
+	pDlg = new Fl_Double_Window(450, 350, _("Settings"));
 
 	pTabs = new Fl_Tabs(10, 10, 430, 240);
 	pTabs->labelsize(16);
 
 	//////////////////////////////////////////////////////////////////////////
-	pStationGroup = new Fl_Group(20, 30, 410, 210, "Station");
+	pStationGroup = new Fl_Group(20, 30, 410, 210, _("Station"));
 	pStationGroup->labelsize(16);
 
-	pSourceCallsignInput = new Fl_Input(218, 51, 127, 30, "My Callsign:");
-	pSourceCallsignInput->tooltip("Input your callsign, up to 8 characters");
+	pSourceCallsignInput = new Fl_Input(218, 51, 127, 30, _("My Callsign:"));
+	pSourceCallsignInput->tooltip(_("Input your callsign, up to 8 characters"));
 	pSourceCallsignInput->color(FL_RED);
 	pSourceCallsignInput->labelsize(16);
 	pSourceCallsignInput->textsize(16);
@@ -139,24 +143,24 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pCodecGroup->box(FL_THIN_UP_BOX);
 	pCodecGroup->labelsize(16);
 
-	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(160, 135, 150, 30, "Voice-only");
-	pVoiceOnlyRadioButton->tooltip("This is the higher quality, 3200 bits/s codec");
+	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(160, 135, 150, 30, _("Voice-only"));
+	pVoiceOnlyRadioButton->tooltip(_("This is the higher quality, 3200 bits/s codec"));
 	pVoiceOnlyRadioButton->labelsize(16);
 
-	pVoiceDataRadioButton = new Fl_Radio_Round_Button(160, 175, 150, 30, "Voice+Data");
-	pVoiceDataRadioButton->tooltip("This is the 1600 bits/s codec");
+	pVoiceDataRadioButton = new Fl_Radio_Round_Button(160, 175, 150, 30, _("Voice+Data"));
+	pVoiceDataRadioButton->tooltip(_("This is the 1600 bits/s codec"));
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
 	pStationGroup->end();
 	pTabs->add(pStationGroup);
 
 	//////////////////////////////////////////////////////////////////////////
-	pAudioGroup = new Fl_Group(20, 30, 410, 210, "Audio");
-	pAudioGroup->tooltip("Select the audio Input device");
+	pAudioGroup = new Fl_Group(20, 30, 410, 210, _("Audio"));
+	pAudioGroup->tooltip(_("Select the audio Input device"));
 	pAudioGroup->labelsize(16);
 
-	pAudioInputChoice = new Fl_Choice(135, 50, 260, 24, "Input:");
-	pAudioInputChoice->tooltip("Select your audio input device, usually \"default\"");
+	pAudioInputChoice = new Fl_Choice(135, 50, 260, 24, _("Input:"));
+	pAudioInputChoice->tooltip(_("Select your audio input device, usually \"default\""));
 	pAudioInputChoice->down_box(FL_BORDER_BOX);
 	pAudioInputChoice->labelsize(16);
 	pAudioInputChoice->textsize(16);
@@ -165,8 +169,8 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pAudioInputDescBox = new Fl_Box(30, 80, 390, 25, "input description");
 	pAudioInputDescBox->labelsize(12);
 
-	pAudioOutputChoice = new Fl_Choice(135, 120, 260, 24, "Output:");
-	pAudioOutputChoice->tooltip("Select the audio output device, usually \"default\"");
+	pAudioOutputChoice = new Fl_Choice(135, 120, 260, 24, _("Output:"));
+	pAudioOutputChoice->tooltip(_("Select the audio output device, usually \"default\""));
 	pAudioOutputChoice->down_box(FL_BORDER_BOX);
 	pAudioOutputChoice->labelsize(16);
 	pAudioOutputChoice->textsize(16);
@@ -175,24 +179,24 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pAudioOutputDescBox = new Fl_Box(30, 150, 390, 25, "output description");
 	pAudioOutputDescBox->labelsize(12);
 
-	pAudioRescanButton = new Fl_Button(192, 186, 90, 40, "Rescan");
-	pAudioRescanButton->tooltip("Rescan for new audio devices");
+	pAudioRescanButton = new Fl_Button(192, 186, 90, 40, _("Rescan"));
+	pAudioRescanButton->tooltip(_("Rescan for new audio devices"));
 	pAudioRescanButton->labelsize(16);
 
 	pAudioGroup->end();
 	pTabs->add(pAudioGroup);
 
 	//////////////////////////////////////////////////////////////////////////
-	pInternetGroup = new Fl_Group(20, 30, 410, 210, "Internet");
+	pInternetGroup = new Fl_Group(20, 30, 410, 210, _("Internet"));
 	pInternetGroup->labelsize(16);
 
-	pIPv4RadioButton = new Fl_Radio_Round_Button(145, 60, 200, 30, "IPv4 Only");
+	pIPv4RadioButton = new Fl_Radio_Round_Button(145, 60, 200, 30, _("IPv4 Only"));
 	pIPv4RadioButton->labelsize(16);
 
-	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, "IPv6 Only");
+	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, _("IPv6 Only"));
 	pIPv6RadioButton->labelsize(16);
 
-	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, "IPv4 && IPv6");
+	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, _("IPv4 && IPv6"));
 	pDualStackRadioButton->labelsize(16);
 
 	pInternetGroup->end();
@@ -200,7 +204,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 
 	pTabs->end();
 
-	pOkayButton = new Fl_Return_Button(310, 280, 120, 44, "Update");
+	pOkayButton = new Fl_Return_Button(310, 280, 120, 44, _("Update"));
 	pOkayButton->labelsize(16);
 	pOkayButton->callback(&CSettingsDlg::OkayButtonCB, this);
 
@@ -250,7 +254,7 @@ void CSettingsDlg::AudioInputChoice()
 	if (AudioInMap.end() == it)
 	{
 		data.sAudioIn.assign("ERROR");
-		pAudioInputDescBox->label(std::string(selected+" not found!").c_str());
+		pAudioInputDescBox->label(std::string(selected+notfoundstr).c_str());
 
 	}
 	else
@@ -271,8 +275,8 @@ void CSettingsDlg::AudioOutputChoice()
 	auto it = AudioOutMap.find(selected);
 	if (AudioOutMap.end() == it)
 	{
-		data.sAudioOut.assign("ERROR");
-		pAudioOutputDescBox->label(std::string(selected+" not found!").c_str());
+		data.sAudioOut.assign(_("ERROR"));
+		pAudioOutputDescBox->label(std::string(selected+notfoundstr).c_str());
 
 	}
 	else
@@ -326,7 +330,7 @@ void CSettingsDlg::AudioRescanButton()
 				} else if (0 == strcasecmp(io, "Output")) {
 					is_input = false;
 				} else {
-					std::cerr << "ERROR: unexpected IOID=" << io << std::endl;
+					std::cerr << _("ERROR: unexpected IOID=") << io << std::endl;
 				}
 				free(io);
 			}
