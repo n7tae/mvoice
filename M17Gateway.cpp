@@ -27,9 +27,7 @@
 
 #include "M17Gateway.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
+extern char *mvoice_cfg_dir;
 
 CM17Gateway::CM17Gateway() : CBase()
 {
@@ -56,7 +54,7 @@ void CM17Gateway::ReleaseLock()
 bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
 	mlink.state = ELinkState::unlinked;
-	std::string path(CFG_DIR);
+	std::string path(mvoice_cfg_dir);
 	path.append("qn.db");
 	if (AM2M17.Open("am2m17"))
 		return true;

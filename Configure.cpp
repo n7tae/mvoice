@@ -24,9 +24,7 @@
 
 #include "Configure.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
+extern char *mvoice_cfg_dir;
 
 void CConfigure::SetDefaultValues()
 {
@@ -44,7 +42,7 @@ void CConfigure::SetDefaultValues()
 void CConfigure::ReadData()
 {
 	SetDefaultValues();
-	std::string path(CFG_DIR);
+	std::string path(mvoice_cfg_dir);
 	path.append("mvoice.cfg");
 
 	std::ifstream cfg(path.c_str(), std::ifstream::in);
@@ -93,7 +91,7 @@ void CConfigure::ReadData()
 void CConfigure::WriteData()
 {
 
-	std::string path(CFG_DIR);
+	std::string path(mvoice_cfg_dir);
 	path.append("mvoice.cfg");
 
 	// directory exists, now make the file

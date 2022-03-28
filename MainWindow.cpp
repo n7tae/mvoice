@@ -33,9 +33,7 @@
 #include "Utilities.h"
 #include "TemplateClasses.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
+char *mvoice_cfg_dir;
 
 static void MyIdleProcess(void *p)
 {
@@ -130,7 +128,7 @@ bool CMainWindow::Init()
 		{ 0,             0, 0,                                     0, 0, 0, 0, 0, 0 }
 	};
 
-	std::string iconpath(CFG_DIR);
+	std::string iconpath(mvoice_cfg_dir);
 	iconpath.append("mvoice48.png");
 	pIcon = new Fl_PNG_Image(iconpath.c_str());
 
@@ -870,7 +868,7 @@ static void ReadM17Json()
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 
-	std::string path(CFG_DIR);
+	std::string path(mvoice_cfg_dir);
 	path.append("m17refl.json");
 	std::ofstream ofs(path);
 	if (ofs.is_open()) {
@@ -889,8 +887,13 @@ static void ReadM17Json()
 
 int main (int argc, char **argv)
 {
-	ReadM17Json();
+#ifdef CFG_DIR
+	mvoice_cfg_dir = (char *) CFG_DIR;
+#else
+	mvoice_cfg_dir = (char *) "/tmp/";
+#endif
 
+	ReadM17Json();
 	CMainWindow MainWindow;
 	if (MainWindow.Init())
 		return 1;
