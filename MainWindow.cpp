@@ -29,6 +29,8 @@
 #include <chrono>
 #include <cmath>
 
+#include <FL/Fl_Preferences.H>
+#include <FL/filename.H>
 #include "MainWindow.h"
 #include "Utilities.h"
 #include "TemplateClasses.h"
@@ -892,6 +894,16 @@ int main (int argc, char **argv)
 #else
 	mvoice_cfg_dir = (char *) "/tmp/";
 #endif
+	// Use FLTK to locate mvoice config files.
+	Fl_Preferences prefs( Fl_Preferences::USER, "n7tae", "mvoice" );
+	char path[FL_PATH_MAX];
+	if (prefs.getUserdataPath(path,FL_PATH_MAX)) {
+		std::string iconpath(path);
+		iconpath.append("mvoice48.png");
+		std::ifstream testicon;
+		testicon.open(iconpath);
+		if (testicon) mvoice_cfg_dir=path;
+	}
 
 	ReadM17Json();
 	CMainWindow MainWindow;
