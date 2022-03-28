@@ -27,10 +27,6 @@
 
 #include "M17Gateway.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 CM17Gateway::CM17Gateway() : CBase()
 {
 	keep_running = false; // not running initially. this will be set to true in CMainWindow
@@ -56,8 +52,6 @@ void CM17Gateway::ReleaseLock()
 bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
 	mlink.state = ELinkState::unlinked;
-	std::string path(CFG_DIR);
-	path.append("qn.db");
 	if (AM2M17.Open("am2m17"))
 		return true;
 	M172AM.SetUp("m172am");

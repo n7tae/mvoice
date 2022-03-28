@@ -33,10 +33,6 @@
 #include "Utilities.h"
 #include "TemplateClasses.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 #define _(STRING) STRING
 
 static const char *pttstr    = _("PTT");
@@ -134,7 +130,7 @@ bool CMainWindow::Init()
 	Fl_Menu_Item theMenu[] = {
  		{ _("Settings..."), 0, &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
 		{ _("About..."),    0, &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
-		{ 0,             0, 0,                                     0, 0, 0, 0, 0, 0 }
+		{ 0,                0, 0,                                     0, 0, 0, 0, 0, 0 }
 	};
 
 	std::string iconpath(CFG_DIR);
@@ -428,6 +424,7 @@ void CMainWindow::AudioSummary(const char *title)
 		double d = 20.0 * log10(sqrt(AudioManager.volStats.ss/(0.5 * AudioManager.volStats.count))) - 65.0;
 		double c = 100.0 * AudioManager.volStats.clip / AudioManager.volStats.count;
 		snprintf(line, 64, _("%s Time=%.1fs Vol=%.0fdB Clip=%.0f%%\n"), title, t, d, c);
+		std::lock_guard<std::mutex> lck(logmux);
 		insertLogText(line);
 }
 
@@ -574,6 +571,7 @@ void CMainWindow::ReadThread()
 			{
 				char line[256] = { 0 };
 				LogInput.Read(line, 256);
+				std::lock_guard<std::mutex> lok(logmux);
 				insertLogText(line);
 			}
 		}
@@ -719,17 +717,20 @@ void CMainWindow::LinkButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::LinkButton()
 {
-	while (cfgdata.sM17SourceCallsign.empty()) {
+	if (cfgdata.sM17SourceCallsign.empty()) {
+		std::lock_guard<std::mutex> lck(logmux);
 		insertLogText(_("ERROR: Your system is not yet configured!\n"));
 		insertLogText(_("Be sure to save your callsign and internet access in Settings\n"));
 		insertLogText(_("You can usually leave the audio devices as 'default'\n"));
-		return;
 	}
-	std::string cmd("M17L");
-	std::string cs;
-	SetDestinationAddress(cs);
-	cmd.append(cs);
-	AudioManager.Link(cmd);
+	else
+	{
+		std::string cmd("M17L");
+		std::string cs;
+		SetDestinationAddress(cs);
+		cmd.append(cs);
+		AudioManager.Link(cmd);
+	}
 }
 
 void CMainWindow::UnlinkButtonCB(Fl_Widget *, void *This)
@@ -817,9 +818,6 @@ void CMainWindow::FixDestActionButton()
 
 void CMainWindow::StopM17()
 {
-	keep_running = false;
-	if (futReadThread.valid())
-		futReadThread.get();
 	if (gateM17.keep_running) {
 		gateM17.keep_running = false;
 		futM17.get();

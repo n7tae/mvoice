@@ -21,6 +21,7 @@
 #include <regex>
 #include <future>
 #include <atomic>
+#include <mutex>
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -75,6 +76,7 @@ private:
 
 	// state data
 	CFGDATA cfgdata;
+	std::mutex logmux;
 
 	// helpers
 	void FixDestActionButton();
@@ -85,7 +87,7 @@ private:
 	void RunM17();
 	void StopM17();
 	void ReadThread();
-	CUnixDgramReader Gate2AM, Link2AM, M172AM, LogInput;
+	CUnixDgramReader M172AM, LogInput;
 	void CloseAll();
 	void insertLogText(const char *line);
 	void AudioSummary(const char *title);

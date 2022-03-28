@@ -22,10 +22,6 @@
 #include "M17RouteMap.h"
 #include "Utilities.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 CM17RouteMap::~CM17RouteMap()
 {
 	mux.lock();

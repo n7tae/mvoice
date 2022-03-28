@@ -24,10 +24,6 @@
 
 #include "Configure.h"
 
-#ifndef CFG_DIR
-#define CFG_DIR "/tmp/"
-#endif
-
 void CConfigure::SetDefaultValues()
 {
 	// M17
