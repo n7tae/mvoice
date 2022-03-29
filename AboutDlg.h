@@ -29,6 +29,7 @@ public:
 	void Show();
 
 protected:
+	char version[64];
 	Fl_Double_Window *pDlg;
 	Fl_PNG_Image *pIcon;
 	Fl_Box *pIconBox, *pVersionBox, *pCopyrightBox;

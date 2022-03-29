@@ -365,6 +365,7 @@ void CMainWindow::DestChoice()
 		Fl::lock();
 		pDestCallsignInput->value(cs);
 		Fl::unlock();
+		DestCallsignInput();
 		auto host = routeMap.Find(cs);
 		if (host) {
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
@@ -372,6 +373,7 @@ void CMainWindow::DestChoice()
 				pDestIPInput->value(host->ip6addr.c_str());
 			else
 				pDestIPInput->value(host->ip4addr.c_str());
+			DestIpInput();
 		}
 	}
 }

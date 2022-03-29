@@ -23,7 +23,7 @@
 
 #define _(STRING) STRING
 
-#define VERSION "0.1.0"
+#define VERSION "0.1.1"
 
 CAboutDlg::CAboutDlg() {}
 
@@ -36,10 +36,9 @@ bool CAboutDlg::Init(Fl_PNG_Image *pIcon)
 	pIconBox = new Fl_Box(176, 30, 48, 48);
 	pIconBox->image(pIcon);
 
-	std::string v(_("MVoice version # "));
-	v.append(VERSION);
+	snprintf(version, sizeof(version), "MVoice version # %s", VERSION);
 
-	pVersionBox = new Fl_Box(0, 100, 400, 30, v.c_str());
+	pVersionBox = new Fl_Box(0, 100, 400, 30, version);
 
 	pCopyrightBox = new Fl_Box(0, 150, 400, 30, _("Copyright (c) 2022 by Thomas A. Early N7TAE"));
 

@@ -61,7 +61,6 @@ install : $(EXE)
 	/bin/cp -f $(EXE) $(BINDIR)
 
 uninstall :
-	/bin/rm -rf $(CFGDIR)announce
 	/bin/rm -f $(CFGDIR)mvoice48.png
 	/bin/rm -f $(CFGDIR)$(EXE).cfg
 	/bin/rm -f $(CFGDIR)m17refl.json
