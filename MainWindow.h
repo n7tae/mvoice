@@ -81,6 +81,7 @@ private:
 	// helpers
 	void FixDestActionButton();
 	void SetDestActionButton(const bool sensitive, const char *label);
+	void TransmitterButtonControl();
 	std::future<void> futM17;
 	std::future<void> futReadThread;
 	void SetState();

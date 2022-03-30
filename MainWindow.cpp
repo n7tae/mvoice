@@ -454,24 +454,15 @@ void CMainWindow::EchoButton()
 void CMainWindow::Receive(bool is_rx)
 {
 	bTransOK = ! is_rx;
-	Fl::lock();
-	if (bTransOK && bDestCS && bDestIP)
-	{
-		pPTTButton->activate();
-		pQuickKeyButton->activate();
-	}
-	else
-	{
-		pPTTButton->deactivate();
-		pQuickKeyButton->deactivate();
-	}
+	TransmitterButtonControl();
 
+	Fl::lock();
 	if (bTransOK)
 		pEchoTestButton->activate();
 	else
 		pEchoTestButton->deactivate();
-
 	Fl::unlock();
+
 	if (bTransOK && AudioManager.volStats.count)
 		AudioSummary(_("RX Audio"));
 }
@@ -589,24 +580,34 @@ void CMainWindow::insertLogText(const char *line)
 
 void CMainWindow::UpdateGUI()
 {
-	auto currentstate = gateM17.GetLinkState();
 	Fl::lock();
-	if (ELinkState::linked != currentstate) {
-		pUnlinkButton->deactivate();
-		std::string s(pDestCallsignInput->value());
-		if (std::regex_match(s, M17RefRegEx) && bDestIP)
-			pLinkButton->activate();
-		else
-			pLinkButton->deactivate();
-	} else {
+	if (cfgdata.sM17SourceCallsign.empty())
+	{
+		pPTTButton->deactivate();
+		pQuickKeyButton->deactivate();
 		pLinkButton->deactivate();
-		if (bDestIP)
-			pUnlinkButton->activate();
-		else
-			pUnlinkButton->deactivate();
 	}
-	pPTTButton->UpdateLabel();
-	pEchoTestButton->UpdateLabel();
+	else
+	{
+		auto currentstate = gateM17.GetLinkState();
+		if (ELinkState::linked != currentstate) {
+			pUnlinkButton->deactivate();
+			std::string s(pDestCallsignInput->value());
+			if (std::regex_match(s, M17RefRegEx) && bDestIP)
+				pLinkButton->activate();
+			else
+				pLinkButton->deactivate();
+		} else {
+			pLinkButton->deactivate();
+			if (bDestIP)
+				pUnlinkButton->activate();
+			else
+				pUnlinkButton->deactivate();
+		}
+		pPTTButton->UpdateLabel();
+		pEchoTestButton->UpdateLabel();
+		TransmitterButtonControl();
+	}
 	Fl::unlock();
 }
 
@@ -802,20 +803,23 @@ void CMainWindow::FixDestActionButton()
 	} else {
 		SetDestActionButton(false, "");
 	}
+	TransmitterButtonControl();
+}
+
+void CMainWindow::TransmitterButtonControl()
+{
+	Fl::lock();
 	if (bTransOK && bDestCS && bDestIP)
 	{
-		Fl::lock();
 		pPTTButton->activate();
-		Fl::unlock();
 		pQuickKeyButton->activate();
 	}
 	else
 	{
-		Fl::lock();
 		pPTTButton->deactivate();
-		Fl::unlock();
 		pQuickKeyButton->deactivate();
 	}
+	Fl::unlock();
 }
 
 void CMainWindow::StopM17()
