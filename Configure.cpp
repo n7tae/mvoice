@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2019-2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2019-2022 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -35,6 +35,9 @@ void CConfigure::SetDefaultValues()
 	// audio
 	data.sAudioIn.assign("default");
 	data.sAudioOut.assign("default");
+	data.sBootStrap.assign("m17-usa.openquad.net");
+	data.sIPv4.clear();
+	data.sIPv6.clear();
 }
 
 void CConfigure::ReadData()

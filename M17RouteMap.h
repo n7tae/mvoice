@@ -28,7 +28,7 @@
 
 using SHost = struct host_tag
 {
-	std::string url, ip4addr, ip6addr;
+	std::string url, ip4addr, ip6addr, modules;
 	uint16_t port;
 };
 

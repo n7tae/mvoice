@@ -18,9 +18,9 @@ USE44100 = false
 DEBUG = false
 
 ifeq ($(DEBUG), true)
-CPPFLAGS = -ggdb -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
+CPPFLAGS = -ggdb -Werror -Wall -Wextra -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
 else
-CPPFLAGS = -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
+CPPFLAGS = -W -Werror -Wall -Wextra -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
 endif
 
 ifeq ($(USE44100), true)
@@ -42,7 +42,7 @@ OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread
+	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread -lopendht
 
 %.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -c $< -o $@

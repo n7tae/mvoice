@@ -137,7 +137,7 @@ bool CMainWindow::Init()
 	iconpath.append("mvoice48.png");
 	pIcon = new Fl_PNG_Image(iconpath.c_str());
 
-	switch( pIcon->fail())
+	switch(pIcon->fail())
 	{
 	case Fl_Image::ERR_NO_IMAGE:
 	case Fl_Image::ERR_FILE_ACCESS:
@@ -298,7 +298,25 @@ bool CMainWindow::Init()
 	// idle processing
 	Fl::add_timeout(1.0, MyIdleProcess, this);
 
+	// start the dht instance
+	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
+
+	if (cfgdata.sBootStrap.length())
+		node.bootstrap(cfgdata.sBootStrap, "17171");
+
+	//PutDHTInfo();
+
+
 	return false;
+}
+
+void CMainWindow::ActivateModules(const std::string &modules)
+{
+	for (unsigned i=0; i<26; i++)
+	if (std::string::npos == modules.find('A'+i))
+		pModuleRadioButton[i]->deactivate();
+	else
+		pModuleRadioButton[i]->activate();
 }
 
 void CMainWindow::Run(int argc, char *argv[])
@@ -642,6 +660,23 @@ void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 	((CMainWindow *)This)->DestCallsignInput();
 }
 
+std::shared_ptr<SHost> CMainWindow::GetDhtReflector(const std::string &refcs)
+{
+	std::shared_ptr<SHost> rval;
+	node.get<SReflectorData>(
+		dht::InfoHash::get(refcs),
+		[&](SReflectorData &&refdata){
+			rval->ip4addr.assign(refdata.ipv4);
+			rval->ip6addr.assign(refdata.ipv6);
+			rval->modules.assign(refdata.modules);
+			rval->port = refdata.port;
+			rval->url.assign(refdata.url);
+			return true;
+		}
+	);
+	return rval;
+}
+
 void CMainWindow::DestCallsignInput()
 {
 	Fl::lock();
@@ -656,7 +691,28 @@ void CMainWindow::DestCallsignInput()
 	SetModuleSensitive(s.c_str());
 	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
 	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
-	const auto host = routeMap.Find(s);
+
+	std::shared_ptr<SHost> host;
+	if (is_valid_reflector)
+	{
+		host = GetDhtReflector(s);
+	}
+
+	if (host)
+	{
+		ActivateModules(host->modules);
+		std::cout << "Found " << s << " on the DHT!" << std::endl;
+		std::cout << "\tModules     =" << (host->modules.length() > 0 ? host->modules : "NONE") << std::endl;
+		std::cout << "\tIPv4 Address=" << (host->ip4addr.length() > 0 ? host->ip4addr : "NONE") << std::endl;
+		std::cout << "\tIPv6 Address=" << (host->ip6addr.length() > 0 ? host->ip6addr : "NONE") << std::endl;
+		std::cout << "\tDashBoard   =" << (    host->url.length() > 0 ? host->url     : "NONE") << std::endl;
+	}
+	else
+	{
+		ActivateModules();
+		host = routeMap.Find(s);
+	}
+
 	if (host)
 	{
 		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())

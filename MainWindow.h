@@ -22,6 +22,7 @@
 #include <future>
 #include <atomic>
 #include <mutex>
+#include <opendht.h>
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -31,6 +32,19 @@
 #include "AudioManager.h"
 #include "M17RouteMap.h"
 #include "TransmitButton.h"
+
+struct SReflectorData
+{
+	uint32_t version;
+	std::string ipv4;
+	std::string ipv6;
+	std::string url;
+	std::string email;
+	std::string modules;
+	uint16_t port;
+	std::vector<std::pair<std::string, std::string>> peers;
+	MSGPACK_DEFINE(version, ipv4, ipv6, url, email, modules, port, peers);
+};
 
 class CMainWindow
 {
@@ -59,6 +73,10 @@ private:
 	CAboutDlg AboutDlg;
 	CM17RouteMap routeMap;
 	CM17Gateway gateM17;
+
+	// Distributed Hash Table
+	dht::DhtRunner node;
+	dht::Value nodevalue;
 
 	// widgets
 	Fl_Double_Window *pWin;
@@ -95,6 +113,8 @@ private:
 	char GetDestinationModule();
 	void SetDestinationAddress(std::string &cs);
 	void SetModuleSensitive(const std::string &dest);
+	std::shared_ptr<SHost> GetDhtReflector(const std::string &refcs);
+	void ActivateModules(const std::string &modules = "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 	// Actual Callbacks
 	void Quit();
