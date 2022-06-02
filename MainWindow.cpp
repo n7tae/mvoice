@@ -301,8 +301,8 @@ bool CMainWindow::Init()
 	// start the dht instance
 	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
 
-	if (cfgdata.sBootStrap.length())
-		node.bootstrap(cfgdata.sBootStrap, "17171");
+	if (cfgdata.sBootstrap.length())
+		node.bootstrap(cfgdata.sBootstrap, "17171");
 
 	//PutDHTInfo();
 

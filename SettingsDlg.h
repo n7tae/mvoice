@@ -19,6 +19,7 @@
 #pragma once
 
 #include <map>
+#include <opendht.h>
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -42,6 +43,7 @@ private:
 	CFGDATA data;
 	// other data
 	bool bM17Source;
+	bool bExt4, bExt6;
 	// Windows
 	CMainWindow *pMainWindow;
     Fl_Double_Window *pDlg;
@@ -49,9 +51,10 @@ private:
 	Fl_Tabs *pTabs;
 	Fl_Return_Button *pOkayButton;
 	Fl_Button *pAudioRescanButton;
-	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice;
-	Fl_Input *pSourceCallsignInput;
-	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup;
+	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice, *pModuleChoice;
+	Fl_Input *pSourceCallsignInput, *pBootstrapInput;
+	Fl_Input *pExt4AddrInput, *pExt6AddrInput;
+	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup, *pDHTGroup;
 	Fl_Radio_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
 	Fl_Radio_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;
@@ -60,11 +63,19 @@ private:
 	static void AudioRescanButtonCB(Fl_Widget *p, void *v);
 	static void AudioInputChoiceCB(Fl_Widget *p, void *v);
 	static void AudioOutputChoiceCB(Fl_Widget *p, void *v);
-	static void OkayButtonCB(Fl_Widget *p, void *v);
+	static void Ext4AddrInputCB(Fl_Widget *p, void *v);
+	static void Ext6AddrInputCB(Fl_Widget *P, void *v);
+	static void ModuleChoiceCB(Fl_Widget *p, void *v);
+	static void UpdateButtonCB(Fl_Widget *p, void *v);
+	static void IPSupportCB(Fl_Widget *p, void *v);
 	// the actual callbacks
 	void SourceCallsignInput();
 	void AudioRescanButton();
 	void AudioInputChoice();
 	void AudioOutputChoice();
-	void OkayButton();
+	void Ext4AddrInput();
+	void Ext6AddrInput();
+	void ModuleChoice();
+	void UpdateButton();
+	void IPSupport(Fl_Widget *pW);
 };

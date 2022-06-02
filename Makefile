@@ -20,7 +20,7 @@ DEBUG = false
 ifeq ($(DEBUG), true)
 CPPFLAGS = -ggdb -Werror -Wall -Wextra -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
 else
-CPPFLAGS = -W -Werror -Wall -Wextra -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
+CPPFLAGS = -Werror -Wall -Wextra -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
 endif
 
 ifeq ($(USE44100), true)
