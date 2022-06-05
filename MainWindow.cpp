@@ -666,7 +666,7 @@ std::shared_ptr<SHost> CMainWindow::GetDhtReflector(const std::string &refcs)
 	const std::string ref(refcs);
 	node.get<SReflectorData>(
 		dht::InfoHash::get(ref),
-		[&](SReflectorData &&rdat) {
+		[&host,ref](SReflectorData &&rdat) {
 			std::cout << "found " << ref << " on the DTH!" << std::endl;
 			host = std::make_shared<SHost>();
 			host->ip4addr.assign(rdat.ipv4);
