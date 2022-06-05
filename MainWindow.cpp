@@ -299,10 +299,10 @@ bool CMainWindow::Init()
 	Fl::add_timeout(1.0, MyIdleProcess, this);
 
 	// start the dht instance
-	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
+	node.run(4222, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
 
 	if (cfgdata.sBootstrap.length())
-		node.bootstrap(cfgdata.sBootstrap, "17171");
+		node.bootstrap(cfgdata.sBootstrap, "4222");
 
 	//PutDHTInfo();
 
@@ -662,19 +662,22 @@ void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 
 std::shared_ptr<SHost> CMainWindow::GetDhtReflector(const std::string &refcs)
 {
-	std::shared_ptr<SHost> rval;
+	std::shared_ptr<SHost> host;
+	const std::string ref(refcs);
 	node.get<SReflectorData>(
-		dht::InfoHash::get(refcs),
-		[&](SReflectorData &&refdata){
-			rval->ip4addr.assign(refdata.ipv4);
-			rval->ip6addr.assign(refdata.ipv6);
-			rval->modules.assign(refdata.modules);
-			rval->port = refdata.port;
-			rval->url.assign(refdata.url);
+		dht::InfoHash::get(ref),
+		[&](SReflectorData &&rdat) {
+			std::cout << "found " << ref << " on the DTH!" << std::endl;
+			host = std::make_shared<SHost>();
+			host->ip4addr.assign(rdat.ipv4);
+			host->ip6addr.assign(rdat.ipv6);
+			host->modules.assign(rdat.modules);
+			host->port = rdat.port;
+			host->url.assign(rdat.url);
 			return true;
 		}
 	);
-	return rval;
+	return host;
 }
 
 void CMainWindow::DestCallsignInput()
@@ -691,10 +694,13 @@ void CMainWindow::DestCallsignInput()
 	SetModuleSensitive(s.c_str());
 	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
 	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
+	if (! bDestCS)
+		pDestIPInput->value("");
 
 	std::shared_ptr<SHost> host;
 	if (is_valid_reflector)
 	{
+		std::cout << "Trying to get " << s << " from the DHT..." << std::endl;
 		host = GetDhtReflector(s);
 	}
 
