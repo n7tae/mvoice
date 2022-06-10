@@ -15,7 +15,7 @@ BINDIR = $(HOME)/bin/
 USE44100 = false
 
 # Set the next line to true if you want debugging support in the mvoice executable.
-DEBUG = false
+DEBUG = true
 
 ifeq ($(DEBUG), true)
 CPPFLAGS = -ggdb -Werror -Wall -Wextra -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
@@ -31,18 +31,24 @@ CPPFLAGS += `fltk-config --cxxflags`
 
 EXE = mvoice
 
-ifeq ($(USE44100), true)
-SRCS = $(wildcard *.cpp)
-else
-SRCS = AboutDlg.cpp Base.cpp Configure.cpp M17Gateway.cpp MainWindow.cpp SettingsDlg.cpp UDPSocket.cpp AudioManager.cpp Callsign.cpp CRC.cpp M17RouteMap.cpp TransmitButton.cpp UnixDgramSocket.cpp
+SRCS = AboutDlg.cpp AudioManager.cpp Base.cpp Callsign.cpp Configure.cpp CRC.cpp M17Gateway.cpp M17RouteMap.cpp MainWindow.cpp SettingsDlg.cpp TransmitButton.cpp UDPSocket.cpp UnixDgramSocket.cpp
+
+ifneq ($(USE44100), true)
+SRCS += Resampler.cpp
 endif
 
 SRCS += $(wildcard codec2/*.cpp)
+
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
+all : $(EXE) test-get
+
 $(EXE) : $(OBJS)
 	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread -lopendht
+
+test-get : TestGet.cpp
+	g++ -o $@ $^ -pthread -lopendht
 
 %.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -c $< -o $@
