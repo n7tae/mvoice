@@ -27,23 +27,23 @@
 #include "FLTK-GUI.h"
 #include "Configure.h"
 #include "M17Gateway.h"
+#include "M17RouteMap.h"
 #include "SettingsDlg.h"
 #include "AboutDlg.h"
 #include "AudioManager.h"
-#include "M17RouteMap.h"
 #include "TransmitButton.h"
 
 struct SReflectorData
 {
-	uint32_t version;
+	std::string cs;
 	std::string ipv4;
 	std::string ipv6;
+	std::string modules;
 	std::string url;
 	std::string email;
-	std::string modules;
 	uint16_t port;
 	std::vector<std::pair<std::string, std::string>> peers;
-	MSGPACK_DEFINE(version, ipv4, ipv6, url, email, modules, port, peers);
+	MSGPACK_DEFINE(cs, ipv4, ipv6, modules, url, email, port, peers);
 };
 
 class CMainWindow
@@ -71,7 +71,6 @@ private:
 	// classes
 	CSettingsDlg SettingsDlg;
 	CAboutDlg AboutDlg;
-	CM17RouteMap routeMap;
 	CM17Gateway gateM17;
 
 	// Distributed Hash Table
@@ -112,8 +111,8 @@ private:
 	void AudioSummary(const char *title);
 	char GetDestinationModule();
 	void SetDestinationAddress(std::string &cs);
-	void SetModuleSensitive(const std::string &dest);
-	std::shared_ptr<SHost> GetDhtReflector(const std::string &refcs);
+	void Listen(std::shared_ptr<SHost> host);
+	void GetFromDHT(const std::string &key);
 	void ActivateModules(const std::string &modules = "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 	// Actual Callbacks

@@ -20,14 +20,15 @@
 
 struct SReflectorData
 {
+	std::string cs;
 	std::string ipv4;
 	std::string ipv6;
+	std::string modules;
 	std::string url;
 	std::string email;
-	std::string modules;
 	uint16_t port;
 	std::vector<std::pair<std::string, std::string>> peers;
-	MSGPACK_DEFINE(ipv4, ipv6, url, email, modules, port, peers);
+	MSGPACK_DEFINE(cs, ipv4, ipv6, modules, url, email, port, peers);
 };
 
 int main(int argc, char *argv[])
@@ -51,17 +52,32 @@ int main(int argc, char *argv[])
 		dht::InfoHash::get(key),
 		[](const std::shared_ptr<dht::Value> &v) {
 			if (v->checkSignature())
+			{
 				std::cout << "Value is signed" << std::endl;
+				std::cout << *v << std::endl;
+				auto rdat = dht::Value::unpack<SReflectorData>(*v);
+				std::cout << "Callsign: '" << rdat.cs << "'" << std::endl;
+				std::cout << "IPv4 Address: '" << rdat.ipv4 << "'" << std::endl;
+				std::cout << "IPv6 Address: '" << rdat.ipv6 << "'" << std::endl;
+				std::cout << "Port: " << rdat.port << std::endl;
+				std::cout << "Modules: '" << rdat.modules << "'" << std::endl;
+				std::cout << "URL: '" << rdat.url << "'" << std::endl;
+				std::cout << "Email Address: '" << rdat.email << "'" << std::endl;
+				if (rdat.peers.size())
+				{
+					std::cout << "Peers:" << std::endl << "\tPeer\tModules";
+					for (const auto &p : rdat.peers)
+					{
+						std::cout << '\t' << p.first << '\t' << p.second << std::endl;
+					}
+				}
+				else
+				{
+					std::cout << "No Peers" << std::endl;
+				}
+			}
 			else
 				std::cout << "Value signature FAILED" << std::endl;
-			std::cout << *v << std::endl;
-			auto rdat = dht::Value::unpack<SReflectorData>(*v);
-			std::cout << "IPv4 Address: '" << rdat.ipv4 << "'" << std::endl;
-			std::cout << "IPv6 Address: '" << rdat.ipv6 << "'" << std::endl;
-			std::cout << "Port: " << rdat.port << std::endl;
-			std::cout << "Modules: '" << rdat.modules << "'" << std::endl;
-			std::cout << "URL: '" << rdat.url << "'" << std::endl;
-			std::cout << "Email Address: '" << rdat.email << "'" << std::endl;
 			return true;
 		},
 		[](bool success) {
@@ -69,6 +85,8 @@ int main(int argc, char *argv[])
 				std::cerr << "get() FAILED!" << std::endl;
 		}
 	);
+
+	std::this_thread::sleep_for(std::chrono::seconds(2));
 
 	node.join();
 

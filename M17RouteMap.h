@@ -23,12 +23,14 @@
 #include <memory>
 #include <map>
 #include <list>
+#include <future>
 
 #include "SockAddress.h"
 
 using SHost = struct host_tag
 {
-	std::string url, ip4addr, ip6addr, modules;
+	std::future<size_t> future;
+	std::string cs, url, ip4addr, ip6addr, modules;
 	uint16_t port;
 };
 
@@ -38,7 +40,7 @@ public:
 	CM17RouteMap() {}
 	~CM17RouteMap();
 	const std::shared_ptr<SHost> Find(const std::string &cs) const;
-	void Update(const std::string &cs, const std::string &url, const std::string &ip4addr, const std::string &ip6addr, const uint16_t port = 17000);
+	void Update(const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port = 17000);
 	void Save() const;
 	void ReadAll();
 	const std::list<std::string> GetKeys() const;

@@ -40,6 +40,9 @@ static const char *savestr   = _("Save");
 static const char *deletestr = _("Delete");
 static const char *updatestr = _("Delete");
 
+static CM17RouteMap routeMap;
+static std::queue<std::shared_ptr<SHost>> expiredHosts;
+
 static void MyIdleProcess(void *p)
 {
 	CMainWindow *pMainWindow = (CMainWindow *)p;
@@ -410,9 +413,9 @@ void CMainWindow::ActionButton()
 	if (0 == label.compare(savestr)) {
 		const std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(cs, "", a, "");
+			routeMap.Update(cs, "", a, "", "");
 		else
-			routeMap.Update(cs, "", "", a);
+			routeMap.Update(cs, "", "", a, "");
 		pDestinationChoice->clear();
 		for (const auto &member : routeMap.GetKeys())
 			pDestinationChoice->add(member.c_str());
@@ -427,9 +430,9 @@ void CMainWindow::ActionButton()
 	} else if (0 == label.compare(updatestr)) {
 		std::string a(pDestIPInput->value());
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(cs, "", a, "");
+			routeMap.Update(cs, a, "", "", "");
 		else
-			routeMap.Update(cs, "", "", a);
+			routeMap.Update(cs, "", a, "", "");
 	}
 	FixDestActionButton();
 	routeMap.Save();
@@ -607,10 +610,24 @@ void CMainWindow::UpdateGUI()
 	}
 	else
 	{
+		std::string s(pDestCallsignInput->value());
+		auto host = routeMap.Find(s);
+		if (host)
+		{
+			if (host->modules.size())
+				ActivateModules(host->modules);
+			else
+				ActivateModules();
+
+			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
+				pDestIPInput->value(host->ip6addr.c_str());
+			else
+				pDestIPInput->value(host->ip4addr.c_str());
+			DestIpInput();
+		}
 		auto currentstate = gateM17.GetLinkState();
 		if (ELinkState::linked != currentstate) {
 			pUnlinkButton->deactivate();
-			std::string s(pDestCallsignInput->value());
 			if (std::regex_match(s, M17RefRegEx) && bDestIP)
 				pLinkButton->activate();
 			else
@@ -627,17 +644,12 @@ void CMainWindow::UpdateGUI()
 		TransmitterButtonControl();
 	}
 	Fl::unlock();
-}
 
-void CMainWindow::SetModuleSensitive(const std::string &dest)
-{
-	const bool state = (0==dest.compare(0, 4, "M17-") || 0==dest.compare(0, 3, "URF")) ? true : false;
-	for (unsigned i=0; i<26; i++)
-	{
-		if (state)
-			pModuleRadioButton[i]->activate();
-		else
-			pModuleRadioButton[i]->deactivate();
+	// empty the trash
+	while (expiredHosts.size()) {
+		auto host = expiredHosts.front();
+		expiredHosts.pop();
+		node.cancelListen(dht::InfoHash::get(host->cs), std::move(host->future));
 	}
 }
 
@@ -660,29 +672,59 @@ void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 	((CMainWindow *)This)->DestCallsignInput();
 }
 
-std::shared_ptr<SHost> CMainWindow::GetDhtReflector(const std::string &refcs)
+void CMainWindow::Listen(std::shared_ptr<SHost> host)
 {
-	std::shared_ptr<SHost> host;
-	const std::string ref(refcs);
-	node.get<SReflectorData>(
-		dht::InfoHash::get(ref),
-		[&host,ref](SReflectorData &&rdat) {
-			std::cout << "found " << ref << " on the DTH!" << std::endl;
-			host = std::make_shared<SHost>();
-			host->ip4addr.assign(rdat.ipv4);
-			host->ip6addr.assign(rdat.ipv6);
-			host->modules.assign(rdat.modules);
-			host->port = rdat.port;
-			host->url.assign(rdat.url);
+	host->future = node.listen(
+		dht::InfoHash::get(host->cs),
+		[](const std::vector<std::shared_ptr<dht::Value>> &values, bool expired) {
+			for (const auto &v : values)
+			{
+				auto rdat = dht::Value::unpack<SReflectorData>(*v);
+				auto host = routeMap.Find(rdat.cs);
+
+				if (host)
+				{
+					if (expired)
+					{
+						std::cout << host->cs << " has expired" << std::endl;
+						expiredHosts.push(host);
+						routeMap.Erase(host->cs);
+					}
+					else
+					{
+						std::cout << "updating " << host->cs << std::endl;
+						routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.modules, rdat.port);
+					}
+				}
+			}
 			return true;
 		}
 	);
-	return host;
+}
+
+void CMainWindow::GetFromDHT(const std::string &key)
+{
+	node.get(
+		dht::InfoHash::get(key),
+		[](const std::vector<std::shared_ptr<dht::Value>> &values) {
+			for (const auto &v : values)
+			{
+				auto rdat = dht::Value::unpack<SReflectorData>(*v);
+				routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.modules, rdat.port);
+			}
+			return true;
+		},
+		[](bool success) {
+			if (! success)
+				std::cerr << "node.get() FAILED" << std::endl;
+		}
+	);
 }
 
 void CMainWindow::DestCallsignInput()
 {
 	Fl::lock();
+	// Convert to uppercase
 	auto pos = pDestCallsignInput->position();
 	std::string s(pDestCallsignInput->value());
 	if (ToUpper(s))
@@ -691,49 +733,56 @@ void CMainWindow::DestCallsignInput()
 		pDestCallsignInput->position(pos);
 	}
 	Fl::unlock();
-	SetModuleSensitive(s.c_str());
-	auto is_valid_reflector = std::regex_match(s.c_str(), M17RefRegEx);
-	bDestCS = std::regex_match(s.c_str(), M17CallRegEx) || is_valid_reflector;
-	if (! bDestCS)
+
+	// the destination either has to be a reflector or a legal callsign
+	bDestCS = std::regex_match(s, M17CallRegEx) || std::regex_match(s, M17RefRegEx);
+
+	if (bDestCS)
+	{
+		auto host = routeMap.Find(s); // is it already in the routeMap?
+		if (host)
+		{
+			// start Listen, if it's not already started
+			if (! host->future.valid())
+				Listen(host);
+
+			// let's try to come up with a destination IP
+			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
+				// if we aren't in IPv4-only mode and there is an IPv6 address, use it
+				pDestIPInput->value(host->ip6addr.c_str());
+			else if (!host->ip4addr.empty())
+				// otherwise, if there is an IPv4 address, use it
+				pDestIPInput->value(host->ip4addr.c_str());
+
+			// activate the configure modules
+			// if there aren't any confgured modules, activate all modules
+			if (host->modules.size())
+				ActivateModules(host->modules);
+			else
+				ActivateModules();
+
+			if (host && !host->url.empty())
+				pDashboardButton->activate();
+			else
+				pDashboardButton->deactivate();
+		}
+		else
+		{
+			// create a new entry and listen for it
+			routeMap.Update(s, "", "", "", "");
+			GetFromDHT(s);
+			std::cout << "Listening for " << s << " from the DHT..." << std::endl;
+			Listen(routeMap.Find(s));
+			pDestinationChoice->value(-1);
+		}
+	}
+	else
+	{
+		// bDestCS is false
 		pDestIPInput->value("");
-
-	std::shared_ptr<SHost> host;
-	if (is_valid_reflector)
-	{
-		std::cout << "Trying to get " << s << " from the DHT..." << std::endl;
-		host = GetDhtReflector(s);
 	}
 
-	if (host)
-	{
-		ActivateModules(host->modules);
-		std::cout << "Found " << s << " on the DHT!" << std::endl;
-		std::cout << "\tModules     =" << (host->modules.length() > 0 ? host->modules : "NONE") << std::endl;
-		std::cout << "\tIPv4 Address=" << (host->ip4addr.length() > 0 ? host->ip4addr : "NONE") << std::endl;
-		std::cout << "\tIPv6 Address=" << (host->ip6addr.length() > 0 ? host->ip6addr : "NONE") << std::endl;
-		std::cout << "\tDashBoard   =" << (    host->url.length() > 0 ? host->url     : "NONE") << std::endl;
-	}
-	else
-	{
-		ActivateModules();
-		host = routeMap.Find(s);
-	}
 
-	if (host)
-	{
-		if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
-			pDestIPInput->value(host->ip6addr.c_str());
-		else if (!host->ip4addr.empty())
-			pDestIPInput->value(host->ip4addr.c_str());
-	}
-	else
-	{
-		pDestinationChoice->value(-1);
-	}
-	if (is_valid_reflector && host && !host->url.empty())
-		pDashboardButton->activate();
-	else
-		pDashboardButton->deactivate();
 
 	DestIpInput();
 	Fl::lock();
