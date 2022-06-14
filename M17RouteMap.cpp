@@ -22,6 +22,8 @@
 #include "M17RouteMap.h"
 #include "Utilities.h"
 
+#define DHTHOSTS "DHTHosts.cfg"
+
 CM17RouteMap::~CM17RouteMap()
 {
 	std::lock_guard<std::mutex> lck(mux);
@@ -50,7 +52,10 @@ void CM17RouteMap::Update(const std::string &cs, const std::string &ip4addr, con
 	if (pos < 3)
 		return;
 	base.assign(cs, 0, pos);
-	auto host = std::make_shared<SHost>();
+	auto host = Find(base);
+	if (! host)
+		host = std::make_shared<SHost>();
+	host->cs.assign(base);
 	if (! url.empty())
 		host->url.assign(url);
 	if (! ip4addr.empty() && ip4addr.compare("none"))
@@ -62,7 +67,11 @@ void CM17RouteMap::Update(const std::string &cs, const std::string &ip4addr, con
 	host->port = port;
 
 	std::lock_guard<std::mutex> lck(mux);
+	if (host->ip4addr.size() || host->ip6addr.size() || host->url.size() || host->modules.size())
+		host->updated = true;
 	baseMap[base] = host;
+	//std::cout << "updating " << host->cs << ": Addr4='" << host->ip4addr << "' Addr6='" << host->ip6addr << "' URL='" << host->url << "' Modules='" << host->modules << "' Port=" << host->port << std::endl;
+
 }
 
 void CM17RouteMap::ReadAll()
@@ -71,7 +80,7 @@ void CM17RouteMap::ReadAll()
 	baseMap.clear();
 	mux.unlock();
 	ReadJson("m17refl.json");
-	Read("DHTHosts.cfg");
+	Read(DHTHOSTS);
 }
 
 void CM17RouteMap::ReadJson(const char *filename)
@@ -150,7 +159,7 @@ void CM17RouteMap::Read(const char *filename)
 void CM17RouteMap::Save() const
 {
 	std::string path(CFG_DIR);
-	path.append("M17Hosts.cfg");
+	path.append(DHTHOSTS);
 	std::ofstream file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (file.is_open()) {
 		mux.lock();

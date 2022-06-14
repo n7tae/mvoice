@@ -112,7 +112,6 @@ private:
 	char GetDestinationModule();
 	void SetDestinationAddress(std::string &cs);
 	void Listen(std::shared_ptr<SHost> host);
-	void GetFromDHT(const std::string &key);
 	void ActivateModules(const std::string &modules = "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 	// Actual Callbacks
@@ -123,7 +122,7 @@ private:
 	void PTTButton();
 	void QuickKeyButton();
 	void DestCallsignInput();
-	void DestIpInput();
+	void DestIPInput();
 	void DestChoice();
 	void ActionButton();
 	void LinkButton();

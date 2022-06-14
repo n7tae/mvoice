@@ -38,7 +38,7 @@
 static const char *pttstr    = _("PTT");
 static const char *savestr   = _("Save");
 static const char *deletestr = _("Delete");
-static const char *updatestr = _("Delete");
+static const char *updatestr = _("Update");
 
 static CM17RouteMap routeMap;
 static std::queue<std::shared_ptr<SHost>> expiredHosts;
@@ -394,7 +394,7 @@ void CMainWindow::DestChoice()
 				pDestIPInput->value(host->ip6addr.c_str());
 			else
 				pDestIPInput->value(host->ip4addr.c_str());
-			DestIpInput();
+			DestIPInput();
 		}
 	}
 }
@@ -610,25 +610,10 @@ void CMainWindow::UpdateGUI()
 	}
 	else
 	{
-		std::string s(pDestCallsignInput->value());
-		auto host = routeMap.Find(s);
-		if (host)
-		{
-			if (host->modules.size())
-				ActivateModules(host->modules);
-			else
-				ActivateModules();
-
-			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
-				pDestIPInput->value(host->ip6addr.c_str());
-			else
-				pDestIPInput->value(host->ip4addr.c_str());
-			DestIpInput();
-		}
-		auto currentstate = gateM17.GetLinkState();
-		if (ELinkState::linked != currentstate) {
+		std::string dest(pDestCallsignInput->value());
+		if (ELinkState::linked != gateM17.GetLinkState()) {
 			pUnlinkButton->deactivate();
-			if (std::regex_match(s, M17RefRegEx) && bDestIP)
+			if (std::regex_match(dest, M17RefRegEx) && bDestIP)
 				pLinkButton->activate();
 			else
 				pLinkButton->deactivate();
@@ -642,6 +627,29 @@ void CMainWindow::UpdateGUI()
 		pPTTButton->UpdateLabel();
 		pEchoTestButton->UpdateLabel();
 		TransmitterButtonControl();
+		if (bTransOK)
+		{
+			auto host = routeMap.Find(dest);
+			if (host)
+			{
+				if (host->updated)
+				{
+					if (EInternetType::ipv4only!=cfgdata.eNetType && ! host->ip6addr.empty())
+						pDestIPInput->value(host->ip6addr.c_str());
+					else
+						pDestIPInput->value(host->ip4addr.c_str());
+
+					DestIPInput();
+
+					if (host->modules.size())
+						ActivateModules(host->modules);
+					else
+						ActivateModules();
+
+					host->updated = false;
+				}
+			}
+		}
 	}
 	Fl::unlock();
 
@@ -667,13 +675,9 @@ bool CMainWindow::ToUpper(std::string &s)
 	return rval;
 }
 
-void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
-{
-	((CMainWindow *)This)->DestCallsignInput();
-}
-
 void CMainWindow::Listen(std::shared_ptr<SHost> host)
 {
+	std::cout << "Listen for changes at " << host->cs << std::endl;
 	host->future = node.listen(
 		dht::InfoHash::get(host->cs),
 		[](const std::vector<std::shared_ptr<dht::Value>> &values, bool expired) {
@@ -692,7 +696,6 @@ void CMainWindow::Listen(std::shared_ptr<SHost> host)
 					}
 					else
 					{
-						std::cout << "updating " << host->cs << std::endl;
 						routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.modules, rdat.port);
 					}
 				}
@@ -702,23 +705,9 @@ void CMainWindow::Listen(std::shared_ptr<SHost> host)
 	);
 }
 
-void CMainWindow::GetFromDHT(const std::string &key)
+void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 {
-	node.get(
-		dht::InfoHash::get(key),
-		[](const std::vector<std::shared_ptr<dht::Value>> &values) {
-			for (const auto &v : values)
-			{
-				auto rdat = dht::Value::unpack<SReflectorData>(*v);
-				routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.modules, rdat.port);
-			}
-			return true;
-		},
-		[](bool success) {
-			if (! success)
-				std::cerr << "node.get() FAILED" << std::endl;
-		}
-	);
+	((CMainWindow *)This)->DestCallsignInput();
 }
 
 void CMainWindow::DestCallsignInput()
@@ -726,20 +715,20 @@ void CMainWindow::DestCallsignInput()
 	Fl::lock();
 	// Convert to uppercase
 	auto pos = pDestCallsignInput->position();
-	std::string s(pDestCallsignInput->value());
-	if (ToUpper(s))
+	std::string dest(pDestCallsignInput->value());
+	if (ToUpper(dest))
 	{
-		pDestCallsignInput->value(s.c_str());
+		pDestCallsignInput->value(dest.c_str());
 		pDestCallsignInput->position(pos);
 	}
 	Fl::unlock();
 
 	// the destination either has to be a reflector or a legal callsign
-	bDestCS = std::regex_match(s, M17CallRegEx) || std::regex_match(s, M17RefRegEx);
+	bDestCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, M17RefRegEx);
 
 	if (bDestCS)
 	{
-		auto host = routeMap.Find(s); // is it already in the routeMap?
+		auto host = routeMap.Find(dest); // is it already in the routeMap?
 		if (host)
 		{
 			// start Listen, if it's not already started
@@ -768,12 +757,11 @@ void CMainWindow::DestCallsignInput()
 		}
 		else
 		{
+			ActivateModules();
 			// create a new entry and listen for it
-			routeMap.Update(s, "", "", "", "");
-			GetFromDHT(s);
-			std::cout << "Listening for " << s << " from the DHT..." << std::endl;
-			Listen(routeMap.Find(s));
-			pDestinationChoice->value(-1);
+			routeMap.Update(dest, "", "", "", "");
+			Listen(routeMap.Find(dest));
+			SetState();
 		}
 	}
 	else
@@ -782,9 +770,7 @@ void CMainWindow::DestCallsignInput()
 		pDestIPInput->value("");
 	}
 
-
-
-	DestIpInput();
+	DestIPInput();
 	Fl::lock();
 	pDestCallsignInput->color(bDestCS ? 2 : 1);
 	pDestCallsignInput->damage(FL_DAMAGE_ALL);
@@ -793,10 +779,10 @@ void CMainWindow::DestCallsignInput()
 
 void CMainWindow::DestIPInputCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->DestIpInput();
+	((CMainWindow *)This)->DestIPInput();
 }
 
-void CMainWindow::DestIpInput()
+void CMainWindow::DestIPInput()
 {
 	auto bIP4 = std::regex_match(pDestIPInput->value(), IPv4RegEx);
 	auto bIP6 = std::regex_match(pDestIPInput->value(), IPv6RegEx);
@@ -880,13 +866,13 @@ void CMainWindow::FixDestActionButton()
 {
 	Fl::lock();
 	const std::string cs(pDestCallsignInput->value());
-	Fl::unlock();
 	const std::string ip(pDestIPInput->value());
+	Fl::unlock();
 	if (bDestCS) {	// is the destination c/s valid?
 		auto host = routeMap.Find(cs);	// look for it
 		if (host) {
 			// cs is found in map
-			if (bDestIP && host->url.empty()) { // is the IP okay and is this not from the csv file?
+			if (bDestIP && host->modules.empty()) { // is the IP okay and is this not from the csv file?
 				if (ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) {
 					// the ip in the IPEntry is different
 					SetDestActionButton(true, updatestr);

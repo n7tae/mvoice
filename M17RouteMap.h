@@ -27,10 +27,12 @@
 
 #include "SockAddress.h"
 
-using SHost = struct host_tag
+struct SHost
 {
+	SHost() : updated(false) {}
 	std::future<size_t> future;
 	std::string cs, url, ip4addr, ip6addr, modules;
+	bool updated;
 	uint16_t port;
 };
 
