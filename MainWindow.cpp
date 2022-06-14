@@ -38,7 +38,7 @@
 static const char *pttstr    = _("PTT");
 static const char *savestr   = _("Save");
 static const char *deletestr = _("Delete");
-static const char *updatestr = _("Delete");
+static const char *updatestr = _("Update");
 
 static void MyIdleProcess(void *p)
 {
