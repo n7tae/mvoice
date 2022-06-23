@@ -45,6 +45,10 @@ make
 sudo make install
 ```
 
+## Distributed Hash Table (OpenDHT)
+
+OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for mvoice and so can be considered optional.
+
 ## Building and Installing *mvoice*
 
 ### Get the *mvoice* repository, and move to it

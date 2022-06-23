@@ -34,6 +34,7 @@
 #include "TemplateClasses.h"
 
 #define _(STRING) STRING
+//#define BOOTFILENAME "DHTNodes.bin"
 
 static const char *pttstr    = _("PTT");
 static const char *savestr   = _("Save");
@@ -68,6 +69,22 @@ CMainWindow::CMainWindow() :
 
 CMainWindow::~CMainWindow()
 {
+#ifdef BOOTFILENAME
+	// Export nodes to binary file
+	std::string path(CFG_DIR);
+	path.append(BOOTFILENAME);
+	std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
+	if (myfile.is_open())
+	{
+		auto exnodes = node.exportNodes();
+		std::cout << "Saving " << exnodes.size() << " nodes to " << path << std::endl;
+		msgpack::pack(myfile, exnodes);
+		myfile.close();
+	}
+	else
+		std::cerr << "Trouble opening " << path << std::endl;
+#endif
+
 	if (futReadThread.valid())
 	{
 		keep_running = false;
@@ -302,10 +319,38 @@ bool CMainWindow::Init()
 	Fl::add_timeout(1.0, MyIdleProcess, this);
 
 	// start the dht instance
-	node.run(4222, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
+	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
 
-	if (cfgdata.sBootstrap.length())
-		node.bootstrap(cfgdata.sBootstrap, "4222");
+#ifdef BOOTFILENAME
+	// bootstrap the DHT from either saved nodes from a previous run,
+	// or from the configured node
+	std::string path(CFG_DIR);
+	path.append(BOOTFILENAME);
+	// Try to import nodes from binary file
+	std::ifstream myfile(path, std::ios::binary|std::ios::ate);
+	if (myfile.is_open())
+	{
+		msgpack::unpacker pac;
+		auto size = myfile.tellg();
+		myfile.seekg (0, std::ios::beg);
+		pac.reserve_buffer(size);
+		myfile.read (pac.buffer(), size);
+		pac.buffer_consumed(size);
+		// Import nodes
+		msgpack::object_handle oh;
+		while (pac.next(oh)) {
+			auto imported_nodes = oh.get().as<std::vector<dht::NodeExport>>();
+			std::cout << "Importing " << imported_nodes.size() << " nodes" << std::endl;
+			node.bootstrap(imported_nodes);
+		}
+		myfile.close();
+	}
+	else
+#endif
+	{
+		if (cfgdata.sBootstrap.length())
+			node.bootstrap(cfgdata.sBootstrap, "17171");
+	}
 
 	//PutDHTInfo();
 
