@@ -47,7 +47,28 @@ sudo make install
 
 ## Distributed Hash Table (OpenDHT)
 
-OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for mvoice and so can be considered optional.
+Using the OpenDHT library, mvoice now joins a special digital voice, ham-radio DHT network to discover reflector and repeater destinations directly. For these target systems using the DHT, connection information is published and updated directly by the target and is availabe to mvoice in near-realtime. All the mvoice user needs to know is the callsign of the target.
+
+### Building and installing the OpenDHT support
+
+OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for mvoice and so can be considered optional. With this in mind, this should work on Debian/Ubuntu-based systems:
+
+```bash
+# Install OpenDHT dependencies
+sudo apt install libncurses5-dev libreadline-dev nettle-dev libgnutls28-dev libargon2-0-dev libmsgpack-dev  libssl-dev libfmt-dev libjsoncpp-dev libhttp-parser-dev libasio-dev cmake
+
+# clone the repo
+git clone https://github.com/savoirfairelinux/opendht.git
+
+# build and install
+cd opendht
+mkdir build && cd build
+cmake -DOPENDHT_PYTHON=OFF -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+sudo make install
+```
+
+Please note that there is no easy way to uninstall OpenDHT once it's been installed. However, it is based on static header files and libraries and doesn't use any resouces except for a small amount of disk space, unless mvoice is running. You can delete your downloaded OpenDHT git repo once you've installed the OpenDHT library.
 
 ## Building and Installing *mvoice*
 
@@ -142,6 +163,6 @@ Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press a
 
 ## To do
 
-If you would like *mvoice* to use a langauge, I could use your help! Send me an E-mail at the address below.
+If you would like *mvoice* GUI to use a different langauge, I could use your help! Send me an E-mail at the address below.
 
 de n7tae (at) tearly (dot) net
