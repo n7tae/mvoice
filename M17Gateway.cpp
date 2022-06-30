@@ -226,7 +226,7 @@ void CM17Gateway::Process()
 					if (0 == memcmp(buf, "ACKN", 4))
 					{
 						mlink.state = ELinkState::linked;
-						SendLog("Linked to %s\n", mlink.cs.GetCS().c_str());
+						SendLog("Connected to %s\n", mlink.cs.GetCS().c_str());
 						mlink.receivePingTimer.start();
 					}
 					else if (0 == memcmp(buf, "NACK", 4))
@@ -237,7 +237,7 @@ void CM17Gateway::Process()
 					}
 					else if (0 == memcmp(buf, "DISC", 4))
 					{
-						SendLog("Unlinked from %s\n", mlink.cs.GetCS().c_str());
+						SendLog("Disconnected from %s\n", mlink.cs.GetCS().c_str());
 						mlink.state = ELinkState::unlinked;
 					}
 					else

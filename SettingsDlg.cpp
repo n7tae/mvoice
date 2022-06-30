@@ -100,8 +100,6 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	}
 	// DHT
 	d.sBootstrap.assign(pBootstrapInput->value());
-	d.sIPv4.assign(pExt4AddrInput->value());
-	d.sIPv6.assign(pExt6AddrInput->value());
 }
 
 void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
@@ -115,21 +113,16 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 	SourceCallsignInput();
 	pModuleChoice->value(d.cModule - 'A');
 	pBootstrapInput->value(d.sBootstrap.c_str());
-	pExt4AddrInput->value(d.sIPv4.c_str());
-	pExt6AddrInput->value(d.sIPv6.c_str());
 	// internet
 	switch (d.eNetType) {
 		case EInternetType::ipv6only:
 			pIPv6RadioButton->setonly();
-			IPSupport(pIPv6RadioButton);
 			break;
 		case EInternetType::dualstack:
 			pDualStackRadioButton->setonly();
-			IPSupport(pDualStackRadioButton);
 			break;
 		default:
 			pIPv4RadioButton->setonly();
-			IPSupport(pIPv4RadioButton);
 			break;
 	}
 }
@@ -182,42 +175,26 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pTabs->add(pStationGroup);
 
 	//////////////////////////////////////////////////////////////////////////
-	pInternetGroup = new Fl_Group(20, 30, 410, 210, _("IP"));
+	pInternetGroup = new Fl_Group(20, 30, 410, 210, _("Network"));
 	pInternetGroup->labelsize(16);
 
 	pIPv4RadioButton = new Fl_Radio_Round_Button(145, 60, 200, 30, _("IPv4 Only"));
 	pIPv4RadioButton->labelsize(16);
-	pIPv4RadioButton->when(FL_WHEN_CHANGED);
-	pIPv4RadioButton->callback(&CSettingsDlg::IPSupportCB, this);
 
 	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, _("IPv6 Only"));
 	pIPv6RadioButton->labelsize(16);
-	pIPv6RadioButton->when(FL_WHEN_CHANGED);
-	pIPv6RadioButton->callback(&CSettingsDlg::IPSupportCB, this);
 
 	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, _("IPv4 && IPv6"));
 	pDualStackRadioButton->labelsize(16);
-	pDualStackRadioButton->when(FL_WHEN_CHANGED);
-	pDualStackRadioButton->callback(&CSettingsDlg::IPSupportCB, this);
 
 	pInternetGroup->end();
 	pTabs->add(pInternetGroup);
 
 	///////////////////////////////////////////////////////////////////////////
-	pDHTGroup = new Fl_Group(20, 30, 410, 210, _("Network"));
+	pDHTGroup = new Fl_Group(20, 30, 410, 210, _("DHT"));
 
-	pBootstrapInput = new Fl_Input(170, 60, 227, 30, _("DHT Bootstrap:"));
+	pBootstrapInput = new Fl_Input(170, 120, 227, 30, _("DHT Bootstrap:"));
 	pBootstrapInput->tooltip(_("An existing node on the DHT Network"));
-
-	pExt4AddrInput = new Fl_Input(170, 110, 227, 30, _("External IPv4 Addr:"));
-	pExt4AddrInput->tooltip(_("Publish your IPv4 Address"));
-	pExt4AddrInput->when(FL_WHEN_CHANGED);
-	pExt4AddrInput->callback(&CSettingsDlg::Ext4AddrInputCB, this);
-
-	pExt6AddrInput = new Fl_Input(170, 155, 227, 30, _("External IPv6 Addr:"));
-	pExt6AddrInput->tooltip(_("Publish your IPv6 Address"));
-	pExt6AddrInput->when(FL_WHEN_CHANGED);
-	pExt6AddrInput->callback(&CSettingsDlg::Ext6AddrInputCB, this);
 
 	pDHTGroup->end();
 	pTabs->add(pDHTGroup);
@@ -264,80 +241,6 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pDlg->set_modal();
 
 	return false;
-}
-
-void CSettingsDlg::IPSupportCB(Fl_Widget *pWidget, void *This)
-{
-	((CSettingsDlg *)This)->IPSupport(pWidget);
-}
-
-void CSettingsDlg::IPSupport(Fl_Widget *pWidget)
-{
-	if (pIPv4RadioButton == pWidget)
-	{
-		pExt6AddrInput->value("");
-		pExt6AddrInput->deactivate();
-		pExt4AddrInput->activate();
-	}
-	else if (pIPv6RadioButton == pWidget)
-	{
-		pExt4AddrInput->value("");
-		pExt4AddrInput->deactivate();
-		pExt6AddrInput->activate();
-	}
-	else
-	{
-		pExt4AddrInput->activate();
-		pExt6AddrInput->activate();
-	}
-}
-
-void CSettingsDlg::Ext4AddrInputCB(Fl_Widget *, void *This)
-{
-	((CSettingsDlg *)This)->Ext4AddrInput();
-}
-
-void CSettingsDlg::Ext4AddrInput()
-{
-	const std::string s(pExt4AddrInput->value());
-	bExt4 = std::regex_match(s.c_str(), pMainWindow->IPv4RegEx);
-	if (0==s.size())
-	{
-		pExt4AddrInput->color(FL_WHITE);
-	}
-	else if (bExt4)
-	{
-		pExt4AddrInput->color(FL_GREEN);
-	}
-	else
-	{
-		pExt4AddrInput->color(FL_RED);
-	}
-	pExt4AddrInput->damage(FL_DAMAGE_ALL);
-}
-
-void CSettingsDlg::Ext6AddrInputCB(Fl_Widget *, void *This)
-{
-	((CSettingsDlg *)This)->Ext6AddrInput();
-}
-
-void CSettingsDlg::Ext6AddrInput()
-{
-	const std::string s(pExt6AddrInput->value());
-	bExt6 = std::regex_match(s.c_str(), pMainWindow->IPv6RegEx);
-	if (0==s.size())
-	{
-		pExt6AddrInput->color(FL_WHITE);
-	}
-	else if (bExt6)
-	{
-		pExt6AddrInput->color(FL_GREEN);
-	}
-	else
-	{
-		pExt6AddrInput->color(FL_RED);
-	}
-	pExt6AddrInput->damage(FL_DAMAGE_ALL);
 }
 
 void CSettingsDlg::ModuleChoiceCB(Fl_Widget *, void *This)

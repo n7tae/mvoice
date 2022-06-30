@@ -80,7 +80,7 @@ private:
 	// widgets
 	Fl_Double_Window *pWin;
 	CTransmitButton *pPTTButton, *pEchoTestButton;
-	Fl_Button *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
+	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Choice *pDestinationChoice;
 	Fl_Group *pModuleGroup;

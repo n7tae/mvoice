@@ -253,7 +253,7 @@ bool CMainWindow::Init()
 	pDestinationChoice->textsize(16);
 	pDestinationChoice->callback(&CMainWindow::DestChoiceCB, this);
 
-	pActionButton = new Fl_Button(455, 472, 80, 30, "Action");
+	pActionButton = new Fl_Button(455, 472, 100, 30, "Action");
 	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
 	pActionButton->labelsize(16);
 	pActionButton->deactivate();
@@ -265,17 +265,17 @@ bool CMainWindow::Init()
 	pDashboardButton->deactivate();
 	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
 
-	pLinkButton = new Fl_Button(358, 514, 80, 30, _("Link"));
-	pLinkButton->tooltip(_("Connect to an M17 Reflector"));
-	pLinkButton->labelsize(16);
-	pLinkButton->deactivate();
-	pLinkButton->callback(&CMainWindow::LinkButtonCB, this);
+	pConnectButton = new Fl_Button(338, 514, 100, 30, _("Connect"));
+	pConnectButton->tooltip(_("Connect to an M17 Reflector"));
+	pConnectButton->labelsize(16);
+	pConnectButton->deactivate();
+	pConnectButton->callback(&CMainWindow::LinkButtonCB, this);
 
-	pUnlinkButton = new Fl_Button(456, 514, 80, 30, _("Unlink"));
-	pUnlinkButton->tooltip(_("Disconnected from a reflector"));
-	pUnlinkButton->labelsize(16);
-	pUnlinkButton->deactivate();
-	pUnlinkButton->callback(&CMainWindow::UnlinkButtonCB, this);
+	pDisconnectButton = new Fl_Button(455, 514, 100, 30, _("Disconnect"));
+	pDisconnectButton->tooltip(_("Disconnected from a reflector"));
+	pDisconnectButton->labelsize(16);
+	pDisconnectButton->deactivate();
+	pDisconnectButton->callback(&CMainWindow::UnlinkButtonCB, this);
 
 	pEchoTestButton = new CTransmitButton(50, 574, 144, 40, _("Echo Test"));
 	pEchoTestButton->tooltip(_("Push to record a test that will be played back"));
@@ -651,23 +651,23 @@ void CMainWindow::UpdateGUI()
 	{
 		pPTTButton->deactivate();
 		pQuickKeyButton->deactivate();
-		pLinkButton->deactivate();
+		pConnectButton->deactivate();
 	}
 	else
 	{
 		std::string dest(pDestCallsignInput->value());
 		if (ELinkState::linked != gateM17.GetLinkState()) {
-			pUnlinkButton->deactivate();
+			pDisconnectButton->deactivate();
 			if (std::regex_match(dest, M17RefRegEx) && bDestIP)
-				pLinkButton->activate();
+				pConnectButton->activate();
 			else
-				pLinkButton->deactivate();
+				pConnectButton->deactivate();
 		} else {
-			pLinkButton->deactivate();
+			pConnectButton->deactivate();
 			if (bDestIP)
-				pUnlinkButton->activate();
+				pDisconnectButton->activate();
 			else
-				pUnlinkButton->deactivate();
+				pDisconnectButton->deactivate();
 		}
 		pPTTButton->UpdateLabel();
 		pEchoTestButton->UpdateLabel();

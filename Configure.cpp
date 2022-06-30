@@ -36,8 +36,6 @@ void CConfigure::SetDefaultValues()
 	data.sAudioIn.assign("default");
 	data.sAudioOut.assign("default");
 	data.sBootstrap.assign("m17-usa.openquad.net");
-	data.sIPv4.clear();
-	data.sIPv6.clear();
 }
 
 void CConfigure::ReadData()
@@ -86,10 +84,6 @@ void CConfigure::ReadData()
 			data.bVoiceOnlyEnable = IS_TRUE(*val);
 		} else if (0 == strcmp(key, "DHTBootstrap")) {
 			data.sBootstrap.assign(val);
-		} else if (0 == strcmp(key, "Ext4Address")) {
-			data.sIPv4.assign(val);
-		} else if (0 == strcmp(key, "Ext6Address")) {
-			data.sIPv6.assign(val);
 		}
 	}
 	cfg.close();
@@ -126,8 +120,6 @@ void CConfigure::WriteData()
 	file << "AudioOutput='" << data.sAudioOut << "'" << std::endl;
 	// DHT
 	file << "DHTBootstrap='" << data.sBootstrap << "'" << std::endl;
-	file << "Ext4Address='" << data.sIPv4 << "'" << std::endl;
-	file << "Ext6Address='" << data.sIPv6 << "'" << std::endl;
 
 	file.close();
 }
@@ -145,8 +137,6 @@ void CConfigure::CopyFrom(const CFGDATA &from)
 	data.sAudioOut.assign(from.sAudioOut);
 	// DHT
 	data.sBootstrap.assign(from.sBootstrap);
-	data.sIPv4.assign(from.sIPv4);
-	data.sIPv6.assign(from.sIPv6);
 }
 
 void CConfigure::CopyTo(CFGDATA &to)
@@ -162,8 +152,6 @@ void CConfigure::CopyTo(CFGDATA &to)
 	to.sAudioOut.assign(data.sAudioOut);
 	// DHT
 	to.sBootstrap.assign(data.sBootstrap);
-	to.sIPv4.assign(data.sIPv4);
-	to.sIPv6.assign(data.sIPv6);
 }
 
 bool CConfigure::IsOkay()
