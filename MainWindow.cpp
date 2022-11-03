@@ -728,7 +728,7 @@ void CMainWindow::Listen(std::shared_ptr<SHost> host)
 		[](const std::vector<std::shared_ptr<dht::Value>> &values, bool expired) {
 			for (const auto &v : values)
 			{
-				std::cout << "Value::user_type=" << v->user_type << std::endl;
+				//std::cout << "Value::user_type=" << v->user_type << std::endl;
 				auto rdat = dht::Value::unpack<SReflectorData>(*v);
 				auto host = routeMap.Find(rdat.cs);
 

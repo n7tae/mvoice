@@ -33,28 +33,28 @@ struct SReflectorData
 
 int main(int argc, char *argv[])
 {
-	if (4 != argc)
+	if (3 != argc)
 	{
-		std::cout << "usage: " << argv[0] << " bootstrap port key" << std::endl;
+		std::cout << "usage: " << argv[0] << " bootstrap key" << std::endl;
 		return EXIT_FAILURE;
 	}
-	const int port = std::stoi(argv[2]);
-	std::string key(argv[3]);
+
+	const std::string key(argv[2]);
 
 	std::string name("TestGet");
 	name += std::to_string(getpid());
-	std::cout << "Joined using bootstrap at " << argv[1] << ':' << port << " using an id of " << name << std::endl;
 	dht::DhtRunner node;
-	node.run(port, dht::crypto::generateIdentity(name));
-	node.bootstrap(argv[1], argv[2]);
-	std::cout << "Getting Data for Reflector " << key << std::endl;
+	node.run(17171, dht::crypto::generateIdentity(name));
+	node.bootstrap(argv[1], "17171");
+	std::cout << "Joined the DHT at " << argv[1] << " using an id of " << name << std::endl;
+	std::cout << "Getting Data for " << key << " ..." << std::endl;
 	node.get(
 		dht::InfoHash::get(key),
 		[](const std::shared_ptr<dht::Value> &v) {
 			if (v->checkSignature())
 			{
 				std::cout << "Value is signed" << std::endl;
-				std::cout << *v << std::endl;
+				std::cout << "Version: " << v->user_type << std::endl;
 				auto rdat = dht::Value::unpack<SReflectorData>(*v);
 				std::cout << "Callsign: '" << rdat.cs << "'" << std::endl;
 				std::cout << "IPv4 Address: '" << rdat.ipv4 << "'" << std::endl;
@@ -65,15 +65,15 @@ int main(int argc, char *argv[])
 				std::cout << "Email Address: '" << rdat.email << "'" << std::endl;
 				if (rdat.peers.size())
 				{
-					std::cout << "Peers:" << std::endl << "\tPeer\tModules";
+					std::cout << "Peer\tModule(s):" << std::endl;
 					for (const auto &p : rdat.peers)
 					{
-						std::cout << '\t' << p.first << '\t' << p.second << std::endl;
+						std::cout << p.first << '\t' << p.second << std::endl;
 					}
 				}
 				else
 				{
-					std::cout << "No Peers" << std::endl;
+					std::cout << "Peers: none" << std::endl;
 				}
 			}
 			else

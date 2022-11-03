@@ -55,7 +55,7 @@ OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). B
 
 ```bash
 # Install OpenDHT dependencies
-sudo apt install libncurses5-dev libreadline-dev nettle-dev libgnutls28-dev libargon2-0-dev libmsgpack-dev  libssl-dev libfmt-dev libjsoncpp-dev libhttp-parser-dev libasio-dev cmake
+sudo apt install libncurses5-dev libreadline-dev nettle-dev libgnutls28-dev libargon2-0-dev libmsgpack-dev  libssl-dev libfmt-dev libjsoncpp-dev libhttp-parser-dev libasio-dev cmake pkg-config
 
 # clone the repo
 git clone https://github.com/savoirfairelinux/opendht.git
