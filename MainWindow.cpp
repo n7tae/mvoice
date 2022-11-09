@@ -728,25 +728,50 @@ void CMainWindow::Listen(std::shared_ptr<SHost> host)
 		[](const std::vector<std::shared_ptr<dht::Value>> &values, bool expired) {
 			for (const auto &v : values)
 			{
-				//std::cout << "Value::user_type=" << v->user_type << std::endl;
-				auto rdat = dht::Value::unpack<SReflectorData>(*v);
-				auto host = routeMap.Find(rdat.cs);
-
-				if (host)
+				if (0 == v->user_type.compare("reflector-mrefd-0"))
 				{
-					if (expired)
+					auto rdat = dht::Value::unpack<SReflectorData0>(*v);
+					auto host = routeMap.Find(rdat.cs);
+
+					if (host)
 					{
-						std::cout << host->cs << " has expired" << std::endl;
-						expiredHosts.push(host);
-						routeMap.Erase(host->cs);
-					}
-					else
-					{
-						routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.modules, rdat.port);
+						if (expired)
+						{
+							std::cout << host->cs << " has expired" << std::endl;
+							expiredHosts.push(host);
+							routeMap.Erase(host->cs);
+						}
+						else
+						{
+							routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+						}
 					}
 				}
+				else if (0 == v->user_type.compare("reflector-mrefd-1"))
+				{
+					auto rdat = dht::Value::unpack<SReflectorData1>(*v);
+					auto host = routeMap.Find(rdat.cs);
+
+					if (host)
+					{
+						if (expired)
+						{
+							std::cout << host->cs << " has expired" << std::endl;
+							expiredHosts.push(host);
+							routeMap.Erase(host->cs);
+						}
+						else
+						{
+							routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+						}
+					}
+				}
+				else
+				{
+					std::cerr << "Found the data, but it is unknown: " << v->user_type << std::endl;
+				}
 			}
-			return true;
+			return false;
 		}
 	);
 }

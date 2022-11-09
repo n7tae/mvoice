@@ -42,13 +42,10 @@ SRCS += $(wildcard codec2/*.cpp)
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
-all : $(EXE) test-get
+all : $(EXE)
 
 $(EXE) : $(OBJS)
 	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread -lopendht
-
-test-get : TestGet.cpp
-	g++ -o $@ $^ -pthread -lopendht
 
 %.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -c $< -o $@

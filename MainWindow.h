@@ -33,17 +33,24 @@
 #include "AudioManager.h"
 #include "TransmitButton.h"
 
-struct SReflectorData
+struct SReflectorData0
 {
-	std::string cs;
-	std::string ipv4;
-	std::string ipv6;
-	std::string modules;
-	std::string url;
-	std::string email;
+	std::string cs, ipv4;
+	std::string ipv6, mods, url, email;
 	uint16_t port;
 	std::vector<std::pair<std::string, std::string>> peers;
-	MSGPACK_DEFINE(cs, ipv4, ipv6, modules, url, email, port, peers);
+
+	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, url, email, port, peers);
+};
+
+struct SReflectorData1
+{
+	std::string cs, ipv4;
+	std::string ipv6, mods, emods, url, email;
+	uint16_t port;
+	std::vector<std::pair<std::string, std::string>> peers;
+
+	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, url, email, port, peers);
 };
 
 class CMainWindow
