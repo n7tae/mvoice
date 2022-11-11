@@ -47,10 +47,11 @@ struct SReflectorData1
 {
 	std::string cs, ipv4;
 	std::string ipv6, mods, emods, url, email;
+	std::string sponsor, country;
 	uint16_t port;
 	std::vector<std::pair<std::string, std::string>> peers;
 
-	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, url, email, port, peers);
+	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, sponsor, country, url, email, port, peers);
 };
 
 class CMainWindow
