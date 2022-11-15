@@ -23,6 +23,7 @@
 #include <FL/Fl_Text_Display.H>
 #include <FL/Fl_Menu_Bar.H>
 #include <FL/Fl_Input.H>
+#include <FL/Fl_Int_Input.H>
 #include <FL/Fl_Box.H>
 #include <FL/Fl_Group.H>
 #include <FL/Fl_Radio_Button.H>

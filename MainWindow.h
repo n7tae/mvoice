@@ -51,7 +51,7 @@ struct SReflectorData1
 	uint16_t port;
 	std::vector<std::pair<std::string, std::string>> peers;
 
-	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, sponsor, country, url, email, port, peers);
+	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, port, peers);
 };
 
 class CMainWindow
@@ -90,6 +90,7 @@ private:
 	CTransmitButton *pPTTButton, *pEchoTestButton;
 	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
+	Fl_Int_Input *pDestPortInput;
 	Fl_Choice *pDestinationChoice;
 	Fl_Group *pModuleGroup;
 	Fl_Radio_Round_Button *pModuleRadioButton[26];
@@ -131,6 +132,7 @@ private:
 	void QuickKeyButton();
 	void DestCallsignInput();
 	void DestIPInput();
+	void DestPortInput();
 	void DestChoice();
 	void ActionButton();
 	void LinkButton();
@@ -145,12 +147,13 @@ private:
 	static void QuickKeyButttonCB(Fl_Widget *, void *);
 	static void DestCallsignInputCB(Fl_Widget *p, void *v);
 	static void DestIPInputCB(Fl_Widget *p, void *v);
+	static void DestPortInputCB(Fl_Widget *p, void *v);
 	static void DestChoiceCB(Fl_Widget *p, void *v);
 	static void ActionButtonCB(Fl_Widget *p, void *v);
 	static void LinkButtonCB(Fl_Widget *p, void *v);
 	static void UnlinkButtonCB(Fl_Widget *p, void *v);
 	static void DashboardButtonCB(Fl_Widget *p, void *v);
 
-	bool bDestCS, bDestIP, bTransOK;
+	bool bDestCS, bDestIP, bDestPort, bTransOK;
 	std::atomic<bool> keep_running;
 };

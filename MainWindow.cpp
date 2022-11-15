@@ -211,7 +211,7 @@ bool CMainWindow::Init()
 
 	pWin->resizable(pTextDisplay);
 
-	pDestCallsignInput = new Fl_Input(245, 360, 149, 30, _("Destination Callsign:"));
+	pDestCallsignInput = new Fl_Input(195, 360, 130, 30, _("Destination Callsign:"));
 	pDestCallsignInput->tooltip(_("A reflector or user callsign"));
 	pDestCallsignInput->color(FL_RED);
 	pDestCallsignInput->labelsize(16);
@@ -219,13 +219,21 @@ bool CMainWindow::Init()
 	pDestCallsignInput->when(FL_WHEN_CHANGED);
 	pDestCallsignInput->callback(&CMainWindow::DestCallsignInputCB, this);
 
-	pDestIPInput = new Fl_Input(460, 360, 424, 30, _("IP:"));
+	pDestIPInput = new Fl_Input(360, 360, 380, 30, _("IP:"));
 	pDestIPInput->tooltip(_("The IP of the reflector or user"));
 	pDestIPInput->color(FL_RED);
 	pDestIPInput->labelsize(16);
 	pDestIPInput->textsize(16);
 	pDestIPInput->when(FL_WHEN_CHANGED);
 	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
+
+	pDestPortInput = new Fl_Int_Input(790, 360, 80, 30, _("Port:"));
+	pDestPortInput->tooltip(_("The comm port of the reflector or user"));
+	pDestPortInput->color(FL_RED);
+	pDestPortInput->labelsize(16);
+	pDestPortInput->textsize(16);
+	pDestPortInput->when(FL_WHEN_CHANGED);
+	pDestPortInput->callback(&CMainWindow::DestPortInputCB, this);
 
 	pModuleGroup = new Fl_Group(170, 400, 560, 60, _("Reflector Module:"));
 	pModuleGroup->tooltip(_("Select a module for the reflector or repeater"));
@@ -870,6 +878,16 @@ void CMainWindow::DestIPInput()
 	pDestIPInput->color(bDestIP ? 2 : 1);
 	FixDestActionButton();
 	pDestIPInput->damage(FL_DAMAGE_ALL);
+}
+
+void CMainWindow::DestPortInputCB(Fl_Widget *, void *This)
+{
+	((CMainWindow *)This)->DestPortInput();
+}
+
+void CMainWindow::DestPortInput()
+{
+
 }
 
 void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
