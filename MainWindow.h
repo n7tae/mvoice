@@ -91,7 +91,7 @@ private:
 	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Int_Input *pDestPortInput;
-	Fl_Choice *pDestinationChoice;
+	Fl_Menu_Button *pDestMenuButton;
 	Fl_Group *pModuleGroup;
 	Fl_Radio_Round_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;
@@ -105,6 +105,7 @@ private:
 	std::mutex logmux;
 
 	// helpers
+	void BuildDestMenuButton();
 	void FixDestActionButton();
 	void SetDestActionButton(const bool sensitive, const char *label);
 	void TransmitterButtonControl();
@@ -133,7 +134,7 @@ private:
 	void DestCallsignInput();
 	void DestIPInput();
 	void DestPortInput();
-	void DestChoice();
+	void DestMenuButton();
 	void ActionButton();
 	void LinkButton();
 	void UnlinkButton();
@@ -148,7 +149,7 @@ private:
 	static void DestCallsignInputCB(Fl_Widget *p, void *v);
 	static void DestIPInputCB(Fl_Widget *p, void *v);
 	static void DestPortInputCB(Fl_Widget *p, void *v);
-	static void DestChoiceCB(Fl_Widget *p, void *v);
+	static void DestMenuButtonCB(Fl_Widget *p, void *v);
 	static void ActionButtonCB(Fl_Widget *p, void *v);
 	static void LinkButtonCB(Fl_Widget *p, void *v);
 	static void UnlinkButtonCB(Fl_Widget *p, void *v);

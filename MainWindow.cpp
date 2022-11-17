@@ -103,39 +103,35 @@ void CMainWindow::RunM17()
 	std::cout << "M17 Gateway has stopped." << std::endl;
 }
 
-void CMainWindow::SetState()
+void CMainWindow::BuildDestMenuButton()
 {
-	if (cfg.IsOkay() && false == gateM17.keep_running)
-		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
-
-	// set up the destination combo box
-	const std::string current(pDestCallsignInput->value());
-	pDestinationChoice->clear();
+	pDestMenuButton->clear();
 	for (const auto &cs : routeMap.GetKeys()) {
 		const auto host = routeMap.Find(cs);
 		if (host) {
 			switch (cfgdata.eNetType) {
 				case EInternetType::ipv6only:
 					if (! host->ip6addr.empty())
-						pDestinationChoice->add(cs.c_str());
+						pDestMenuButton->add(cs.c_str());
 					break;
 				case EInternetType::ipv4only:
 					if (! host->ip4addr.empty())
-						pDestinationChoice->add(cs.c_str());
+						pDestMenuButton->add(cs.c_str());
 					break;
 				default:
-					pDestinationChoice->add(cs.c_str());
+					pDestMenuButton->add(cs.c_str());
 					break;
 			}
 		}
 	}
-	if (routeMap.Find(current))
-		pDestinationChoice->value(pDestinationChoice->find_index(current.c_str()));
-	else
-	{
-		pDestinationChoice->value(-1);
-		std::cout << "Set DestChoice to -1" << std::endl;
-	}
+}
+
+void CMainWindow::SetState()
+{
+	if (cfg.IsOkay() && false == gateM17.keep_running)
+		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
+
+	BuildDestMenuButton();
 }
 
 void CMainWindow::CloseAll()
@@ -257,12 +253,12 @@ bool CMainWindow::Init()
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
 
-	pDestinationChoice = new Fl_Choice(276, 474, 164, 30, _("Destination:"));
-	pDestinationChoice->tooltip(_("Select a saved contact (reflector or user)"));
-	pDestinationChoice->down_box(FL_BORDER_BOX);
-	pDestinationChoice->labelsize(16);
-	pDestinationChoice->textsize(16);
-	pDestinationChoice->callback(&CMainWindow::DestChoiceCB, this);
+	pDestMenuButton = new Fl_Menu_Button(276, 474, 164, 30, _("Destination"));
+	pDestMenuButton->tooltip(_("Select a saved contact (reflector or user)"));
+	pDestMenuButton->down_box(FL_BORDER_BOX);
+	pDestMenuButton->labelsize(16);
+	pDestMenuButton->textsize(16);
+	pDestMenuButton->callback(&CMainWindow::DestMenuButtonCB, this);
 
 	pActionButton = new Fl_Button(455, 472, 100, 30, "Action");
 	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
@@ -324,7 +320,7 @@ bool CMainWindow::Init()
 	routeMap.ReadAll();
 	Receive(false);
 	SetState();
-	DestChoice();
+	DestMenuButton();
 
 	// idle processing
 	Fl::add_timeout(1.0, MyIdleProcess, this);
@@ -428,17 +424,17 @@ void CMainWindow::NewSettings(CFGDATA *newdata)
 	SetState();
 }
 
-void CMainWindow::DestChoiceCB(Fl_Widget *, void *This)
+void CMainWindow::DestMenuButtonCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->DestChoice();
+	((CMainWindow *)This)->DestMenuButton();
 }
 
-void CMainWindow::DestChoice()
+void CMainWindow::DestMenuButton()
 {
-	auto i = pDestinationChoice->value();
+	auto i = pDestMenuButton->value();
 	if (i >= 0)
 	{
-		auto cs = pDestinationChoice->text(i);
+		auto cs = pDestMenuButton->text(i);
 		pDestCallsignInput->value(cs);
 		DestCallsignInput();
 		auto host = routeMap.Find(cs);
@@ -473,17 +469,12 @@ void CMainWindow::ActionButton()
 			routeMap.Update(false, cs, a, "", "", "", p);
 		else
 			routeMap.Update(false, cs, "", a, "", "", p);
-		pDestinationChoice->clear();
+		pDestMenuButton->clear();
 		for (const auto &member : routeMap.GetKeys())
-			pDestinationChoice->add(member.c_str());
-		auto i = pDestinationChoice->find_index(cs);
-		if (i >= 0)
-			pDestinationChoice->value(i);
+			pDestMenuButton->add(member.c_str());
 	} else if (0 == label.compare(deletestr)) {
-		auto index = pDestinationChoice->value();
-		pDestinationChoice->remove(index);
 		routeMap.Erase(cs);
-		pDestinationChoice->value(-1);
+		BuildDestMenuButton();
 	} else if (0 == label.compare(updatestr)) {
 		std::string a(pDestIPInput->value());
 		const auto p = uint16_t(std::atoi(pDestPortInput->value()));
@@ -925,14 +916,8 @@ void CMainWindow::FixDestActionButton()
 				} else {
 					// perfect match
 					SetDestActionButton(true, deletestr);
-					auto index = pDestinationChoice->find_index(cs.c_str());
-					if (index >= 0)
-						pDestinationChoice->value(index);
 				}
 			} else {
-				auto index = pDestinationChoice->find_index(cs.c_str());
-				if (index >= 0)
-					pDestinationChoice->value(index);
 				SetDestActionButton(false, "");
 			}
 		} else {
