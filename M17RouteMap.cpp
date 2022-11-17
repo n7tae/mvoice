@@ -22,8 +22,6 @@
 #include "M17RouteMap.h"
 #include "Utilities.h"
 
-#define DHTHOSTS "DHTHosts.cfg"
-
 CM17RouteMap::~CM17RouteMap()
 {
 	std::lock_guard<std::mutex> lck(mux);
@@ -45,7 +43,7 @@ const std::shared_ptr<SHost> CM17RouteMap::Find(const std::string &cs) const
 	return rval;
 }
 
-void CM17RouteMap::Update(const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port)
+void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port)
 {
 	std::string base;
 	auto pos = cs.find_first_of(" /.");
@@ -55,6 +53,7 @@ void CM17RouteMap::Update(const std::string &cs, const std::string &ip4addr, con
 	auto host = Find(base);
 	if (! host)
 		host = std::make_shared<SHost>();
+	host->from_json = frmjson;
 	host->cs.assign(base);
 	if (! url.empty())
 		host->url.assign(url);
@@ -80,7 +79,7 @@ void CM17RouteMap::ReadAll()
 	baseMap.clear();
 	mux.unlock();
 	ReadJson("m17refl.json");
-	Read(DHTHOSTS);
+	Read("M17Hosts.cfg");
 }
 
 void CM17RouteMap::ReadJson(const char *filename)
@@ -130,7 +129,7 @@ void CM17RouteMap::ReadJson(const char *filename)
 			po = true;
 		}
 		if (cs && ur && v4 && v6 && po) {
-			Update(scs, sv4, sv6, sur, "", std::stoul(spo));
+			Update(true, scs, sv4, sv6, sur, "", std::stoul(spo));
 			cs = ur = v4 = v6 = po = false;
 			scs.clear(); sur.clear(); sv4.clear(); sv6.clear(); spo.clear();
 		}
@@ -150,7 +149,7 @@ void CM17RouteMap::Read(const char *filename)
 			if (0==line.size() || '#'==line[0]) continue;
 			std::vector<std::string> elem;
 			split(line, ',', elem);
-			Update(elem[0], elem[1], elem[2], elem[3], elem[4], std::stoul(elem[4]));
+			Update(false, elem[0], elem[1], elem[2], elem[3], elem[4], std::stoul(elem[5]));
 		}
 		file.close();
 	}
@@ -159,14 +158,14 @@ void CM17RouteMap::Read(const char *filename)
 void CM17RouteMap::Save() const
 {
 	std::string path(CFG_DIR);
-	path.append(DHTHOSTS);
+	path.append("M17Hosts.cfg");
 	std::ofstream file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
 	if (file.is_open()) {
 		mux.lock();
 		for (const auto &pair : baseMap) {
 			const auto host = pair.second;
-			if (host->url.empty()) {
-				file << host->cs << host->ip4addr << ',' << host->ip6addr << ',' << host->url << ',' << host->modules << ',' << host->port << std::endl;
+			if (! host->from_json) {
+				file << host->cs << ',' << host->ip4addr << ',' << host->ip6addr << ',' << host->url << ',' << host->modules << ',' << host->port << std::endl;
 			}
 		}
 		file.close();

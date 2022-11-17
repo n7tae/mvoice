@@ -147,7 +147,7 @@ On the main window, set your destination callsign and IP address. You can select
 
 Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a vaild callsign is exactly **seven** characters long, `M17-xxx` where `xxx` is made up of letters or numbers. Or, now you can also link to the new URF reflectors. A URF reflector callsign is exactly **six** characters long, beginning with `URF`.
 
-Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If the reflector you're using is from the `M17Hosts.csv` file, you can open the reflector's dashboard with the **Open Dashboard** button.
+Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If *mvoice* has found a URL for the target, you can open the reflector's dashboard with the **Open Dashboard** button.
 
 For Linking, you can select a reflector. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if reflect exists at that IP and the module you are requesting is actually configured and operational, or even if it actually exists.
 

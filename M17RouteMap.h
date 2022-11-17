@@ -23,16 +23,14 @@
 #include <memory>
 #include <map>
 #include <list>
-#include <future>
 
 #include "SockAddress.h"
 
 struct SHost
 {
 	SHost() : updated(false) {}
-	std::future<size_t> future;
 	std::string cs, url, ip4addr, ip6addr, modules;
-	bool updated;
+	bool updated, from_json;
 	uint16_t port;
 };
 
@@ -42,7 +40,7 @@ public:
 	CM17RouteMap() {}
 	~CM17RouteMap();
 	const std::shared_ptr<SHost> Find(const std::string &cs) const;
-	void Update(const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port = 17000);
+	void Update(bool frmjson, const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port);
 	void Save() const;
 	void ReadAll();
 	const std::list<std::string> GetKeys() const;

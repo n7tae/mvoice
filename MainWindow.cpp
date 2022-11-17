@@ -42,7 +42,6 @@ static const char *deletestr = _("Delete");
 static const char *updatestr = _("Update");
 
 static CM17RouteMap routeMap;
-static std::queue<std::shared_ptr<SHost>> expiredHosts;
 
 static void MyIdleProcess(void *p)
 {
@@ -57,6 +56,7 @@ CMainWindow::CMainWindow() :
 	pSettingsMenuItem(nullptr),
 	bDestCS(false),
 	bDestIP(false),
+	bDestPort(false),
 	bTransOK(true)
 {
 	cfg.CopyTo(cfgdata);
@@ -109,9 +109,7 @@ void CMainWindow::SetState()
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 
 	// set up the destination combo box
-	Fl::lock();
 	const std::string current(pDestCallsignInput->value());
-	Fl::unlock();
 	pDestinationChoice->clear();
 	for (const auto &cs : routeMap.GetKeys()) {
 		const auto host = routeMap.Find(cs);
@@ -133,6 +131,11 @@ void CMainWindow::SetState()
 	}
 	if (routeMap.Find(current))
 		pDestinationChoice->value(pDestinationChoice->find_index(current.c_str()));
+	else
+	{
+		pDestinationChoice->value(-1);
+		std::cout << "Set DestChoice to -1" << std::endl;
+	}
 }
 
 void CMainWindow::CloseAll()
@@ -436,18 +439,20 @@ void CMainWindow::DestChoice()
 	if (i >= 0)
 	{
 		auto cs = pDestinationChoice->text(i);
-		Fl::lock();
 		pDestCallsignInput->value(cs);
-		Fl::unlock();
 		DestCallsignInput();
 		auto host = routeMap.Find(cs);
 		if (host) {
+			// first the IP
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
 				// if we're not in IPv4-only mode && there is an IPv6 address for this host
 				pDestIPInput->value(host->ip6addr.c_str());
 			else
 				pDestIPInput->value(host->ip4addr.c_str());
 			DestIPInput();
+			// then the port
+			pDestPortInput->value(std::to_string(host->port).c_str());
+			DestPortInput();
 		}
 	}
 }
@@ -460,15 +465,14 @@ void CMainWindow::ActionButtonCB(Fl_Widget *, void *This)
 void CMainWindow::ActionButton()
 {
 	const std::string label(pActionButton->label());
-	Fl::lock();
 	auto cs = pDestCallsignInput->value();
-	Fl::unlock();
 	if (0 == label.compare(savestr)) {
 		const std::string a(pDestIPInput->value());
+		auto p = uint16_t(std::atoi(pDestPortInput->value()));
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(cs, "", a, "", "");
+			routeMap.Update(false, cs, a, "", "", "", p);
 		else
-			routeMap.Update(cs, "", "", a, "");
+			routeMap.Update(false, cs, "", a, "", "", p);
 		pDestinationChoice->clear();
 		for (const auto &member : routeMap.GetKeys())
 			pDestinationChoice->add(member.c_str());
@@ -482,10 +486,11 @@ void CMainWindow::ActionButton()
 		pDestinationChoice->value(-1);
 	} else if (0 == label.compare(updatestr)) {
 		std::string a(pDestIPInput->value());
+		const auto p = uint16_t(std::atoi(pDestPortInput->value()));
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(cs, a, "", "", "");
+			routeMap.Update(false, cs, a, "", "", "", p);
 		else
-			routeMap.Update(cs, "", a, "", "");
+			routeMap.Update(false, cs, "", a, "", "", p);
 	}
 	FixDestActionButton();
 	routeMap.Save();
@@ -511,10 +516,8 @@ void CMainWindow::EchoButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::EchoButton()
 {
-	Fl::lock();
 	pEchoTestButton->toggle();
 	auto onchar = pEchoTestButton->value();
-	Fl::unlock();
 	if (onchar) {
 		// record the mic to a queue
 		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
@@ -530,12 +533,10 @@ void CMainWindow::Receive(bool is_rx)
 	bTransOK = ! is_rx;
 	TransmitterButtonControl();
 
-	Fl::lock();
 	if (bTransOK)
 		pEchoTestButton->activate();
 	else
 		pEchoTestButton->deactivate();
-	Fl::unlock();
 
 	if (bTransOK && AudioManager.volStats.count)
 		AudioSummary(_("RX Audio"));
@@ -543,14 +544,9 @@ void CMainWindow::Receive(bool is_rx)
 
 void CMainWindow::SetDestinationAddress(std::string &cs)
 {
-	Fl::lock();
 	cs.assign(pDestCallsignInput->value());
-	Fl::unlock();
 	const std::string ip(pDestIPInput->value());
-	uint16_t port = 17000;	// we need to get the port from the routeMap in case it's not 17000
-	auto host = routeMap.Find(cs);
-	if (host)
-		port = host->port;
+	uint16_t port = std::stoul(pDestPortInput->value());
 	gateM17.SetDestAddress(ip, port);
 	if (0==cs.compare(0, 4, "M17-") || 0==cs.compare(0, 3, "URF")) {
 		cs.resize(8, ' ');
@@ -565,10 +561,8 @@ void CMainWindow::PTTButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::PTTButton()
 {
-	Fl::lock();
 	pPTTButton->toggle();
 	auto onchar = pPTTButton->value();
-	Fl::unlock();
 	if (onchar) {
 		if (gateM17.TryLock())
 		{
@@ -578,9 +572,7 @@ void CMainWindow::PTTButton()
 		}
 		else
 		{
-			Fl::lock();
 			pPTTButton->value(0);
-			Fl::unlock();
 		}
 	}
 	else
@@ -654,7 +646,6 @@ void CMainWindow::insertLogText(const char *line)
 
 void CMainWindow::UpdateGUI()
 {
-	Fl::lock();
 	if (cfgdata.sM17SourceCallsign.empty())
 	{
 		pPTTButton->deactivate();
@@ -666,13 +657,13 @@ void CMainWindow::UpdateGUI()
 		std::string dest(pDestCallsignInput->value());
 		if (ELinkState::linked != gateM17.GetLinkState()) {
 			pDisconnectButton->deactivate();
-			if (std::regex_match(dest, M17RefRegEx) && bDestIP)
+			if (std::regex_match(dest, M17RefRegEx) && bDestIP && bDestPort)
 				pConnectButton->activate();
 			else
 				pConnectButton->deactivate();
 		} else {
 			pConnectButton->deactivate();
-			if (bDestIP)
+			if (bDestIP && bDestPort)
 				pDisconnectButton->activate();
 			else
 				pDisconnectButton->deactivate();
@@ -691,8 +682,9 @@ void CMainWindow::UpdateGUI()
 						pDestIPInput->value(host->ip6addr.c_str());
 					else
 						pDestIPInput->value(host->ip4addr.c_str());
-
 					DestIPInput();
+					pDestPortInput->value(std::to_string(host->port).c_str());
+					DestPortInput();
 
 					if (host->modules.size())
 						ActivateModules(host->modules);
@@ -703,14 +695,6 @@ void CMainWindow::UpdateGUI()
 				}
 			}
 		}
-	}
-	Fl::unlock();
-
-	// empty the trash
-	while (expiredHosts.size()) {
-		auto host = expiredHosts.front();
-		expiredHosts.pop();
-		node.cancelListen(dht::InfoHash::get(host->cs), std::move(host->future));
 	}
 }
 
@@ -728,58 +712,30 @@ bool CMainWindow::ToUpper(std::string &s)
 	return rval;
 }
 
-void CMainWindow::Listen(std::shared_ptr<SHost> host)
+void CMainWindow::Get(const std::string &cs)
 {
-	std::cout << "Listen for changes at " << host->cs << std::endl;
-	host->future = node.listen(
-		dht::InfoHash::get(host->cs),
-		[](const std::vector<std::shared_ptr<dht::Value>> &values, bool expired) {
-			for (const auto &v : values)
+	node.get(
+		dht::InfoHash::get(cs),
+		[](const std::shared_ptr<dht::Value> &v) {
+			if (0 == v->user_type.compare("reflector-mrefd-0"))
 			{
-				if (0 == v->user_type.compare("reflector-mrefd-0"))
-				{
-					auto rdat = dht::Value::unpack<SReflectorData0>(*v);
-					auto host = routeMap.Find(rdat.cs);
-
-					if (host)
-					{
-						if (expired)
-						{
-							std::cout << host->cs << " has expired" << std::endl;
-							expiredHosts.push(host);
-							routeMap.Erase(host->cs);
-						}
-						else
-						{
-							routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
-						}
-					}
-				}
-				else if (0 == v->user_type.compare("reflector-mrefd-1"))
-				{
-					auto rdat = dht::Value::unpack<SReflectorData1>(*v);
-					auto host = routeMap.Find(rdat.cs);
-
-					if (host)
-					{
-						if (expired)
-						{
-							std::cout << host->cs << " has expired" << std::endl;
-							expiredHosts.push(host);
-							routeMap.Erase(host->cs);
-						}
-						else
-						{
-							routeMap.Update(rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
-						}
-					}
-				}
-				else
-				{
-					std::cerr << "Found the data, but it is unknown: " << v->user_type << std::endl;
-				}
+				auto rdat = dht::Value::unpack<SReflectorData0>(*v);
+				routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+			}
+			else if (0 == v->user_type.compare("reflector-mrefd-1"))
+			{
+				auto rdat = dht::Value::unpack<SReflectorData1>(*v);
+				routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+			}
+			else
+			{
+				std::cerr << "Found the data, but it has an unknown user_type: " << v->user_type << std::endl;
 			}
 			return false;
+		},
+		[](bool success) {
+			if (! success)
+				std::cout << "node.get() was unsuccessful!" << std::endl;
 		}
 	);
 }
@@ -791,7 +747,6 @@ void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 
 void CMainWindow::DestCallsignInput()
 {
-	Fl::lock();
 	// Convert to uppercase
 	auto pos = pDestCallsignInput->position();
 	std::string dest(pDestCallsignInput->value());
@@ -800,7 +755,6 @@ void CMainWindow::DestCallsignInput()
 		pDestCallsignInput->value(dest.c_str());
 		pDestCallsignInput->position(pos);
 	}
-	Fl::unlock();
 
 	// the destination either has to be a reflector or a legal callsign
 	bDestCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, M17RefRegEx);
@@ -811,8 +765,7 @@ void CMainWindow::DestCallsignInput()
 		if (host)
 		{
 			// start Listen, if it's not already started
-			if (! host->future.valid())
-				Listen(host);
+			Get(host->cs);
 
 			// let's try to come up with a destination IP
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
@@ -821,6 +774,8 @@ void CMainWindow::DestCallsignInput()
 			else if (!host->ip4addr.empty())
 				// otherwise, if there is an IPv4 address, use it
 				pDestIPInput->value(host->ip4addr.c_str());
+
+			pDestPortInput->value(std::to_string(host->port).c_str());
 
 			// activate the configure modules
 			// if there aren't any confgured modules, activate all modules
@@ -837,9 +792,7 @@ void CMainWindow::DestCallsignInput()
 		else
 		{
 			ActivateModules();
-			// create a new entry and listen for it
-			routeMap.Update(dest, "", "", "", "");
-			Listen(routeMap.Find(dest));
+			Get(dest);
 			SetState();
 		}
 	}
@@ -847,13 +800,16 @@ void CMainWindow::DestCallsignInput()
 	{
 		// bDestCS is false
 		pDestIPInput->value("");
+		pDestPortInput->value("");
 	}
 
 	DestIPInput();
-	Fl::lock();
 	pDestCallsignInput->color(bDestCS ? 2 : 1);
 	pDestCallsignInput->damage(FL_DAMAGE_ALL);
-	Fl::unlock();
+
+	DestPortInput();
+	pDestPortInput->color(bDestPort ? 2 : 1);
+	pDestPortInput->damage(FL_DAMAGE_ALL);
 }
 
 void CMainWindow::DestIPInputCB(Fl_Widget *, void *This)
@@ -887,7 +843,11 @@ void CMainWindow::DestPortInputCB(Fl_Widget *, void *This)
 
 void CMainWindow::DestPortInput()
 {
-
+	auto port = std::atoi(pDestPortInput->value());
+	bDestPort = (1023 < port && port < 49000);
+	pDestPortInput->color(bDestPort ? 2 : 1);
+	FixDestActionButton();
+	pDestPortInput->damage(FL_DAMAGE_ALL);
 }
 
 void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
@@ -940,9 +900,7 @@ void CMainWindow::DashboardButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::DashboardButton()
 {
-	Fl::lock();
 	auto dciv = pDestCallsignInput->value();
-	Fl::unlock();
 	auto host = routeMap.Find(dciv);
 	if (host && ! host->url.empty()) {
 		std::string opencmd("xdg-open ");
@@ -953,17 +911,16 @@ void CMainWindow::DashboardButton()
 
 void CMainWindow::FixDestActionButton()
 {
-	Fl::lock();
-	const std::string cs(pDestCallsignInput->value());
-	const std::string ip(pDestIPInput->value());
-	Fl::unlock();
 	if (bDestCS) {	// is the destination c/s valid?
+		const std::string cs(pDestCallsignInput->value());
 		auto host = routeMap.Find(cs);	// look for it
 		if (host) {
 			// cs is found in map
-			if (bDestIP && host->modules.empty()) { // is the IP okay and is this not from the csv file?
-				if (ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) {
-					// the ip in the IPEntry is different
+			if (bDestIP && bDestPort && host->modules.empty()) { // is the IP and port okay and is this not from the csv file?
+				const std::string ip(pDestIPInput->value());
+				const std::string port(pDestPortInput->value());
+				if ((ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) || (port.compare(std::to_string(host->port)))) {
+					// the ip in the IPEntry is different, or the port is different
 					SetDestActionButton(true, updatestr);
 				} else {
 					// perfect match
@@ -980,7 +937,7 @@ void CMainWindow::FixDestActionButton()
 			}
 		} else {
 			// cs is not found in map
-			if (bDestIP) { // is the IP okay and is the not from the csv file?
+			if (bDestIP && bDestPort) { // is the IP okay and is the not from the csv file?
 				SetDestActionButton(true, savestr);
 			} else {
 				SetDestActionButton(false, "");
@@ -994,8 +951,7 @@ void CMainWindow::FixDestActionButton()
 
 void CMainWindow::TransmitterButtonControl()
 {
-	Fl::lock();
-	if (bTransOK && bDestCS && bDestIP)
+	if (bTransOK && bDestCS && bDestIP && bDestPort)
 	{
 		pPTTButton->activate();
 		pQuickKeyButton->activate();
@@ -1005,7 +961,6 @@ void CMainWindow::TransmitterButtonControl()
 		pPTTButton->deactivate();
 		pQuickKeyButton->deactivate();
 	}
-	Fl::unlock();
 }
 
 void CMainWindow::StopM17()
@@ -1097,7 +1052,7 @@ int main (int argc, char **argv)
 	if (MainWindow.Init())
 		return 1;
 
-	Fl::lock();
+	Fl::lock();	// "start" the FLTK lock mechanism
 	MainWindow.Run(argc, argv);
 	Fl::run();
 	return 0;

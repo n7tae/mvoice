@@ -120,7 +120,7 @@ private:
 	void AudioSummary(const char *title);
 	char GetDestinationModule();
 	void SetDestinationAddress(std::string &cs);
-	void Listen(std::shared_ptr<SHost> host);
+	void Get(const std::string &cs);
 	void ActivateModules(const std::string &modules = "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 	// Actual Callbacks
