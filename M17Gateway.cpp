@@ -78,7 +78,7 @@ void CM17Gateway::LinkCheck()
 	if (mlink.receivePingTimer.time() > 30) // is the reflector okay?
 	{
 		// looks like we lost contact
-		SendLog("Unlinked from %s, TIMEOUT...\n", mlink.cs.GetCS().c_str());
+		SendLog("Disconnected from %s, TIMEOUT...\n", mlink.cs.GetCS().c_str());
 		mlink.state = ELinkState::unlinked;
 		mlink.addr.Clear();
 	}
