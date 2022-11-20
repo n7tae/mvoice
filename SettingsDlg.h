@@ -19,7 +19,9 @@
 #pragma once
 
 #include <map>
+#ifndef NO_DHT
 #include <opendht.h>
+#endif
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -51,8 +53,14 @@ private:
 	Fl_Return_Button *pOkayButton;
 	Fl_Button *pAudioRescanButton;
 	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice, *pModuleChoice;
-	Fl_Input *pSourceCallsignInput, *pBootstrapInput;
-	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup, *pDHTGroup;
+	Fl_Input *pSourceCallsignInput;
+#ifndef NO_DHT
+	Fl_Input *pBootstrapInput;
+#endif
+	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup;
+#ifndef NO_DHT
+	Fl_Group *pDHTGroup;
+#endif
 	Fl_Radio_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
 	Fl_Radio_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;

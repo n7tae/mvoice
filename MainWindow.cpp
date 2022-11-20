@@ -311,6 +311,7 @@ bool CMainWindow::Init()
 	// idle processing
 	Fl::add_timeout(1.0, MyIdleProcess, this);
 
+#ifndef NO_DHT
 	// start the dht instance
 	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
 
@@ -346,7 +347,7 @@ bool CMainWindow::Init()
 	}
 
 	//PutDHTInfo();
-
+#endif
 
 	return false;
 }
@@ -687,6 +688,7 @@ bool CMainWindow::ToUpper(std::string &s)
 	return rval;
 }
 
+#ifndef NO_DHT
 void CMainWindow::Get(const std::string &cs)
 {
 	node.get(
@@ -714,6 +716,7 @@ void CMainWindow::Get(const std::string &cs)
 		}
 	);
 }
+#endif
 
 void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
 {
@@ -739,9 +742,9 @@ void CMainWindow::DestCallsignInput()
 		auto host = routeMap.Find(dest); // is it already in the routeMap?
 		if (host)
 		{
-			// start Listen, if it's not already started
+#ifndef NO_DHT
 			Get(host->cs);
-
+#endif
 			// let's try to come up with a destination IP
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
 				// if we aren't in IPv4-only mode and there is an IPv6 address, use it
@@ -767,7 +770,9 @@ void CMainWindow::DestCallsignInput()
 		else
 		{
 			ActivateModules();
+#ifndef NO_DHT
 			Get(dest);
+#endif
 			SetState();
 		}
 	}

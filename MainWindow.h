@@ -22,7 +22,9 @@
 #include <future>
 #include <atomic>
 #include <mutex>
+#ifndef NO_DHT
 #include <opendht.h>
+#endif
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -33,6 +35,7 @@
 #include "AudioManager.h"
 #include "TransmitButton.h"
 
+#ifndef NO_DHT
 struct SReflectorData0
 {
 	std::string cs, ipv4;
@@ -53,6 +56,7 @@ struct SReflectorData1
 
 	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, port, peers);
 };
+#endif
 
 class CMainWindow
 {
@@ -81,9 +85,11 @@ private:
 	CAboutDlg AboutDlg;
 	CM17Gateway gateM17;
 
+#ifndef NO_DHT
 	// Distributed Hash Table
 	dht::DhtRunner node;
 	dht::Value nodevalue;
+#endif
 
 	// widgets
 	Fl_Double_Window *pWin;
@@ -119,7 +125,9 @@ private:
 	void AudioSummary(const char *title);
 	char GetDestinationModule();
 	void SetDestinationAddress(std::string &cs);
+#ifndef NO_DHT
 	void Get(const std::string &cs);
+#endif
 	void ActivateModules(const std::string &modules = "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 	// Actual Callbacks

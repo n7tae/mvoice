@@ -81,15 +81,13 @@ cd mvoice
 
 ### Compiling
 
-By default,*mvoice* uses pulseaudio at an audio rate of 8000 Hz. Most modern devices support this rate. However, some don't. You can build a version of *mvoice* that will use an audio rate of 44,100 Hz (CD quality) which is supported on just about any pulseaudio device. Start by copying the Makefile:
+There are several compile-time options for building *mvoice*, including where run-time files are stored, where the *mvoice* executable is installed, support for 44,100 Hz (CD-quality) audio, debugging support and support for the new **Digital Voice Information Network**. These are all controlled by your very own `mvoice.mk` file. Start by creating the file:
 
 ```bash
-cp Makefile makefile    # or cp {M,m}akefile
+cp example.mk mvoice.mk
 ```
 
-Then use you favorite editor to modify your new `makefile` and change `USE44100 = false` to `USE44100 = true`. You can also enable gnu debugging by changing `DEBUG = false` to `DEBUG = true`. You can also change where the configuration data and the executable is stored by modifying the pathnames for `CFGDIR` and `BINDIR`. Be sure to end your new path with '/'.
-
-If you are using a custom `makefile`, then pay close attention when you do a `git pull`. If a new version of `Makefile` comes with that pull, be sure to recreate your custom `makefile` based on the new `Makefile`.
+Use your favorite editor to change values in your `mvoice.mk` file.
 
 You're now read to build *mvoice*:
 

@@ -59,10 +59,12 @@ void CSettingsDlg::UpdateButton()
 	pDlg->hide();
 	CFGDATA newstate;						// the user clicked okay, time to look at what's changed
 	SaveWidgetStates(newstate);				// newstate is now the current contents of the Settings Dialog
+#ifndef NO_DHT
 	if (newstate.sBootstrap.compare(pMainWindow->cfg.GetData()->sBootstrap))
 	{
 		fl_message("Please restart to use new bootstrap");
 	}
+#endif
 	pMainWindow->cfg.CopyFrom(newstate);	// and it is now in the global cfg object
 	pMainWindow->cfg.WriteData();			// and it's saved in the config dir
 
@@ -98,8 +100,9 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	{
 		d.sAudioOut.assign(itout->second.first);
 	}
-	// DHT
+#ifndef NO_DHT
 	d.sBootstrap.assign(pBootstrapInput->value());
+#endif
 }
 
 void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
@@ -112,7 +115,9 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 	pSourceCallsignInput->value(d.sM17SourceCallsign.c_str());
 	SourceCallsignInput();
 	pModuleChoice->value(d.cModule - 'A');
+#ifndef NO_DHT
 	pBootstrapInput->value(d.sBootstrap.c_str());
+#endif
 	// internet
 	switch (d.eNetType) {
 		case EInternetType::ipv6only:
@@ -191,6 +196,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pTabs->add(pInternetGroup);
 
 	///////////////////////////////////////////////////////////////////////////
+#ifndef NO_DHT
 	pDHTGroup = new Fl_Group(20, 30, 410, 210, _("DHT"));
 
 	pBootstrapInput = new Fl_Input(170, 120, 227, 30, _("DHT Bootstrap:"));
@@ -198,6 +204,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 
 	pDHTGroup->end();
 	pTabs->add(pDHTGroup);
+#endif
 
 	//////////////////////////////////////////////////////////////////////////
 	pAudioGroup = new Fl_Group(20, 30, 410, 210, _("Audio"));
