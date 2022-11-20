@@ -55,7 +55,6 @@ static void MyIdleProcess(void *p)
 
 CMainWindow::CMainWindow() :
 	pWin(nullptr),
-	pSettingsMenuItem(nullptr),
 	bDestCS(false),
 	bDestIP(false),
 	bDestPort(false),
@@ -187,7 +186,7 @@ bool CMainWindow::Init()
 	pWin = new Fl_Double_Window(900, 600, "MVoice");
 	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);
-	pWin->size_range(740, 440);
+	pWin->size_range(760, 440);
 	pWin->callback(&CMainWindow::QuitCB, this);
 	//Fl::visual(FL_DOUBLE|FL_INDEX);
 
@@ -229,7 +228,7 @@ bool CMainWindow::Init()
 	pDestPortInput->when(FL_WHEN_CHANGED);
 	pDestPortInput->callback(&CMainWindow::DestPortInputCB, this);
 
-	pModuleGroup = new Fl_Group(170, 400, 560, 60, _("Reflector Module:"));
+	pModuleGroup = new Fl_Group(170, 400, 560, 60, _("Module:"));
 	pModuleGroup->tooltip(_("Select a module for the reflector or repeater"));
 	pModuleGroup->labelsize(16);
 	pModuleGroup->align(FL_ALIGN_LEFT);

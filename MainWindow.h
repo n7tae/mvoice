@@ -94,7 +94,6 @@ private:
 	Fl_Group *pModuleGroup;
 	Fl_Radio_Round_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;
-	Fl_Menu_Item *pSettingsMenuItem;
 	Fl_Text_Display *pTextDisplay;
 	Fl_Text_Buffer  *pTextBuffer;
 	Fl_PNG_Image *pIcon;
