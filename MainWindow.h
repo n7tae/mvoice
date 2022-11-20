@@ -91,7 +91,6 @@ private:
 	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
 	Fl_Int_Input *pDestPortInput;
-	Fl_Menu_Button *pDestMenuButton;
 	Fl_Group *pModuleGroup;
 	Fl_Radio_Round_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;

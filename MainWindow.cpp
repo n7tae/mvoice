@@ -29,6 +29,8 @@
 #include <chrono>
 #include <cmath>
 
+#include <FL/filename.H>
+
 #include "MainWindow.h"
 #include "Utilities.h"
 #include "TemplateClasses.h"
@@ -105,22 +107,29 @@ void CMainWindow::RunM17()
 
 void CMainWindow::BuildDestMenuButton()
 {
-	pDestMenuButton->clear();
-	for (const auto &cs : routeMap.GetKeys()) {
-		const auto host = routeMap.Find(cs);
-		if (host) {
-			switch (cfgdata.eNetType) {
-				case EInternetType::ipv6only:
-					if (! host->ip6addr.empty())
-						pDestMenuButton->add(cs.c_str());
-					break;
-				case EInternetType::ipv4only:
-					if (! host->ip4addr.empty())
-						pDestMenuButton->add(cs.c_str());
-					break;
-				default:
-					pDestMenuButton->add(cs.c_str());
-					break;
+	auto index = pMenuBar->find_index(_("Destination"));
+	if (index >= 0)
+	{
+		pMenuBar->clear_submenu(index);
+		for (const auto &cs : routeMap.GetKeys()) {
+			const auto host = routeMap.Find(cs);
+			if (host) {
+				std::string name(_("Destination"));
+				name.append("/");
+				name.append(cs);
+				switch (cfgdata.eNetType) {
+					case EInternetType::ipv6only:
+						if (! host->ip6addr.empty())
+							pMenuBar->add(name.c_str(), 0, &CMainWindow::DestMenuButtonCB, this);
+						break;
+					case EInternetType::ipv4only:
+						if (! host->ip4addr.empty())
+							pMenuBar->add(name.c_str(), 0, &CMainWindow::DestMenuButtonCB, this);
+						break;
+					default:
+						pMenuBar->add(name.c_str(), 0, &CMainWindow::DestMenuButtonCB, this);
+						break;
+				}
 			}
 		}
 	}
@@ -144,13 +153,6 @@ bool CMainWindow::Init()
 {
 	keep_running = true;
 	futReadThread = std::async(std::launch::async, &CMainWindow::ReadThread, this);
-
-	bool menu__i18n_done = false;
-	Fl_Menu_Item theMenu[] = {
- 		{ _("Settings..."), 0, &CMainWindow::ShowSettingsDialogCB, this, 0, 0, 0, 0, 0 },
-		{ _("About..."),    0, &CMainWindow::ShowAboutDialogCB,    this, 0, 0, 0, 0, 0 },
-		{ 0,                0, 0,                                     0, 0, 0, 0, 0, 0 }
-	};
 
 	std::string iconpath(CFG_DIR);
 	iconpath.append("mvoice48.png");
@@ -182,26 +184,19 @@ bool CMainWindow::Init()
 		return true;
 	}
 
-	pWin = new Fl_Double_Window(900, 640, "MVoice");
+	pWin = new Fl_Double_Window(900, 600, "MVoice");
 	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);
-	pWin->size_range(720, 440);
+	pWin->size_range(740, 440);
 	pWin->callback(&CMainWindow::QuitCB, this);
 	//Fl::visual(FL_DOUBLE|FL_INDEX);
 
 	pMenuBar = new Fl_Menu_Bar(0, 0, 900, 30);
 	pMenuBar->labelsize(16);
-	if (! menu__i18n_done)
-	{
-		int i = 0;
-		while (theMenu[i].label())
-		{
-			theMenu[i].label(theMenu[i].label());
-			i++;
-		}
-		menu__i18n_done = true;
-	}
-	pMenuBar->copy(theMenu);
+	pMenuBar->add(_("Destination"), 0, 0, 0, FL_SUBMENU);
+	pMenuBar->add(_("Settings..."), 0, &CMainWindow::ShowSettingsDialogCB, this, 0);
+	pMenuBar->add(_("About..."),    0, &CMainWindow::ShowAboutDialogCB,    this, 0);
+
 
 	pTextBuffer = new Fl_Text_Buffer();
 	pTextDisplay = new Fl_Text_Display(16, 30, 872, 314);
@@ -253,51 +248,44 @@ bool CMainWindow::Init()
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
 
-	pDestMenuButton = new Fl_Menu_Button(276, 474, 164, 30, _("Destination"));
-	pDestMenuButton->tooltip(_("Select a saved contact (reflector or user)"));
-	pDestMenuButton->down_box(FL_BORDER_BOX);
-	pDestMenuButton->labelsize(16);
-	pDestMenuButton->textsize(16);
-	pDestMenuButton->callback(&CMainWindow::DestMenuButtonCB, this);
-
-	pActionButton = new Fl_Button(455, 472, 100, 30, "Action");
+	pActionButton = new Fl_Button(50, 475, 100, 30, "Action");
 	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
 	pActionButton->labelsize(16);
 	pActionButton->deactivate();
 	pActionButton->callback(&CMainWindow::ActionButtonCB, this);
 
-	pDashboardButton = new Fl_Button(600, 474, 201, 30, _("Open Dashboard"));
+	pDashboardButton = new Fl_Button(690, 475, 160, 30, _("Open Dashboard"));
 	pDashboardButton->tooltip(_("Open a reflector dashboard, if available"));
 	pDashboardButton->labelsize(16);
 	pDashboardButton->deactivate();
 	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
 
-	pConnectButton = new Fl_Button(338, 514, 100, 30, _("Connect"));
+	pConnectButton = new Fl_Button(338, 475, 100, 30, _("Connect"));
 	pConnectButton->tooltip(_("Connect to an M17 Reflector"));
 	pConnectButton->labelsize(16);
 	pConnectButton->deactivate();
 	pConnectButton->callback(&CMainWindow::LinkButtonCB, this);
 
-	pDisconnectButton = new Fl_Button(455, 514, 100, 30, _("Disconnect"));
+	pDisconnectButton = new Fl_Button(455, 475, 100, 30, _("Disconnect"));
 	pDisconnectButton->tooltip(_("Disconnected from a reflector"));
 	pDisconnectButton->labelsize(16);
 	pDisconnectButton->deactivate();
 	pDisconnectButton->callback(&CMainWindow::UnlinkButtonCB, this);
 
-	pEchoTestButton = new CTransmitButton(50, 574, 144, 40, _("Echo Test"));
+	pEchoTestButton = new CTransmitButton(50, 540, 144, 40, _("Echo Test"));
 	pEchoTestButton->tooltip(_("Push to record a test that will be played back"));
 	pEchoTestButton->labelsize(16);
 	pEchoTestButton->selection_color(FL_YELLOW);
 	pEchoTestButton->callback(&CMainWindow::EchoButtonCB, this);
 
-	pPTTButton = new CTransmitButton(250, 557, 400, 60, pttstr);
+	pPTTButton = new CTransmitButton(250, 520, 400, 60, pttstr);
 	pPTTButton->tooltip(_("Push to talk. This is actually a toggle button"));
 	pPTTButton->labelsize(22);
 	pPTTButton->deactivate();
 	pPTTButton->selection_color(FL_YELLOW);
 	pPTTButton->callback(&CMainWindow::PTTButtonCB, this);
 
-	pQuickKeyButton = new Fl_Button(700, 574, 150, 40, _("Quick Key"));
+	pQuickKeyButton = new Fl_Button(700, 540, 150, 40, _("Quick Key"));
 	pQuickKeyButton->tooltip(_("Send a short, silent voice stream"));
 	pQuickKeyButton->labelsize(16);
 	pQuickKeyButton->deactivate();
@@ -320,7 +308,6 @@ bool CMainWindow::Init()
 	routeMap.ReadAll();
 	Receive(false);
 	SetState();
-	DestMenuButton();
 
 	// idle processing
 	Fl::add_timeout(1.0, MyIdleProcess, this);
@@ -431,10 +418,10 @@ void CMainWindow::DestMenuButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::DestMenuButton()
 {
-	auto i = pDestMenuButton->value();
-	if (i >= 0)
+	auto item = pMenuBar->mvalue();
+	if (item)
 	{
-		auto cs = pDestMenuButton->text(i);
+		auto cs = item->label();
 		pDestCallsignInput->value(cs);
 		DestCallsignInput();
 		auto host = routeMap.Find(cs);
@@ -469,9 +456,7 @@ void CMainWindow::ActionButton()
 			routeMap.Update(false, cs, a, "", "", "", p);
 		else
 			routeMap.Update(false, cs, "", a, "", "", p);
-		pDestMenuButton->clear();
-		for (const auto &member : routeMap.GetKeys())
-			pDestMenuButton->add(member.c_str());
+		BuildDestMenuButton();
 	} else if (0 == label.compare(deletestr)) {
 		routeMap.Erase(cs);
 		BuildDestMenuButton();
@@ -894,9 +879,7 @@ void CMainWindow::DashboardButton()
 	auto dciv = pDestCallsignInput->value();
 	auto host = routeMap.Find(dciv);
 	if (host && ! host->url.empty()) {
-		std::string opencmd("xdg-open ");
-		opencmd.append(host->url);
-		system(opencmd.c_str());
+		fl_open_uri(host->url.c_str());
 	}
 }
 
@@ -915,7 +898,10 @@ void CMainWindow::FixDestActionButton()
 					SetDestActionButton(true, updatestr);
 				} else {
 					// perfect match
-					SetDestActionButton(true, deletestr);
+					if (host->from_json)
+						SetDestActionButton(false, "");
+					else
+						SetDestActionButton(true, deletestr);
 				}
 			} else {
 				SetDestActionButton(false, "");
