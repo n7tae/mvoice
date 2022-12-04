@@ -355,7 +355,6 @@ void CM17Gateway::SendLinkRequest(const CCallsign &ref)
 	from.CodeOut(conn.cscode);
 	conn.mod = ref.GetModule();
 	Write(conn.magic, 11, mlink.addr);	// send the link request
-
 	// go ahead and make the pong packet
 	memcpy(mlink.pongPacket.magic, "PONG", 4);
 	from.CodeOut(mlink.pongPacket.cscode);

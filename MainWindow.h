@@ -35,29 +35,6 @@
 #include "AudioManager.h"
 #include "TransmitButton.h"
 
-#ifndef NO_DHT
-struct SReflectorData0
-{
-	std::string cs, ipv4;
-	std::string ipv6, mods, url, email;
-	uint16_t port;
-	std::vector<std::pair<std::string, std::string>> peers;
-
-	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, url, email, port, peers);
-};
-
-struct SReflectorData1
-{
-	std::string cs, ipv4;
-	std::string ipv6, mods, emods, url, email;
-	std::string sponsor, country;
-	uint16_t port;
-	std::vector<std::pair<std::string, std::string>> peers;
-
-	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, port, peers);
-};
-#endif
-
 class CMainWindow
 {
 public:
