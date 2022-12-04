@@ -618,13 +618,16 @@ void CMainWindow::ReadThread()
 
 void CMainWindow::insertLogText(const char *line)
 {
+	Fl::lock();
 	pTextBuffer->append(line);
 	pTextDisplay->insert_position(pTextBuffer->length());
 	pTextDisplay->show_insert_position();
+	Fl::unlock();
 }
 
 void CMainWindow::UpdateGUI()
 {
+	Fl::lock();
 	if (cfgdata.sM17SourceCallsign.empty())
 	{
 		pPTTButton->deactivate();
@@ -675,6 +678,7 @@ void CMainWindow::UpdateGUI()
 			}
 		}
 	}
+	Fl::unlock();
 }
 
 bool CMainWindow::ToUpper(std::string &s)
@@ -1019,13 +1023,14 @@ int main (int argc, char **argv)
 	// bindtextdomain("mvoice", CFG_DIR);
 	// textdomain("mvoice");
 
+	Fl::lock();	// "start" the FLTK lock mechanism
+
 	ReadM17Json();
 
 	CMainWindow MainWindow;
 	if (MainWindow.Init())
 		return 1;
 
-	Fl::lock();	// "start" the FLTK lock mechanism
 	MainWindow.Run(argc, argv);
 	Fl::run();
 	return 0;
