@@ -1,7 +1,7 @@
 //  Copyright © 2022 Thomas A. Early, N7TAE
 //
 // ----------------------------------------------------------------------------
-//    This file is part of MVoice.
+//    This file is part of M17Refd.
 //
 //    M17Refd is free software: you can redistribute it and/or modify
 //    it under the terms of the GNU General Public License as published by
@@ -27,32 +27,50 @@ template<typename E> constexpr auto toUType(E enumerator) noexcept
 	return static_cast<std::underlying_type_t<E>>(enumerator);
 } // Item #10 in "Effective Modern C++", by Scott Meyers, O'REILLY
 
-enum class EMrefdValueID : uint64_t { Config=1, Peers=2, Clients=3 };
+enum class EMrefdValueID : uint64_t { Config=1, Peers=2, Clients=3, Users=4 };
 
 /* PEERS */
-using PeerTuple = std::tuple<std::string, std::string, std::time_t, std::time_t>;
-enum class EMrefdPeerFields { Callsign, Modules, ConnectTime, LastHeardTime };
-struct SMrefdPeers0
+using PeerTuple = std::tuple<std::string, std::string, std::time_t>;
+enum class EMrefdPeerFields { Callsign, Modules, ConnectTime };
+struct SMrefdPeers1
 {
-	std::list<PeerTuple> peers;
+	std::time_t timestamp;
+	unsigned int sequence;
+	std::list<PeerTuple> list;
 
-	MSGPACK_DEFINE(peers)
+	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* Clients */
+/* CLIENTS */
 using ClientTuple = std::tuple<std::string, std::string, char, std::time_t, std::time_t>;
 enum class EMrefdClientFields { Callsign, Ip, Module, ConnectTime, LastHeardTime };
-struct SMrefdClients0
+struct SMrefdClients1
 {
-	std::list<ClientTuple> clients;
+	std::time_t timestamp;
+	unsigned int sequence;
+	std::list<ClientTuple> list;
 
-	MSGPACK_DEFINE(clients)
+	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-struct SMrefdConfig0
+/* USERS */
+using UserTuple = std::tuple<std::string, std::string, std::string, std::time_t>;
+enum class EMrefdUserFields { Source, Destination, Reflector, LastHeardTime };
+struct SMrefdUsers1
 {
-	std::string cs, ipv4, ipv6, mods, emods, url, email, sponsor, country;
+	std::time_t timestamp;
+	unsigned int sequence;
+	std::list<UserTuple> list;
+
+	MSGPACK_DEFINE(timestamp, sequence, list);
+};
+
+/* CONFIGURATION */
+struct SMrefdConfig1
+{
+	std::time_t timestamp;
+	std::string cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, version;
 	uint16_t port;
 
-	MSGPACK_DEFINE(cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, port)
+	MSGPACK_DEFINE(timestamp, cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, version, port)
 };

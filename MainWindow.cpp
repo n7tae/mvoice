@@ -35,7 +35,7 @@
 #include "Utilities.h"
 #include "TemplateClasses.h"
 #ifndef NO_DHT
-#include "DHT.h"
+#include "mrefd-dht-values.h"
 #endif
 
 #define _(STRING) STRING
@@ -701,9 +701,9 @@ void CMainWindow::Get(const std::string &cs)
 	node.get(
 		dht::InfoHash::get(cs),
 		[](const std::shared_ptr<dht::Value> &v) {
-			if (0 == v->user_type.compare("mrefd-config-0"))
+			if (0 == v->user_type.compare("mrefd-config-1"))
 			{
-				auto rdat = dht::Value::unpack<SMrefdConfig0>(*v);
+				auto rdat = dht::Value::unpack<SMrefdConfig1>(*v);
 				routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
 			}
 			else
