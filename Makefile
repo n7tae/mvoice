@@ -1,26 +1,15 @@
 # Copyright (c) 2019-2022 by Thomas A. Early N7TAE
 
-# make sure you have write/modify access to the next two path variables
-# Change the following line if you want to change where the MVoice configuration data is installed.
-CFGDIR = $(HOME)/etc/
-# some like to use $(HOME)/.config/mvoice/
-
-# Change the following line if you want to change where the MVoice executable is installed.
-BINDIR = $(HOME)/bin/
-
-# The only audio rates supported are 8000 and 44100 Hz.
-# MVoice will be smaller and a little bit faster with 8000 Hz.
-# So if your audio system supports it, use 8000.
-# Otherwise, set it to true.
-USE44100 = false
-
-# Set the next line to true if you want debugging support in the mvoice executable.
-DEBUG = false
+include mvoice.mk
 
 ifeq ($(DEBUG), true)
-CPPFLAGS = -ggdb -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
+CPPFLAGS = -ggdb -W -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
 else
-CPPFLAGS = -W -Wall -std=c++11 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
+CPPFLAGS = -W -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\"
+endif
+
+ifneq ($(USE_DVIN), true)
+CPPFLAGS += -DNO_DHT
 endif
 
 ifeq ($(USE44100), true)
@@ -31,21 +20,27 @@ CPPFLAGS += `fltk-config --cxxflags`
 
 EXE = mvoice
 
+SRCS = AboutDlg.cpp AudioManager.cpp Base.cpp Callsign.cpp Configure.cpp CRC.cpp M17Gateway.cpp M17RouteMap.cpp MainWindow.cpp SettingsDlg.cpp TransmitButton.cpp UDPSocket.cpp UnixDgramSocket.cpp
+
 ifeq ($(USE44100), true)
-SRCS = $(wildcard *.cpp)
-else
-SRCS = AboutDlg.cpp Base.cpp Configure.cpp M17Gateway.cpp MainWindow.cpp SettingsDlg.cpp UDPSocket.cpp AudioManager.cpp Callsign.cpp CRC.cpp M17RouteMap.cpp TransmitButton.cpp UnixDgramSocket.cpp
+SRCS += Resampler.cpp
 endif
 
 SRCS += $(wildcard codec2/*.cpp)
+
 OBJS = $(SRCS:.cpp=.o)
 DEPS = $(SRCS:.cpp=.d)
 
+all : $(EXE)
+
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread
+	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread -lopendht
 
 %.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -c $< -o $@
+
+mvoice.mk :
+	cp example.mk mvoice.mk
 
 .PHONY : clean
 

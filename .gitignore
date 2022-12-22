@@ -4,10 +4,6 @@
 # VS Code
 .vscode
 
-# Glade backup
-*~
-\#MVoice.*
-
 # Compiled Object files
 *.slo
 *.lo
@@ -33,18 +29,8 @@
 *.a
 *.lib
 
-# intermediate files
-qdvdash.service
-
-# host files
-gwys.txt
-XLX_Hosts.txt
-DExtra_Hosts.txt
-DPlus_Hosts.txt
-DCS_Hosts.txt
-My_Hosts.txt
-
 # custom makefile
+mvoice.mk
 makefile
 
 # Executable

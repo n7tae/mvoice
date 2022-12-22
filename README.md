@@ -45,6 +45,31 @@ make
 sudo make install
 ```
 
+## Distributed Hash Table (OpenDHT)
+
+Using the OpenDHT library, mvoice now joins a special digital voice, ham-radio DHT network to discover reflector and repeater destinations directly. For these target systems using the DHT, connection information is published and updated directly by the target and is availabe to mvoice in near-realtime. All the mvoice user needs to know is the callsign of the target.
+
+### Building and installing the OpenDHT support
+
+OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for mvoice and so can be considered optional. With this in mind, this should work on Debian/Ubuntu-based systems:
+
+```bash
+# Install OpenDHT dependencies
+sudo apt install libncurses5-dev libreadline-dev nettle-dev libgnutls28-dev libargon2-0-dev libmsgpack-dev  libssl-dev libfmt-dev libjsoncpp-dev libhttp-parser-dev libasio-dev cmake pkg-config
+
+# clone the repo
+git clone https://github.com/savoirfairelinux/opendht.git
+
+# build and install
+cd opendht
+mkdir build && cd build
+cmake -DOPENDHT_PYTHON=OFF -DCMAKE_INSTALL_PREFIX=/usr ..
+make
+sudo make install
+```
+
+Please note that there is no easy way to uninstall OpenDHT once it's been installed. However, it is based on static header files and libraries and doesn't use any resouces except for a small amount of disk space, unless mvoice is running. You can delete your downloaded OpenDHT git repo once you've installed the OpenDHT library.
+
 ## Building and Installing *mvoice*
 
 ### Get the *mvoice* repository, and move to it
@@ -56,15 +81,13 @@ cd mvoice
 
 ### Compiling
 
-By default,*mvoice* uses pulseaudio at an audio rate of 8000 Hz. Most modern devices support this rate. However, some don't. You can build a version of *mvoice* that will use an audio rate of 44,100 Hz (CD quality) which is supported on just about any pulseaudio device. Start by copying the Makefile:
+There are several compile-time options for building *mvoice*, including where run-time files are stored, where the *mvoice* executable is installed, support for 44,100 Hz (CD-quality) audio, debugging support and support for the new **Digital Voice Information Network**. These are all controlled by your very own `mvoice.mk` file. Start by creating the file:
 
 ```bash
-cp Makefile makefile    # or cp {M,m}akefile
+cp example.mk mvoice.mk
 ```
 
-Then use you favorite editor to modify your new `makefile` and change `USE44100 = false` to `USE44100 = true`. You can also enable gnu debugging by changing `DEBUG = false` to `DEBUG = true`. You can also change where the configuration data and the executable is stored by modifying the pathnames for `CFGDIR` and `BINDIR`. Be sure to end your new path with '/'.
-
-If you are using a custom `makefile`, then pay close attention when you do a `git pull`. If a new version of `Makefile` comes with that pull, be sure to recreate your custom `makefile` based on the new `Makefile`.
+Use your favorite editor to change values in your `mvoice.mk` file.
 
 You're now read to build *mvoice*:
 
@@ -122,7 +145,7 @@ On the main window, set your destination callsign and IP address. You can select
 
 Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a vaild callsign is exactly **seven** characters long, `M17-xxx` where `xxx` is made up of letters or numbers. Or, now you can also link to the new URF reflectors. A URF reflector callsign is exactly **six** characters long, beginning with `URF`.
 
-Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If the reflector you're using is from the `M17Hosts.csv` file, you can open the reflector's dashboard with the **Open Dashboard** button.
+Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If *mvoice* has found a URL for the target, you can open the reflector's dashboard with the **Open Dashboard** button.
 
 For Linking, you can select a reflector. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if reflect exists at that IP and the module you are requesting is actually configured and operational, or even if it actually exists.
 
@@ -138,6 +161,6 @@ Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press a
 
 ## To do
 
-If you would like *mvoice* to use a langauge, I could use your help! Send me an E-mail at the address below.
+If you would like *mvoice* GUI to use a different langauge, I could use your help! Send me an E-mail at the address below.
 
 de n7tae (at) tearly (dot) net

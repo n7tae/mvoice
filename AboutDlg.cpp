@@ -23,7 +23,7 @@
 
 #define _(STRING) STRING
 
-#define VERSION "0.1.3"
+#define VERSION "0.5.0"
 
 CAboutDlg::CAboutDlg() {}
 

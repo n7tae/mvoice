@@ -78,7 +78,7 @@ void CM17Gateway::LinkCheck()
 	if (mlink.receivePingTimer.time() > 30) // is the reflector okay?
 	{
 		// looks like we lost contact
-		SendLog("Unlinked from %s, TIMEOUT...\n", mlink.cs.GetCS().c_str());
+		SendLog("Disconnected from %s, TIMEOUT...\n", mlink.cs.GetCS().c_str());
 		mlink.state = ELinkState::unlinked;
 		mlink.addr.Clear();
 	}
@@ -226,7 +226,7 @@ void CM17Gateway::Process()
 					if (0 == memcmp(buf, "ACKN", 4))
 					{
 						mlink.state = ELinkState::linked;
-						SendLog("Linked to %s\n", mlink.cs.GetCS().c_str());
+						SendLog("Connected to %s\n", mlink.cs.GetCS().c_str());
 						mlink.receivePingTimer.start();
 					}
 					else if (0 == memcmp(buf, "NACK", 4))
@@ -237,7 +237,7 @@ void CM17Gateway::Process()
 					}
 					else if (0 == memcmp(buf, "DISC", 4))
 					{
-						SendLog("Unlinked from %s\n", mlink.cs.GetCS().c_str());
+						SendLog("Disconnected from %s\n", mlink.cs.GetCS().c_str());
 						mlink.state = ELinkState::unlinked;
 					}
 					else
@@ -355,7 +355,6 @@ void CM17Gateway::SendLinkRequest(const CCallsign &ref)
 	from.CodeOut(conn.cscode);
 	conn.mod = ref.GetModule();
 	Write(conn.magic, 11, mlink.addr);	// send the link request
-
 	// go ahead and make the pong packet
 	memcpy(mlink.pongPacket.magic, "PONG", 4);
 	from.CodeOut(mlink.pongPacket.cscode);

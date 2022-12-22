@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2019-2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2019-2022 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -35,6 +35,9 @@ void CConfigure::SetDefaultValues()
 	// audio
 	data.sAudioIn.assign("default");
 	data.sAudioOut.assign("default");
+#ifndef NO_DHT
+	data.sBootstrap.assign("m17-usa.openquad.net");
+#endif
 }
 
 void CConfigure::ReadData()
@@ -81,6 +84,10 @@ void CConfigure::ReadData()
 			data.sM17SourceCallsign.assign(val);
 		} else if (0 == strcmp(key, "M17VoiceOnly")) {
 			data.bVoiceOnlyEnable = IS_TRUE(*val);
+#ifndef NO_DHT
+		} else if (0 == strcmp(key, "DHTBootstrap")) {
+			data.sBootstrap.assign(val);
+#endif
 		}
 	}
 	cfg.close();
@@ -115,7 +122,10 @@ void CConfigure::WriteData()
 	// audio
 	file << "AudioInput='" << data.sAudioIn << "'" << std::endl;
 	file << "AudioOutput='" << data.sAudioOut << "'" << std::endl;
-
+#ifndef NO_DHT
+	// DHT
+	file << "DHTBootstrap='" << data.sBootstrap << "'" << std::endl;
+#endif
 	file.close();
 }
 
@@ -130,6 +140,10 @@ void CConfigure::CopyFrom(const CFGDATA &from)
 	// audio
 	data.sAudioIn.assign(from.sAudioIn);
 	data.sAudioOut.assign(from.sAudioOut);
+#ifndef NO_DHT
+	// DHT
+	data.sBootstrap.assign(from.sBootstrap);
+#endif
 }
 
 void CConfigure::CopyTo(CFGDATA &to)
@@ -143,6 +157,10 @@ void CConfigure::CopyTo(CFGDATA &to)
 	// audio
 	to.sAudioIn.assign(data.sAudioIn);
 	to.sAudioOut.assign(data.sAudioOut);
+#ifndef NO_DHT
+	// DHT
+	to.sBootstrap.assign(data.sBootstrap);
+#endif
 }
 
 bool CConfigure::IsOkay()

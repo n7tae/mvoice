@@ -22,14 +22,17 @@
 #include <future>
 #include <atomic>
 #include <mutex>
+#ifndef NO_DHT
+#include <opendht.h>
+#endif
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
 #include "M17Gateway.h"
+#include "M17RouteMap.h"
 #include "SettingsDlg.h"
 #include "AboutDlg.h"
 #include "AudioManager.h"
-#include "M17RouteMap.h"
 #include "TransmitButton.h"
 
 class CMainWindow
@@ -57,19 +60,23 @@ private:
 	// classes
 	CSettingsDlg SettingsDlg;
 	CAboutDlg AboutDlg;
-	CM17RouteMap routeMap;
 	CM17Gateway gateM17;
+
+#ifndef NO_DHT
+	// Distributed Hash Table
+	dht::DhtRunner node;
+	dht::Value nodevalue;
+#endif
 
 	// widgets
 	Fl_Double_Window *pWin;
 	CTransmitButton *pPTTButton, *pEchoTestButton;
-	Fl_Button *pQuickKeyButton, *pActionButton, *pLinkButton, *pUnlinkButton, *pDashboardButton;
+	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
 	Fl_Input *pDestCallsignInput, *pDestIPInput;
-	Fl_Choice *pDestinationChoice;
+	Fl_Int_Input *pDestPortInput;
 	Fl_Group *pModuleGroup;
 	Fl_Radio_Round_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;
-	Fl_Menu_Item *pSettingsMenuItem;
 	Fl_Text_Display *pTextDisplay;
 	Fl_Text_Buffer  *pTextBuffer;
 	Fl_PNG_Image *pIcon;
@@ -79,6 +86,7 @@ private:
 	std::mutex logmux;
 
 	// helpers
+	void BuildDestMenuButton();
 	void FixDestActionButton();
 	void SetDestActionButton(const bool sensitive, const char *label);
 	void TransmitterButtonControl();
@@ -94,7 +102,10 @@ private:
 	void AudioSummary(const char *title);
 	char GetDestinationModule();
 	void SetDestinationAddress(std::string &cs);
-	void SetModuleSensitive(const std::string &dest);
+#ifndef NO_DHT
+	void Get(const std::string &cs);
+#endif
+	void ActivateModules(const std::string &modules = "ABCDEFGHIJKLMNOPQRSTUVWXYZ");
 
 	// Actual Callbacks
 	void Quit();
@@ -104,8 +115,9 @@ private:
 	void PTTButton();
 	void QuickKeyButton();
 	void DestCallsignInput();
-	void DestIpInput();
-	void DestChoice();
+	void DestIPInput();
+	void DestPortInput();
+	void DestMenuButton();
 	void ActionButton();
 	void LinkButton();
 	void UnlinkButton();
@@ -119,12 +131,13 @@ private:
 	static void QuickKeyButttonCB(Fl_Widget *, void *);
 	static void DestCallsignInputCB(Fl_Widget *p, void *v);
 	static void DestIPInputCB(Fl_Widget *p, void *v);
-	static void DestChoiceCB(Fl_Widget *p, void *v);
+	static void DestPortInputCB(Fl_Widget *p, void *v);
+	static void DestMenuButtonCB(Fl_Widget *p, void *v);
 	static void ActionButtonCB(Fl_Widget *p, void *v);
 	static void LinkButtonCB(Fl_Widget *p, void *v);
 	static void UnlinkButtonCB(Fl_Widget *p, void *v);
 	static void DashboardButtonCB(Fl_Widget *p, void *v);
 
-	bool bDestCS, bDestIP, bTransOK;
+	bool bDestCS, bDestIP, bDestPort, bTransOK;
 	std::atomic<bool> keep_running;
 };

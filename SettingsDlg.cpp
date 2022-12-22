@@ -49,21 +49,27 @@ void CSettingsDlg::Show()
 	AudioRescanButton();	// re-read the audio PCM devices
 }
 
-void CSettingsDlg::OkayButtonCB(Fl_Widget *, void *This)
+void CSettingsDlg::UpdateButtonCB(Fl_Widget *, void *This)
 {
-	((CSettingsDlg *)This)->OkayButton();
+	((CSettingsDlg *)This)->UpdateButton();
 }
 
-void CSettingsDlg::OkayButton()
+void CSettingsDlg::UpdateButton()
 {
+	pDlg->hide();
 	CFGDATA newstate;						// the user clicked okay, time to look at what's changed
 	SaveWidgetStates(newstate);				// newstate is now the current contents of the Settings Dialog
+#ifndef NO_DHT
+	if (newstate.sBootstrap.compare(pMainWindow->cfg.GetData()->sBootstrap))
+	{
+		fl_message("Please restart to use new bootstrap");
+	}
+#endif
 	pMainWindow->cfg.CopyFrom(newstate);	// and it is now in the global cfg object
 	pMainWindow->cfg.WriteData();			// and it's saved in the config dir
 
 	// reconfigure current environment if anything changed
 	pMainWindow->cfg.CopyTo(data);
-	pDlg->hide();
 	pMainWindow->NewSettings(&newstate);
 }
 
@@ -94,6 +100,9 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	{
 		d.sAudioOut.assign(itout->second.first);
 	}
+#ifndef NO_DHT
+	d.sBootstrap.assign(pBootstrapInput->value());
+#endif
 }
 
 void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
@@ -105,6 +114,10 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 		pVoiceDataRadioButton->setonly();
 	pSourceCallsignInput->value(d.sM17SourceCallsign.c_str());
 	SourceCallsignInput();
+	pModuleChoice->value(d.cModule - 'A');
+#ifndef NO_DHT
+	pBootstrapInput->value(d.sBootstrap.c_str());
+#endif
 	// internet
 	switch (d.eNetType) {
 		case EInternetType::ipv6only:
@@ -131,7 +144,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pStationGroup = new Fl_Group(20, 30, 410, 210, _("Station"));
 	pStationGroup->labelsize(16);
 
-	pSourceCallsignInput = new Fl_Input(218, 51, 127, 30, _("My Callsign:"));
+	pSourceCallsignInput = new Fl_Input(218, 45, 127, 30, _("My Callsign:"));
 	pSourceCallsignInput->tooltip(_("Input your callsign, up to 8 characters"));
 	pSourceCallsignInput->color(FL_RED);
 	pSourceCallsignInput->labelsize(16);
@@ -139,20 +152,59 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pSourceCallsignInput->when(FL_WHEN_CHANGED);
 	pSourceCallsignInput->callback(&CSettingsDlg::SourceCallsignInputCB, this);
 
-	pCodecGroup = new Fl_Group(110, 118, 245, 105, "Codec:");
+	pModuleChoice = new Fl_Choice(218, 85, 50, 30, _("Using Module:"));
+	pModuleChoice->down_box(FL_BORDER_BOX);
+	pModuleChoice->tooltip(_("Assign the transceiver module"));
+	pModuleChoice->labelsize(16);
+	pModuleChoice->textsize(16);
+	pModuleChoice->callback(&CSettingsDlg::ModuleChoiceCB, this);
+	for (char c='A'; c<='Z'; c++)
+	{
+		const std::string l(1, c);
+		pModuleChoice->add(l.c_str());
+	}
+
+	pCodecGroup = new Fl_Group(110, 138, 245, 105, "Codec:");
 	pCodecGroup->box(FL_THIN_UP_BOX);
 	pCodecGroup->labelsize(16);
 
-	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(160, 135, 150, 30, _("Voice-only"));
+	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(160, 155, 150, 30, _("Voice-only"));
 	pVoiceOnlyRadioButton->tooltip(_("This is the higher quality, 3200 bits/s codec"));
 	pVoiceOnlyRadioButton->labelsize(16);
 
-	pVoiceDataRadioButton = new Fl_Radio_Round_Button(160, 175, 150, 30, _("Voice+Data"));
+	pVoiceDataRadioButton = new Fl_Radio_Round_Button(160, 195, 150, 30, _("Voice+Data"));
 	pVoiceDataRadioButton->tooltip(_("This is the 1600 bits/s codec"));
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
 	pStationGroup->end();
 	pTabs->add(pStationGroup);
+
+	//////////////////////////////////////////////////////////////////////////
+	pInternetGroup = new Fl_Group(20, 30, 410, 210, _("Network"));
+	pInternetGroup->labelsize(16);
+
+	pIPv4RadioButton = new Fl_Radio_Round_Button(145, 60, 200, 30, _("IPv4 Only"));
+	pIPv4RadioButton->labelsize(16);
+
+	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, _("IPv6 Only"));
+	pIPv6RadioButton->labelsize(16);
+
+	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, _("IPv4 && IPv6"));
+	pDualStackRadioButton->labelsize(16);
+
+	pInternetGroup->end();
+	pTabs->add(pInternetGroup);
+
+	///////////////////////////////////////////////////////////////////////////
+#ifndef NO_DHT
+	pDHTGroup = new Fl_Group(20, 30, 410, 210, _("DHT"));
+
+	pBootstrapInput = new Fl_Input(170, 120, 227, 30, _("DHT Bootstrap:"));
+	pBootstrapInput->tooltip(_("An existing node on the DHT Network"));
+
+	pDHTGroup->end();
+	pTabs->add(pDHTGroup);
+#endif
 
 	//////////////////////////////////////////////////////////////////////////
 	pAudioGroup = new Fl_Group(20, 30, 410, 210, _("Audio"));
@@ -186,32 +238,27 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pAudioGroup->end();
 	pTabs->add(pAudioGroup);
 
-	//////////////////////////////////////////////////////////////////////////
-	pInternetGroup = new Fl_Group(20, 30, 410, 210, _("Internet"));
-	pInternetGroup->labelsize(16);
-
-	pIPv4RadioButton = new Fl_Radio_Round_Button(145, 60, 200, 30, _("IPv4 Only"));
-	pIPv4RadioButton->labelsize(16);
-
-	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, _("IPv6 Only"));
-	pIPv6RadioButton->labelsize(16);
-
-	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, _("IPv4 && IPv6"));
-	pDualStackRadioButton->labelsize(16);
-
-	pInternetGroup->end();
-	pTabs->add(pInternetGroup);
-
 	pTabs->end();
 
 	pOkayButton = new Fl_Return_Button(310, 280, 120, 44, _("Update"));
 	pOkayButton->labelsize(16);
-	pOkayButton->callback(&CSettingsDlg::OkayButtonCB, this);
+	pOkayButton->callback(&CSettingsDlg::UpdateButtonCB, this);
 
 	pDlg->end();
 	pDlg->set_modal();
 
 	return false;
+}
+
+void CSettingsDlg::ModuleChoiceCB(Fl_Widget *, void *This)
+{
+	((CSettingsDlg *)This)->ModuleChoice();
+}
+
+void CSettingsDlg::ModuleChoice()
+{
+	const std::string selected(pModuleChoice->text());
+	data.cModule = selected.at(0);
 }
 
 void CSettingsDlg::SourceCallsignInputCB(Fl_Widget *, void *This)

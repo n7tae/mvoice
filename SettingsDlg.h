@@ -19,6 +19,9 @@
 #pragma once
 
 #include <map>
+#ifndef NO_DHT
+#include <opendht.h>
+#endif
 
 #include "FLTK-GUI.h"
 #include "Configure.h"
@@ -49,9 +52,15 @@ private:
 	Fl_Tabs *pTabs;
 	Fl_Return_Button *pOkayButton;
 	Fl_Button *pAudioRescanButton;
-	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice;
+	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice, *pModuleChoice;
 	Fl_Input *pSourceCallsignInput;
+#ifndef NO_DHT
+	Fl_Input *pBootstrapInput;
+#endif
 	Fl_Group *pStationGroup, *pAudioGroup, *pInternetGroup, *pCodecGroup;
+#ifndef NO_DHT
+	Fl_Group *pDHTGroup;
+#endif
 	Fl_Radio_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
 	Fl_Radio_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;
@@ -60,11 +69,13 @@ private:
 	static void AudioRescanButtonCB(Fl_Widget *p, void *v);
 	static void AudioInputChoiceCB(Fl_Widget *p, void *v);
 	static void AudioOutputChoiceCB(Fl_Widget *p, void *v);
-	static void OkayButtonCB(Fl_Widget *p, void *v);
+	static void ModuleChoiceCB(Fl_Widget *p, void *v);
+	static void UpdateButtonCB(Fl_Widget *p, void *v);
 	// the actual callbacks
 	void SourceCallsignInput();
 	void AudioRescanButton();
 	void AudioInputChoice();
 	void AudioOutputChoice();
-	void OkayButton();
+	void ModuleChoice();
+	void UpdateButton();
 };

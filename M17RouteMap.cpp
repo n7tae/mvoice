@@ -24,9 +24,8 @@
 
 CM17RouteMap::~CM17RouteMap()
 {
-	mux.lock();
+	std::lock_guard<std::mutex> lck(mux);
 	baseMap.clear();
-	mux.unlock();
 }
 
 const std::shared_ptr<SHost> CM17RouteMap::Find(const std::string &cs) const
@@ -37,32 +36,41 @@ const std::shared_ptr<SHost> CM17RouteMap::Find(const std::string &cs) const
 	if (pos < 3)
 		return rval;
 	base.assign(cs, 0, pos);
-	mux.lock();
+	std::lock_guard<std::mutex> lck(mux);
 	auto bit = baseMap.find(cs);
 	if (bit != baseMap.end())
 		rval = bit->second;
-	mux.unlock();
 	return rval;
 }
 
-void CM17RouteMap::Update(const std::string &cs, const std::string &url, const std::string &ip4addr, const std::string &ip6addr, const uint16_t port)
+void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port)
 {
 	std::string base;
 	auto pos = cs.find_first_of(" /.");
 	if (pos < 3)
 		return;
 	base.assign(cs, 0, pos);
-	mux.lock();
-	auto host = std::make_shared<SHost>();
+	auto host = Find(base);
+	if (! host)
+		host = std::make_shared<SHost>();
+	host->from_json = frmjson;
+	host->cs.assign(base);
 	if (! url.empty())
 		host->url.assign(url);
 	if (! ip4addr.empty() && ip4addr.compare("none"))
 		host->ip4addr.assign(ip4addr);
 	if (! ip6addr.empty() && ip6addr.compare("none"))
 		host->ip6addr.assign(ip6addr);
+	if (! modules.empty())
+		host->modules.assign(modules);
 	host->port = port;
+
+	std::lock_guard<std::mutex> lck(mux);
+	if (host->ip4addr.size() || host->ip6addr.size() || host->url.size() || host->modules.size())
+		host->updated = true;
 	baseMap[base] = host;
-	mux.unlock();
+	//std::cout << "updating " << host->cs << ": Addr4='" << host->ip4addr << "' Addr6='" << host->ip6addr << "' URL='" << host->url << "' Modules='" << host->modules << "' Port=" << host->port << std::endl;
+
 }
 
 void CM17RouteMap::ReadAll()
@@ -121,7 +129,7 @@ void CM17RouteMap::ReadJson(const char *filename)
 			po = true;
 		}
 		if (cs && ur && v4 && v6 && po) {
-			Update(scs, sur, sv4, sv6, std::stoul(spo));
+			Update(true, scs, sv4, sv6, sur, "", std::stoul(spo));
 			cs = ur = v4 = v6 = po = false;
 			scs.clear(); sur.clear(); sv4.clear(); sv6.clear(); spo.clear();
 		}
@@ -141,7 +149,7 @@ void CM17RouteMap::Read(const char *filename)
 			if (0==line.size() || '#'==line[0]) continue;
 			std::vector<std::string> elem;
 			split(line, ',', elem);
-			Update(elem[0], elem[1], elem[2], elem[3], std::stoul(elem[4]));
+			Update(false, elem[0], elem[1], elem[2], elem[3], elem[4], std::stoul(elem[5]));
 		}
 		file.close();
 	}
@@ -156,8 +164,8 @@ void CM17RouteMap::Save() const
 		mux.lock();
 		for (const auto &pair : baseMap) {
 			const auto host = pair.second;
-			if (host->url.empty()) {
-				file << pair.first << ",," << host->ip4addr << ',' << host->ip6addr << ',' << host->port << ",," << std::endl;
+			if (! host->from_json) {
+				file << host->cs << ',' << host->ip4addr << ',' << host->ip6addr << ',' << host->url << ',' << host->modules << ',' << host->port << std::endl;
 			}
 		}
 		file.close();
