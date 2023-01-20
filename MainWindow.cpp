@@ -698,24 +698,34 @@ bool CMainWindow::ToUpper(std::string &s)
 #ifndef NO_DHT
 void CMainWindow::Get(const std::string &cs)
 {
+	static std::time_t ts;
+	ts = 0;
+	dht::Where w;
+	w.id(toUType(EMrefdValueID::Config));
 	node.get(
 		dht::InfoHash::get(cs),
 		[](const std::shared_ptr<dht::Value> &v) {
 			if (0 == v->user_type.compare("mrefd-config-1"))
 			{
 				auto rdat = dht::Value::unpack<SMrefdConfig1>(*v);
-				routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+				if (rdat.timestamp > ts)
+				{
+					ts = rdat.timestamp;
+					routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+				}
 			}
 			else
 			{
 				std::cerr << "Found the data, but it has an unknown user_type: " << v->user_type << std::endl;
 			}
-			return false;
+			return true;
 		},
 		[](bool success) {
 			if (! success)
 				std::cout << "node.get() was unsuccessful!" << std::endl;
-		}
+		},
+		{}, // empty filter
+		w
 	);
 }
 #endif
