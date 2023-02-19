@@ -94,7 +94,7 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	{
 		d.sAudioIn.assign(itin->second.first);
 	}
-	const std::string out(pAudioInputChoice->text());
+	const std::string out(pAudioOutputChoice->text());
 	auto itout = AudioOutMap.find(out);
 	if (AudioOutMap.end() != itout)
 	{
