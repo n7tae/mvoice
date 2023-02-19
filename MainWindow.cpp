@@ -269,7 +269,7 @@ bool CMainWindow::Init()
 	pConnectButton->callback(&CMainWindow::LinkButtonCB, this);
 
 	pDisconnectButton = new Fl_Button(455, 475, 100, 30, _("Disconnect"));
-	pDisconnectButton->tooltip(_("Disconnected from a reflector"));
+	pDisconnectButton->tooltip(_("Disconnect from an M17 reflector"));
 	pDisconnectButton->labelsize(16);
 	pDisconnectButton->deactivate();
 	pDisconnectButton->callback(&CMainWindow::UnlinkButtonCB, this);
