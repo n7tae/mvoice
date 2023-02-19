@@ -208,7 +208,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 
 	//////////////////////////////////////////////////////////////////////////
 	pAudioGroup = new Fl_Group(20, 30, 410, 210, _("Audio"));
-	pAudioGroup->tooltip(_("Select the audio Input device"));
+	pAudioGroup->tooltip(_("Select the audio Input and Output devices"));
 	pAudioGroup->labelsize(16);
 
 	pAudioInputChoice = new Fl_Choice(135, 50, 260, 24, _("Input:"));
