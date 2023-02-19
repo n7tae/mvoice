@@ -250,7 +250,7 @@ bool CMainWindow::Init()
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
 
-	pActionButton = new Fl_Button(50, 475, 100, 30, "Action");
+	pActionButton = new Fl_Button(50, 475, 100, 30, _("Action"));
 	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
 	pActionButton->labelsize(16);
 	pActionButton->deactivate();

@@ -36,11 +36,11 @@ bool CAboutDlg::Init(Fl_PNG_Image *pIcon)
 	pIconBox = new Fl_Box(176, 30, 48, 48);
 	pIconBox->image(pIcon);
 
-	snprintf(version, sizeof(version), "MVoice version # %s", VERSION);
+	snprintf(version, sizeof(version), _("MVoice version # %s"), VERSION);
 
 	pVersionBox = new Fl_Box(0, 100, 400, 30, version);
 
-	pCopyrightBox = new Fl_Box(0, 150, 400, 30, "Copyright (c) 2022 by Thomas A. Early N7TAE");
+	pCopyrightBox = new Fl_Box(0, 150, 400, 30, _("Copyright (c) 2022 by Thomas A. Early N7TAE"));
 
 	pDlg->end();
 	pDlg->callback(&CAboutDlg::WindowCallbackCB, this);
