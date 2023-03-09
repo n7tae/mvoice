@@ -16,12 +16,12 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-//#include <libintl.h>
+#include <locale>
 #include <string>
 
 #include "AboutDlg.h"
 
-#define _(STRING) STRING
+#define _(STRING) gettext(STRING)
 
 #define VERSION "0.5.1"
 

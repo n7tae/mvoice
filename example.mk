@@ -23,3 +23,6 @@ USE44100 = false
 USE_DVIN = true
 
 # If you change any of the above three values, be sure to do a "make clean" before you do a "make".
+
+# This defines where the translations are installed.
+LOCALEDIR = $(HOME)/share/locale

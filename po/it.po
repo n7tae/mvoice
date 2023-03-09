@@ -1,0 +1,297 @@
+# Italian translation of mvoice.
+# Copyright (c) 2019-2022 by Thomas A. Early N7TAE
+# This file is distributed under the same license as the mvoice package.
+# Daniele Forsi <iu5hkx@gmail.com>, 2023.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: mvoice\n"
+"Report-Msgid-Bugs-To: https://github.com/n7tae/mvoice/issues\n"
+"POT-Creation-Date: 2023-02-19 21:05+0100\n"
+"PO-Revision-Date: 2023-02-20 21:11+0100\n"
+"Last-Translator: Daniele Forsi <iu5hkx@gmail.com>, 2023\n"
+"Language-Team: \n"
+"Language: it\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"X-Generator: Poedit 3.2.2\n"
+
+#: AboutDlg.cpp:34
+msgid "About MVoice"
+msgstr "Informazioni su MVoice"
+
+#: MainWindow.cpp:44
+msgid "PTT"
+msgstr "PTT"
+
+#: MainWindow.cpp:45
+msgid "Save"
+msgstr "Salva"
+
+#: MainWindow.cpp:46 MainWindow.cpp:47
+msgid "Delete"
+msgstr "Elimina"
+
+#: MainWindow.cpp:112 MainWindow.cpp:119 MainWindow.cpp:198
+msgid "Destination"
+msgstr "Destinazione"
+
+#: MainWindow.cpp:170
+#, c-format
+msgid "%s: couldn't decode image"
+msgstr "%s: impossibile decodificare l'immagine"
+
+#: MainWindow.cpp:199
+msgid "Settings..."
+msgstr "Impostazioni..."
+
+#: MainWindow.cpp:200
+msgid "About..."
+msgstr "Informazioni..."
+
+#: MainWindow.cpp:210
+msgid "Destination Callsign:"
+msgstr "Nominativo destinatario:"
+
+#: MainWindow.cpp:211
+msgid "A reflector or user callsign"
+msgstr "Il nominativo di un utente o di un reflector"
+
+#: MainWindow.cpp:218
+msgid "IP:"
+msgstr "IP:"
+
+#: MainWindow.cpp:219
+msgid "The IP of the reflector or user"
+msgstr "L'IP di un utente o di un reflector"
+
+#: MainWindow.cpp:226
+msgid "Port:"
+msgstr "Porta:"
+
+#: MainWindow.cpp:227
+msgid "The comm port of the reflector or user"
+msgstr "La porta di comunicazione di un utente o di un reflector"
+
+#: MainWindow.cpp:234
+msgid "Module:"
+msgstr "Modulo:"
+
+#: MainWindow.cpp:235
+msgid "Select a module for the reflector or repeater"
+msgstr "Selezionare un modulo per il reflector o ripetitore"
+
+#: MainWindow.cpp:254
+msgid "Update or delete an existing contact, or save a new contact"
+msgstr "Aggiorna o elimina un contatto esistente o salva un nuovo contatto"
+
+#: MainWindow.cpp:259
+msgid "Open Dashboard"
+msgstr "Apri dashboard"
+
+#: MainWindow.cpp:260
+msgid "Open a reflector dashboard, if available"
+msgstr "Apre il dashboard di un reflector, se disponibile"
+
+#: MainWindow.cpp:265
+msgid "Connect"
+msgstr "Connetti"
+
+#: MainWindow.cpp:266
+msgid "Connect to an M17 Reflector"
+msgstr "Connette a un reflector M17"
+
+#: MainWindow.cpp:271
+msgid "Disconnect"
+msgstr "Disconnetti"
+
+#: MainWindow.cpp:272
+msgid "Disconnected from a reflector"
+msgstr "Disconnesso da un reflector"
+
+#: MainWindow.cpp:277
+msgid "Echo Test"
+msgstr "Test eco"
+
+#: MainWindow.cpp:278
+msgid "Push to record a test that will be played back"
+msgstr "Premere per registrare una prova che verrà riprodotta"
+
+#: MainWindow.cpp:284
+msgid "Push to talk. This is actually a toggle button"
+msgstr "Push to talk. In realtà questo è un interruttore"
+
+#: MainWindow.cpp:290
+msgid "Quick Key"
+msgstr "Tasto veloce"
+
+#: MainWindow.cpp:291
+msgid "Send a short, silent voice stream"
+msgstr "Invia un breve flusso vocale silenzioso"
+
+#: MainWindow.cpp:486
+#, c-format
+msgid "%s Time=%.1fs Vol=%.0fdB Clip=%.0f%%\n"
+msgstr "%s Tempo=%.1fs Vol=%.0fdB Clip=%.0f%%\n"
+
+#: MainWindow.cpp:504
+msgid "Echo"
+msgstr "Eco"
+
+#: MainWindow.cpp:521
+msgid "RX Audio"
+msgstr "Ricezione audio"
+
+#: MainWindow.cpp:863
+msgid "ERROR: Your system is not yet configured!\n"
+msgstr "ERRORE: Il sistema non è ancora configurato!\n"
+
+#: MainWindow.cpp:864
+msgid "Be sure to save your callsign and internet access in Settings\n"
+msgstr ""
+"Assicurarsi di salvare il nominativo e l'accesso a internet nelle "
+"impostazioni\n"
+
+#: MainWindow.cpp:865
+msgid "You can usually leave the audio devices as 'default'\n"
+msgstr "Solitamente si può lasciare i dispositivi audio come \"default\"\n"
+
+#: SettingsDlg.cpp:30
+msgid " not found"
+msgstr " non trovato"
+
+#: SettingsDlg.cpp:138
+msgid "Settings"
+msgstr "Impostazioni"
+
+#: SettingsDlg.cpp:144
+msgid "Station"
+msgstr "Stazione"
+
+#: SettingsDlg.cpp:147
+msgid "My Callsign:"
+msgstr "Mio nominativo:"
+
+#: SettingsDlg.cpp:148
+msgid "Input your callsign, up to 8 characters"
+msgstr "Inserire il nominativo, fino a 8 caratteri"
+
+#: SettingsDlg.cpp:155
+msgid "Using Module:"
+msgstr "Modulo in uso:"
+
+#: SettingsDlg.cpp:157
+msgid "Assign the transceiver module"
+msgstr "Assegna il modulo del transceiver"
+
+#: SettingsDlg.cpp:171
+msgid "Voice-only"
+msgstr "Solo voce"
+
+#: SettingsDlg.cpp:172
+msgid "This is the higher quality, 3200 bits/s codec"
+msgstr "Questo è il codec con qualità più alta, 3200 bit/s"
+
+#: SettingsDlg.cpp:175
+msgid "Voice+Data"
+msgstr "Voce+dati"
+
+#: SettingsDlg.cpp:176
+msgid "This is the 1600 bits/s codec"
+msgstr "Questo è il codec a 1600 bit/s"
+
+#: SettingsDlg.cpp:183
+msgid "Network"
+msgstr "Rete"
+
+#: SettingsDlg.cpp:186
+msgid "IPv4 Only"
+msgstr "Solo IPv4"
+
+#: SettingsDlg.cpp:189
+msgid "IPv6 Only"
+msgstr "Solo IPv6"
+
+#: SettingsDlg.cpp:192
+msgid "IPv4 && IPv6"
+msgstr "IPv4 && IPv6"
+
+#: SettingsDlg.cpp:200
+msgid "DHT"
+msgstr "DHT"
+
+#: SettingsDlg.cpp:202
+msgid "DHT Bootstrap:"
+msgstr "Avvio DHT:"
+
+#: SettingsDlg.cpp:203
+msgid "An existing node on the DHT Network"
+msgstr "Un nodo esistente sulla rete DHT"
+
+#: SettingsDlg.cpp:210
+msgid "Audio"
+msgstr "Audio"
+
+#: SettingsDlg.cpp:211
+msgid "Select the audio Input device"
+msgstr "Scegliere il dispositivo audio di ingresso"
+
+#: SettingsDlg.cpp:214
+msgid "Input:"
+msgstr "Ingresso:"
+
+#: SettingsDlg.cpp:215
+msgid "Select your audio input device, usually \"default\""
+msgstr "Scegliere il dispositivo audio di ingresso, solitamente \"default\""
+
+#: SettingsDlg.cpp:224
+msgid "Output:"
+msgstr "Uscita:"
+
+#: SettingsDlg.cpp:225
+msgid "Select the audio output device, usually \"default\""
+msgstr "Scegliere il dispositivo audio di uscita, solitamente \"default\""
+
+# traduzione libera
+#: SettingsDlg.cpp:234
+msgid "Rescan"
+msgstr "Aggiorna"
+
+# traduzione libera
+#: SettingsDlg.cpp:235
+msgid "Rescan for new audio devices"
+msgstr "Aggiorna l'elenco dei dispositivi audio"
+
+#: SettingsDlg.cpp:243
+msgid "Update"
+msgstr "Aggiorna"
+
+#: SettingsDlg.cpp:325
+msgid "ERROR"
+msgstr "ERRORE"
+
+#: SettingsDlg.cpp:380
+msgid "ERROR: unexpected IOID="
+msgstr "ERRORE: unexpected IOID="
+
+#: AboutDlg.cpp:39
+#, c-format
+msgid "MVoice version # %s"
+msgstr "MVoice versione %s"
+
+#: MainWindow.cpp:253
+msgid "Action"
+msgstr "Azione"
+
+#: AboutDlg.cpp:43
+msgid "Copyright (c) 2022 by Thomas A. Early N7TAE"
+msgstr "Copyright © 2022 Thomas A. Early N7TAE"
+
+#: MainWindow.cpp:272
+msgid "Disconnect from an M17 reflector"
+msgstr "Disconnette da un reflector M17"
+
+#: SettingsDlg.cpp:211
+msgid "Select the audio Input and Output devices"
+msgstr "Scegliere il dispositivo audio di ingresso e di uscita"

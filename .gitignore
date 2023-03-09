@@ -35,3 +35,6 @@ makefile
 
 # Executable
 mvoice
+
+# Translation files
+*.mo

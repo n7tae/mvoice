@@ -38,7 +38,7 @@
 #include "mrefd-dht-values.h"
 #endif
 
-#define _(STRING) STRING
+#define _(STRING) gettext(STRING)
 //#define BOOTFILENAME "DHTNodes.bin"
 
 static const char *pttstr    = _("PTT");
@@ -1029,9 +1029,9 @@ static void ReadM17Json()
 int main (int argc, char **argv)
 {
 	// internationalization
-	// setlocale(LC_ALL, "");
-	// bindtextdomain("mvoice", CFG_DIR);
-	// textdomain("mvoice");
+	setlocale(LC_ALL, "");
+	bindtextdomain("mvoice", LOCALEDIR);
+	textdomain("mvoice");
 
 	ReadM17Json();
 
