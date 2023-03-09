@@ -250,7 +250,7 @@ bool CMainWindow::Init()
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
 
-	pActionButton = new Fl_Button(50, 475, 100, 30, "Action");
+	pActionButton = new Fl_Button(50, 475, 100, 30, _("Action"));
 	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
 	pActionButton->labelsize(16);
 	pActionButton->deactivate();
@@ -269,7 +269,7 @@ bool CMainWindow::Init()
 	pConnectButton->callback(&CMainWindow::LinkButtonCB, this);
 
 	pDisconnectButton = new Fl_Button(455, 475, 100, 30, _("Disconnect"));
-	pDisconnectButton->tooltip(_("Disconnected from a reflector"));
+	pDisconnectButton->tooltip(_("Disconnect from an M17 reflector"));
 	pDisconnectButton->labelsize(16);
 	pDisconnectButton->deactivate();
 	pDisconnectButton->callback(&CMainWindow::UnlinkButtonCB, this);
