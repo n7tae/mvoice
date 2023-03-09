@@ -24,7 +24,7 @@ You might also need to go to the ALSA audio configuration. For Debian Buster, th
 There are several library requirements before you start:
 
 ```bash
-sudo apt install -y git build-essential libasound2-dev libcurl4-gnutls-dev
+sudo apt install -y git build-essential libasound2-dev libcurl4-gnutls-dev gettext
 ```
 
 ## FLTK
@@ -159,8 +159,10 @@ Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press a
 
 3) **Quick Key** is a single press button that will send a 200 millisecond transmission. This is useful when trying to get the attention of a Net Control Operator when your are participating in a Net. It could also be useful if you are trying to do a direct callsign route when you are behind a firewall you can't configure.
 
-## To do
+## Language support
 
-If you would like *mvoice* GUI to use a different langauge, I could use your help! Send me an E-mail at the address below.
+Thanks to IU5HKX, *mvoice* is now available in Italian.
+
+If you would like to add another language to *mvoice* GUI to use a different langauge, I would welcome a pull request. To get started, see https://www.gnu.org/software/gettext/manual/html_node/index.html.
 
 de n7tae (at) tearly (dot) net
