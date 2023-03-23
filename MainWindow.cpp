@@ -75,7 +75,8 @@ CMainWindow::~CMainWindow()
 {
 #ifdef BOOTFILENAME
 	// Export nodes to binary file
-	std::string path(CFG_DIR);
+	std::string path(CFGDIR);
+	path.append("/");
 	path.append(BOOTFILENAME);
 	std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
 	if (myfile.is_open())
@@ -156,8 +157,8 @@ bool CMainWindow::Init()
 	keep_running = true;
 	futReadThread = std::async(std::launch::async, &CMainWindow::ReadThread, this);
 
-	std::string iconpath(CFG_DIR);
-	iconpath.append("mvoice48.png");
+	std::string iconpath(BASEDIR);
+	iconpath.append("/etc/mvoice48.png");
 	pIcon = new Fl_PNG_Image(iconpath.c_str());
 
 	switch(pIcon->fail())
@@ -321,7 +322,8 @@ bool CMainWindow::Init()
 #ifdef BOOTFILENAME
 	// bootstrap the DHT from either saved nodes from a previous run,
 	// or from the configured node
-	std::string path(CFG_DIR);
+	std::string path(CFGDIR);
+	path.append("/");
 	path.append(BOOTFILENAME);
 	// Try to import nodes from binary file
 	std::ifstream myfile(path, std::ios::binary|std::ios::ate);
@@ -1009,8 +1011,8 @@ static void ReadM17Json()
 {
 	curl_global_init(CURL_GLOBAL_ALL);
 
-	std::string path(CFG_DIR);
-	path.append("m17refl.json");
+	std::string path(CFGDIR);
+	path.append("/m17refl.json");
 	std::ofstream ofs(path);
 	if (ofs.is_open()) {
 		const std::string url("https://reflectors.m17.link/ref-list/json");
@@ -1026,12 +1028,66 @@ static void ReadM17Json()
 	curl_global_cleanup();
 }
 
+#define MKDIR(PATH) ::mkdir(PATH, 0755)
+
+static bool do_mkdir(const std::string& path)
+{
+    struct stat st;
+    if (::stat(path.c_str(), &st) != 0)
+	{
+        if (MKDIR(path.c_str()) != 0 && errno != EEXIST)
+		{
+            return false;
+        }
+    } else if (!S_ISDIR(st.st_mode))
+	{
+        errno = ENOTDIR;
+        return false;
+    }
+    return true;
+}
+
+void mkpath(std::string path)
+{
+    std::string build;
+    for (size_t pos = 0; (pos = path.find('/')) != std::string::npos; )
+	{
+        build += path.substr(0, pos + 1);
+        do_mkdir(build);
+        path.erase(0, pos + 1);
+    }
+    if (!path.empty())
+	{
+        build += path;
+        do_mkdir(build);
+    }
+}
+
 int main (int argc, char **argv)
 {
 	// internationalization
 	setlocale(LC_ALL, "");
-	bindtextdomain("mvoice", LOCALEDIR);
+	std::string localedir(BASEDIR);
+	localedir.append("/share/locale");
+	bindtextdomain("mvoice", localedir.c_str());
 	textdomain("mvoice");
+
+	// make the user's config directory
+	auto home = getenv("HOME");
+	if (home)
+	{
+		if (chdir(home))
+		{
+			std::cerr << "ERROR: Can't cd to '" << home << "': " << strerror(errno) << std::endl;
+			return EXIT_FAILURE;
+		}
+		mkpath(CFGDIR);
+	}
+	else
+	{
+		std::cerr << "ERROR: HOME enviromental variable not found" << std::endl;
+		return EXIT_FAILURE;
+	}
 
 	ReadM17Json();
 

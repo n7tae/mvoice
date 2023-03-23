@@ -1,12 +1,15 @@
 # Copyright (c) 2022 by Thomas A. Early N7TAE
 
-# Make sure you have write/modify access to the next two path variables. You need to have
-# write access to both of these folders.
-# Change the following line if you want to change where the MVoice configuration data is installed.
-# Some like to use $(HOME)/.config/mvoice/
-CFGDIR = $(HOME)/etc/
-# This defines where the MVoice executable is installed.
-BINDIR = $(HOME)/bin/
+# BASEDIR includes three places:
+# $(BASEDIR)/etc for the mvoice icon
+# $(BASEDIR)/bin for the executable
+# $(BASEDIR)/share/locale for the language file(s)
+BASEDIR = $(HOME)
+# If mvoice is shared between different user, you can use:
+# BASEDIR = /usr/local
+
+# The user configuration files are always relative to $(HOME)
+CFGDIR = .config/mvoice
 
 # Set the following to true if you want to build in debugging support.
 DEBUG = false
@@ -21,8 +24,3 @@ USE44100 = false
 # The DVIN will provide addtional information about reflectors, making it easier to use them.
 # if you don't want this, set this to false.
 USE_DVIN = true
-
-# If you change any of the above three values, be sure to do a "make clean" before you do a "make".
-
-# This defines where the translations are installed.
-LOCALEDIR = $(HOME)/share/locale

@@ -3,12 +3,16 @@
 include mvoice.mk
 
 ifeq ($(DEBUG), true)
-CPPFLAGS = -ggdb -W -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" -DLOCALEDIR=\"$(LOCALEDIR)\"
+CPPFLAGS = -ggdb -W -std=c++17 -Icodec2 -DCFGDIR=\"$(CFGDIR)\" -DBASEDIR=\"$(BASEDIR)\"
 else
-CPPFLAGS = -W -std=c++17 -Icodec2 -DCFG_DIR=\"$(CFGDIR)\" -DLOCALEDIR=\"$(LOCALEDIR)\"
+CPPFLAGS = -W -std=c++17 -Icodec2 -DCFGDIR=\"$(CFGDIR)\" -DBASEDIR=\"$(BASEDIR)\"
 endif
 
-ifneq ($(USE_DVIN), true)
+LDFLAGS = `fltk-config --use-images --ldflags` -lasound -lcurl -pthread
+
+ifeq ($(USE_DVIN), true)
+LDFLAGS += -lopendht
+else
 CPPFLAGS += -DNO_DHT
 endif
 
@@ -34,7 +38,7 @@ DEPS = $(SRCS:.cpp=.d)
 all : subdirs $(EXE)
 
 $(EXE) : $(OBJS)
-	g++ -o $@ $^ `fltk-config --use-images --ldflags` -lasound -lcurl -pthread -lopendht
+	g++ -o $@ $^ $(LDFLAGS)
 
 %.o : %.cpp
 	g++ $(CPPFLAGS) -MMD -c $< -o $@
@@ -50,16 +54,16 @@ clean : subdirs
 -include $(DEPS)
 
 install : $(EXE) subdirs
-	mkdir -p $(CFGDIR)
-	/bin/cp -f $(shell pwd)/images/mvoice48.png $(CFGDIR)
-	mkdir -p $(BINDIR)
-	/bin/cp -f $(EXE) $(BINDIR)
+	mkdir   -p $(BASEDIR)/etc
+	/bin/cp -f $(shell pwd)/images/mvoice48.png $(BASEDIR)/etc
+	mkdir   -p $(BASEDIR)/bin
+	/bin/cp -f $(EXE) $(BASEDIR)/bin
 
 uninstall : subdirs
-	/bin/rm -f $(CFGDIR)mvoice48.png
-	/bin/rm -f $(CFGDIR)$(EXE).cfg
-	/bin/rm -f $(CFGDIR)m17refl.json
-	/bin/rm -f $(BINDIR)$(EXE)
+	/bin/rm -f $(BASEDIR)/etc/mvoice48.png
+	rmdir   -p $(BASEDIR)/bin --ignore-fail-on-non-empty
+	/bin/rm -f $(BASEDIR)/bin/$(EXE)
+	rmdir   -p $(BASEDIR)/bin --ignore-fail-on-non-empty
 
 SUBDIRS = po
 

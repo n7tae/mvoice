@@ -1,5 +1,6 @@
 include ../mvoice.mk
 
+LOCALEDIR = $(BASEDIR)/share/locale
 DOMAIN = mvoice
 LINGUAS = it
 

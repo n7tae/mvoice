@@ -37,7 +37,7 @@ struct SHost
 class CM17RouteMap
 {
 public:
-	CM17RouteMap() {}
+	CM17RouteMap();
 	~CM17RouteMap();
 	const std::shared_ptr<SHost> Find(const std::string &cs) const;
 	void Update(bool frmjson, const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port);
