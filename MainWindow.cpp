@@ -940,7 +940,7 @@ void CMainWindow::FixDestActionButton()
 
 void CMainWindow::TransmitterButtonControl()
 {
-	if (bTransOK && bDestCS && bDestIP && bDestPort)
+	if (bTransOK && bDestCS && bDestIP && bDestPort && (0 == pConnectButton->active()))
 	{
 		pPTTButton->activate();
 		pQuickKeyButton->activate();
