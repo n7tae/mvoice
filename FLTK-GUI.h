@@ -34,5 +34,4 @@
 #include <FL/Fl_Toggle_Button.H>
 #include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Tabs.H>
-#include <FL/Fl_PNG_Image.H>
 #include <FL/fl_ask.H>

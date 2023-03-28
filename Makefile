@@ -54,14 +54,10 @@ clean : subdirs
 -include $(DEPS)
 
 install : $(EXE) subdirs
-	mkdir   -p $(BASEDIR)/etc
-	/bin/cp -f $(shell pwd)/images/mvoice48.png $(BASEDIR)/etc
 	mkdir   -p $(BASEDIR)/bin
 	/bin/cp -f $(EXE) $(BASEDIR)/bin
 
 uninstall : subdirs
-	/bin/rm -f $(BASEDIR)/etc/mvoice48.png
-	rmdir   -p $(BASEDIR)/bin --ignore-fail-on-non-empty
 	/bin/rm -f $(BASEDIR)/bin/$(EXE)
 	rmdir   -p $(BASEDIR)/bin --ignore-fail-on-non-empty
 

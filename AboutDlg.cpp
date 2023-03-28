@@ -23,13 +23,13 @@
 
 #define _(STRING) gettext(STRING)
 
-#define VERSION "0.7.3"
+#define VERSION "0.8.0"
 
 CAboutDlg::CAboutDlg() {}
 
 CAboutDlg::~CAboutDlg() {}
 
-bool CAboutDlg::Init(Fl_PNG_Image *pIcon)
+bool CAboutDlg::Init(Fl_RGB_Image *pIcon)
 {
 	pDlg = new Fl_Double_Window(400, 200, _("About MVoice"));
 

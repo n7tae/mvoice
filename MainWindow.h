@@ -79,7 +79,7 @@ private:
 	Fl_Menu_Bar *pMenuBar;
 	Fl_Text_Display *pTextDisplay;
 	Fl_Text_Buffer  *pTextBuffer;
-	Fl_PNG_Image *pIcon;
+	Fl_RGB_Image *pIcon;
 
 	// state data
 	CFGDATA cfgdata;

@@ -1,7 +1,6 @@
 # Copyright (c) 2022 by Thomas A. Early N7TAE
 
-# BASEDIR includes three places:
-# $(BASEDIR)/etc for the mvoice icon
+# BASEDIR includes two places:
 # $(BASEDIR)/bin for the executable
 # $(BASEDIR)/share/locale for the language file(s)
 BASEDIR = $(HOME)

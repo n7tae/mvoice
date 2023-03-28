@@ -33,6 +33,7 @@
 
 #include "MainWindow.h"
 #include "Utilities.h"
+#include "IconData.h"
 #include "TemplateClasses.h"
 #ifndef NO_DHT
 #include "mrefd-dht-values.h"
@@ -157,21 +158,6 @@ bool CMainWindow::Init()
 	keep_running = true;
 	futReadThread = std::async(std::launch::async, &CMainWindow::ReadThread, this);
 
-	std::string iconpath(BASEDIR);
-	iconpath.append("/etc/mvoice48.png");
-	pIcon = new Fl_PNG_Image(iconpath.c_str());
-
-	switch(pIcon->fail())
-	{
-	case Fl_Image::ERR_NO_IMAGE:
-	case Fl_Image::ERR_FILE_ACCESS:
-		fl_alert("%s: %s", iconpath.c_str(), strerror(errno));    // shows actual os error to user
-		return true;
-	case Fl_Image::ERR_FORMAT:
-		fl_alert(_("%s: couldn't decode image"), iconpath.c_str());
-		return true;
-	}
-
 	if (M172AM.Open("m172am")) {
 		CloseAll();
 		return true;
@@ -187,6 +173,7 @@ bool CMainWindow::Init()
 		return true;
 	}
 
+	pIcon = new Fl_RGB_Image(icon_image.pixel_data, icon_image.width, icon_image.height, icon_image.bytes_per_pixel);
 	pWin = new Fl_Double_Window(900, 600, "MVoice");
 	pWin->icon(pIcon);
 	pWin->box(FL_BORDER_BOX);

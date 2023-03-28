@@ -25,13 +25,13 @@
 public:
 	CAboutDlg();
 	~CAboutDlg();
-	bool Init(Fl_PNG_Image *);
+	bool Init(Fl_RGB_Image *);
 	void Show();
 
 protected:
 	char version[64];
 	Fl_Double_Window *pDlg;
-	Fl_PNG_Image *pIcon;
+	Fl_RGB_Image *pIcon;
 	Fl_Box *pIconBox, *pVersionBox, *pCopyrightBox;
 	static void WindowCallbackCB(Fl_Widget *, void *);
 	void WindowCallback();
