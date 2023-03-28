@@ -500,12 +500,14 @@ void CMainWindow::EchoButton()
 	pEchoTestButton->toggle();
 	auto onchar = pEchoTestButton->value();
 	if (onchar) {
+		bTransOK = false;
 		// record the mic to a queue
 		AudioManager.RecordMicThread(E_PTT_Type::echo, "ECHOTEST");
 	} else {
 		AudioSummary(_("Echo"));
 		// play back the queue
 		AudioManager.PlayEchoDataThread();
+		bTransOK = true;
 	}
 }
 
