@@ -37,6 +37,7 @@
 #include "TemplateClasses.h"
 #ifndef NO_DHT
 #include "mrefd-dht-values.h"
+#include "urfd-dht-values.h"
 #endif
 
 #define _(STRING) gettext(STRING)
@@ -692,7 +693,15 @@ void CMainWindow::Get(const std::string &cs)
 	static std::time_t ts;
 	ts = 0;
 	dht::Where w;
-	w.id(toUType(EMrefdValueID::Config));
+	if (0 == cs.compare(0, 4, "M17-"))
+		w.id(toUType(EMrefdValueID::Config));
+	else if (0 == cs.compare(0, 3, "URF"))
+		w.id(toUType(EUrfdValueID::Config));
+	else
+	{
+		std::cerr << "Unknown callsign '" << cs << "' for node.get()" << std::endl;
+		return;
+	}
 	node.get(
 		dht::InfoHash::get(cs),
 		[](const std::shared_ptr<dht::Value> &v) {
@@ -703,6 +712,15 @@ void CMainWindow::Get(const std::string &cs)
 				{
 					ts = rdat.timestamp;
 					routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+				}
+			}
+			else if (0 == v->user_type.compare("urfd-config-1"))
+			{
+				auto rdat = dht::Value::unpack<SUrfdConfig1>(*v);
+				if (rdat.timestamp > ts)
+				{
+					ts = rdat.timestamp;
+					routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port[toUType(EUrfdPorts::m17)]);
 				}
 			}
 			else

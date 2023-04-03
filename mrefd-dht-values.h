@@ -22,47 +22,50 @@
 #include <opendht.h>
 
 /* HELPERS */
+#ifndef TO_U_TYPE_DEF
+#define TO_U_TYPE_DEF
 template<typename E> constexpr auto toUType(E enumerator) noexcept
 {
 	return static_cast<std::underlying_type_t<E>>(enumerator);
 } // Item #10 in "Effective Modern C++", by Scott Meyers, O'REILLY
+#endif
 
 enum class EMrefdValueID : uint64_t { Config=1, Peers=2, Clients=3, Users=4 };
 
 /* PEERS */
-using PeerTuple = std::tuple<std::string, std::string, std::time_t>;
+using MrefdPeerTuple = std::tuple<std::string, std::string, std::time_t>;
 enum class EMrefdPeerFields { Callsign, Modules, ConnectTime };
 struct SMrefdPeers1
 {
 	std::time_t timestamp;
 	unsigned int sequence;
-	std::list<PeerTuple> list;
+	std::list<MrefdPeerTuple> list;
 
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
 /* CLIENTS */
-using ClientTuple = std::tuple<std::string, std::string, char, std::time_t, std::time_t>;
+using MrefdClientTuple = std::tuple<std::string, std::string, char, std::time_t, std::time_t>;
 enum class EMrefdClientFields { Callsign, Ip, Module, ConnectTime, LastHeardTime };
 struct SMrefdClients1
 {
 	std::time_t timestamp;
 	unsigned int sequence;
-	std::list<ClientTuple> list;
+	std::list<MrefdClientTuple> list;
 
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
 /* USERS */
-using UserTuple = std::tuple<std::string, std::string, std::string, std::time_t>;
+using MrefdUserTuple = std::tuple<std::string, std::string, std::string, std::time_t>;
 enum class EMrefdUserFields { Source, Destination, Reflector, LastHeardTime };
 struct SMrefdUsers1
 {
 	std::time_t timestamp;
 	unsigned int sequence;
-	std::list<UserTuple> list;
+	std::list<MrefdUserTuple> list;
 
-	MSGPACK_DEFINE(timestamp, sequence, list);
+	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
 /* CONFIGURATION */
