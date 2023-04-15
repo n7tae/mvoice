@@ -63,7 +63,8 @@ CMainWindow::CMainWindow() :
 	bDestCS(false),
 	bDestIP(false),
 	bDestPort(false),
-	bTransOK(true)
+	bTransOK(true),
+	exportNodeFilename("/exNodes.bin")
 {
 	cfg.CopyTo(cfgdata);
 	// allowed M17 " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."
@@ -75,11 +76,10 @@ CMainWindow::CMainWindow() :
 
 CMainWindow::~CMainWindow()
 {
-#ifdef BOOTFILENAME
+#ifndef NO_DHT
 	// Export nodes to binary file
 	std::string path(CFGDIR);
-	path.append("/");
-	path.append(BOOTFILENAME);
+	path.append(exportNodeFilename);
 	std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
 	if (myfile.is_open())
 	{
@@ -90,6 +90,8 @@ CMainWindow::~CMainWindow()
 	}
 	else
 		std::cerr << "Trouble opening " << path << std::endl;
+
+	node.join();
 #endif
 
 	if (futReadThread.valid())
@@ -307,12 +309,10 @@ bool CMainWindow::Init()
 	// start the dht instance
 	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true);
 
-#ifdef BOOTFILENAME
 	// bootstrap the DHT from either saved nodes from a previous run,
 	// or from the configured node
 	std::string path(CFGDIR);
-	path.append("/");
-	path.append(BOOTFILENAME);
+	path.append(exportNodeFilename);
 	// Try to import nodes from binary file
 	std::ifstream myfile(path, std::ios::binary|std::ios::ate);
 	if (myfile.is_open())
@@ -327,19 +327,20 @@ bool CMainWindow::Init()
 		msgpack::object_handle oh;
 		while (pac.next(oh)) {
 			auto imported_nodes = oh.get().as<std::vector<dht::NodeExport>>();
-			std::cout << "Importing " << imported_nodes.size() << " nodes" << std::endl;
+			std::cout << "Importing " << imported_nodes.size() << " ham-dht nodes from " << path << std::endl;
 			node.bootstrap(imported_nodes);
 		}
 		myfile.close();
 	}
-	else
-#endif
+	else if (cfgdata.sBootstrap.length())
 	{
-		if (cfgdata.sBootstrap.length())
-			node.bootstrap(cfgdata.sBootstrap, "17171");
+		std::cout << "Bootstrapping from " << cfgdata.sBootstrap << std::endl;
+		node.bootstrap(cfgdata.sBootstrap, "17171");
 	}
-
-	//PutDHTInfo();
+	else
+	{
+		std::cout << "ERROR: not connected to any DHT network!" << std::endl;
+	}
 #endif
 
 	return false;

@@ -66,6 +66,7 @@ private:
 	// Distributed Hash Table
 	dht::DhtRunner node;
 	dht::Value nodevalue;
+	const std::string exportNodeFilename;
 #endif
 
 	// widgets
