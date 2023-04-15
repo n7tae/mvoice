@@ -32,7 +32,7 @@ template<typename E> constexpr auto toUType(E enumerator) noexcept
 
 enum class EUrfdValueID : uint64_t { Config=1, Peers=2, Clients=3, Users=4 };
 
-/* PEERS */
+// PEERS: user_type = "urfd-peers-1"
 using UrfdPeerTuple = std::tuple<std::string, std::string, std::time_t>;
 enum class EUrfdPeerFields { Callsign, Modules, ConnectTime };
 struct SUrfdPeers1
@@ -44,7 +44,7 @@ struct SUrfdPeers1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* CLIENTS */
+// CLIENTS: user_type = "urfd-clients-1"
 using UrfdClientTuple = std::tuple<std::string, std::string, char, std::time_t, std::time_t>;
 enum class EUrfdClientFields { Callsign, Ip, Module, ConnectTime, LastHeardTime };
 struct SUrfdClients1
@@ -56,7 +56,7 @@ struct SUrfdClients1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* USERS */
+// USERS: user_type = urfd-users-1"
 using UrfdUserTuple = std::tuple<std::string, std::string, char, std::string, std::time_t>;
 enum class EUrfdUserFields { Callsign, ViaNode, OnModule, ViaPeer, LastHeardTime };
 struct SUrfdUsers1
@@ -68,8 +68,8 @@ struct SUrfdUsers1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* CONFIGURATION */
-// 'SIZE' has to be last for these scoped enums
+// CONFIGURATION: user_type = "urfd-config-1"
+// 'SIZE' has to be last value for these scoped enums
 enum class EUrfdPorts : unsigned { dcs, dextra, dmrplus, dplus, m17, mmdvm, nxdn, p25, urf, ysf, SIZE };
 enum class EUrfdAlMod : unsigned { nxdn, p25, ysf, SIZE };
 enum class EUrfdTxRx  : unsigned { rx, tx, SIZE };
@@ -77,7 +77,7 @@ enum class EUrfdRefId : unsigned { nxdn, p25, SIZE };
 struct SUrfdConfig1
 {
 	std::time_t timestamp;
-	std::string cs, ipv4, ipv6, mods, tcmods, url, email, sponsor, country, version;
+	std::string callsign, ipv4addr, ipv6addr, modules, transcodedmods, url, email, sponsor, country, version;
 	std::array<uint16_t, toUType(EUrfdPorts::SIZE)> port;
 	std::array<char, toUType(EUrfdAlMod::SIZE)> almod;
 	std::array<unsigned long, toUType(EUrfdTxRx::SIZE)> ysffreq;
@@ -85,5 +85,5 @@ struct SUrfdConfig1
 	std::unordered_map<char, std::string> description;
 	bool g3enabled;
 
-	MSGPACK_DEFINE(timestamp, cs, ipv4, ipv6, mods, tcmods, url, email, sponsor, country, version, almod, ysffreq, refid, g3enabled, port, description)
+	MSGPACK_DEFINE(timestamp, callsign, ipv4addr, ipv6addr, modules, transcodedmods, url, email, sponsor, country, version, almod, ysffreq, refid, g3enabled, port, description)
 };

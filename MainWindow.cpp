@@ -712,7 +712,7 @@ void CMainWindow::Get(const std::string &cs)
 				if (rdat.timestamp > ts)
 				{
 					ts = rdat.timestamp;
-					routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port);
+					routeMap.Update(false, rdat.callsign, rdat.ipv4addr, rdat.ipv6addr, rdat.url, rdat.modules, rdat.port);
 				}
 			}
 			else if (0 == v->user_type.compare("urfd-config-1"))
@@ -721,7 +721,7 @@ void CMainWindow::Get(const std::string &cs)
 				if (rdat.timestamp > ts)
 				{
 					ts = rdat.timestamp;
-					routeMap.Update(false, rdat.cs, rdat.ipv4, rdat.ipv6, rdat.url, rdat.mods, rdat.port[toUType(EUrfdPorts::m17)]);
+					routeMap.Update(false, rdat.callsign, rdat.ipv4addr, rdat.ipv6addr, rdat.url, rdat.modules, rdat.port[toUType(EUrfdPorts::m17)]);
 				}
 			}
 			else

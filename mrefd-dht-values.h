@@ -32,7 +32,7 @@ template<typename E> constexpr auto toUType(E enumerator) noexcept
 
 enum class EMrefdValueID : uint64_t { Config=1, Peers=2, Clients=3, Users=4 };
 
-/* PEERS */
+// PEERS: user_type = "mrefd-peers-1
 using MrefdPeerTuple = std::tuple<std::string, std::string, std::time_t>;
 enum class EMrefdPeerFields { Callsign, Modules, ConnectTime };
 struct SMrefdPeers1
@@ -44,7 +44,7 @@ struct SMrefdPeers1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* CLIENTS */
+// CLIENTS: user_type = "mrefd-clients-1"
 using MrefdClientTuple = std::tuple<std::string, std::string, char, std::time_t, std::time_t>;
 enum class EMrefdClientFields { Callsign, Ip, Module, ConnectTime, LastHeardTime };
 struct SMrefdClients1
@@ -56,7 +56,7 @@ struct SMrefdClients1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* USERS */
+// USERS: user_type = "mrefd-users-1"
 using MrefdUserTuple = std::tuple<std::string, std::string, std::string, std::time_t>;
 enum class EMrefdUserFields { Source, Destination, Reflector, LastHeardTime };
 struct SMrefdUsers1
@@ -68,12 +68,12 @@ struct SMrefdUsers1
 	MSGPACK_DEFINE(timestamp, sequence, list)
 };
 
-/* CONFIGURATION */
+// CONFIGURATION: user_type = "mrefd-config-1"
 struct SMrefdConfig1
 {
 	std::time_t timestamp;
-	std::string cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, version;
+	std::string callsign, ipv4addr, ipv6addr, modules, encryptedmods, url, email, sponsor, country, version;
 	uint16_t port;
 
-	MSGPACK_DEFINE(timestamp, cs, ipv4, ipv6, mods, emods, url, email, sponsor, country, version, port)
+	MSGPACK_DEFINE(timestamp, callsign, ipv4addr, ipv6addr, modules, encryptedmods, url, email, sponsor, country, version, port)
 };
