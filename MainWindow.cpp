@@ -36,8 +36,7 @@
 #include "IconData.h"
 #include "TemplateClasses.h"
 #ifndef NO_DHT
-#include "mrefd-dht-values.h"
-#include "urfd-dht-values.h"
+#include "dht-values.h"
 #endif
 
 #define _(STRING) gettext(STRING)
