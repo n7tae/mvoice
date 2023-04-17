@@ -705,7 +705,7 @@ void CMainWindow::Get(const std::string &cs)
 	node.get(
 		dht::InfoHash::get(cs),
 		[](const std::shared_ptr<dht::Value> &v) {
-			if (0 == v->user_type.compare("mrefd-config-1"))
+			if (0 == v->user_type.compare(MREFD_CONFIG_1))
 			{
 				auto rdat = dht::Value::unpack<SMrefdConfig1>(*v);
 				if (rdat.timestamp > ts)
@@ -714,7 +714,7 @@ void CMainWindow::Get(const std::string &cs)
 					routeMap.Update(false, rdat.callsign, rdat.ipv4addr, rdat.ipv6addr, rdat.url, rdat.modules, rdat.port);
 				}
 			}
-			else if (0 == v->user_type.compare("urfd-config-1"))
+			else if (0 == v->user_type.compare(URFD_CONFIG_1))
 			{
 				auto rdat = dht::Value::unpack<SUrfdConfig1>(*v);
 				if (rdat.timestamp > ts)
