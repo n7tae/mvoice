@@ -699,7 +699,7 @@ void CMainWindow::Get(const std::string &cs)
 		w.id(toUType(EUrfdValueID::Config));
 	else
 	{
-		std::cerr << "Unknown callsign '" << cs << "' for node.get()" << std::endl;
+		// std::cerr << "Unknown callsign '" << cs << "' for node.get()" << std::endl;
 		return;
 	}
 	node.get(
