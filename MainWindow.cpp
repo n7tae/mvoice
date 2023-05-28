@@ -58,12 +58,14 @@ static void MyIdleProcess(void *p)
 }
 
 CMainWindow::CMainWindow() :
+#ifndef NO_DHT
+	exportNodeFilename("/exNodes.bin"),
+#endif
 	pWin(nullptr),
 	bDestCS(false),
 	bDestIP(false),
 	bDestPort(false),
-	bTransOK(true),
-	exportNodeFilename("/exNodes.bin")
+	bTransOK(true)
 {
 	cfg.CopyTo(cfgdata);
 	// allowed M17 " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."

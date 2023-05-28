@@ -10,7 +10,7 @@ Raspberry Pi OS is not ready for *mvoice* out of the box. While Raspbian has ALS
 sudo apt install -y pulseaudio pavucontrol paprefs
 ```
 
-It's proabably a good idea to reboot after installing pulseaudio. After it's installed, take a look at the output of `aplay -L`. Near the beginning is should say:
+It's probably a good idea to reboot after installing pulseaudio. After it's installed, take a look at the output of `aplay -L`. Near the beginning is should say:
 
 ```bash
 default
@@ -47,7 +47,7 @@ sudo make install
 
 ## Distributed Hash Table (OpenDHT)
 
-Using the OpenDHT library, mvoice now joins a special digital voice, ham-radio DHT network to discover reflector and repeater destinations directly. For these target systems using the DHT, connection information is published and updated directly by the target and is availabe to mvoice in near-realtime. All the mvoice user needs to know is the callsign of the target.
+Using the OpenDHT library, mvoice now joins a special digital voice, ham-radio DHT network to discover reflector and repeater destinations directly. For these target systems using the DHT, connection information is published and updated directly by the target and is available to mvoice in near-realtime. All the mvoice user needs to know is the callsign of the target.
 
 ### Building and installing the OpenDHT support
 
@@ -68,7 +68,7 @@ make
 sudo make install
 ```
 
-Please note that there is no easy way to uninstall OpenDHT once it's been installed. However, it is based on static header files and libraries and doesn't use any resouces except for a small amount of disk space, unless mvoice is running. You can delete your downloaded OpenDHT git repo once you've installed the OpenDHT library.
+Please note that there is no easy way to uninstall OpenDHT once it's been installed. However, it is based on static header files and libraries and doesn't use any resources except for a small amount of disk space, unless mvoice is running. You can delete your downloaded OpenDHT git repo once you've installed the OpenDHT library.
 
 ## Building and Installing *mvoice*
 
@@ -123,7 +123,7 @@ If you want a desktop icon to launch *mvoice* then, from your build directory:
 cp mvoice.desktop ~/Desktop
 ```
 
-If you don't want to answer the question "What do you want to do with it?" every time you double-click the new desktop icon, then in the Raspberry Pi Menu, go to "Accessories->File Manager->Edit->Preference->General and turn on the "Don't ask options..." check box. The mvoice.desktop file will lauch a terminal window to run *mvoice*. If you really don't want to see this terminal window, then change the "Terminal=true" line to "Terminal=false" in your copy of mvoice.desktop in your Desktop folder.
+If you don't want to answer the question "What do you want to do with it?" every time you double-click the new desktop icon, then in the Raspberry Pi Menu, go to "Accessories->File Manager->Edit->Preference->General and turn on the "Don't ask options..." check box. The mvoice.desktop file will launch a terminal window to run *mvoice*. If you really don't want to see this terminal window, then change the "Terminal=true" line to "Terminal=false" in your copy of mvoice.desktop in your Desktop folder.
 
 The Raspberry Pi OS has a bug in xdg-open and that's what *mvoice*'s "Open Dashboard" button uses to view a reflector's dashboard. If Chromium isn't running when you click this button, it will freeze the *mvoice* gui. To unfreeze the gui, simple kill Chromium. To get around this bug, launch Chromium before you click this "Open Dashboard" button and a new tab with the dashboard will open without a problem.
 
@@ -133,7 +133,7 @@ Plug in your headset and start *mvoice*: Open a shell and type `mvoice` if ~/bin
 
 ## Firewall
 
-*mvoice* can operate in linking or routing mode. If you want to be able to recieve incoming callsign routes, you'll need to port-forward UDP 17000 on your network firewall. If you can't, you can still connect to M17 reflectors. You can originate a direct, callsign route, but if there is a long pause in the QSO, you're firewall will shutdown the port until you key up again.
+*mvoice* can operate in linking or routing mode. If you want to be able to receive incoming callsign routes, you'll need to port-forward UDP 17000 on your network firewall. If you can't, you can still connect to M17 reflectors. You can originate a direct, callsign route, but if there is a long pause in the QSO, you're firewall will shutdown the port until you key up again.
 
 ## Operating
 
@@ -143,17 +143,17 @@ Once it launches, click the **Settings** button and make sure to set your callsi
 
 On the main window, set your destination callsign and IP address. You can select a reflector from the dropdown list and that will fill the Destination callsign and IP address, or you can type the callsign into the Callsign Entry box. If the IP address can be found from your local data, the IP will be automatically set, otherwise, you will need to know the IP address of your destination. Once you have valid values for both, you can save these for future use, if it's not already in your database. Please remember that when you are setting a new destination, the callsign and IP entry will "approve" their input strictly based on syntax and not whether the callsign or an IP address is actually a place where an M17 destination exists.
 
-Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a vaild callsign is exactly **seven** characters long, `M17-xxx` where `xxx` is made up of letters or numbers. Or, now you can also link to the new URF reflectors. A URF reflector callsign is exactly **six** characters long, beginning with `URF`.
+Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a valid callsign is exactly **seven** characters long, `M17-xxx` where `xxx` is made up of letters or numbers. Or, now you can also link to the new URF reflectors. A URF reflector callsign is exactly **six** characters long, beginning with `URF`.
 
 Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If *mvoice* has found a URL for the target, you can open the reflector's dashboard with the **Open Dashboard** button.
 
 For Linking, you can select a reflector. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if reflect exists at that IP and the module you are requesting is actually configured and operational, or even if it actually exists.
 
-There are three "transmitting" buttons on *mvoice* that are explained below, but first, an explaination:
+There are three "transmitting" buttons on *mvoice* that are explained below, but first, an explanation:
 
 Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press and release these buttons to start their function and press and release again to stop their function. Both of these buttons also have built-in timers and will show the *approximate* "key on" time.
 
-1) **Echo Test** is a toggle switch. Click it to start recording an echo test and your voice will be encoded using the Codec 2 mode you selected in the Settings dialog. Note that the button will turn yellow when you are recording your test. Click the button again and *mvoice* will decode the saved AMBE data and play it back to you. This is a great way to check the operation of your setup as well as the volume levels and make sure your headset is working properly. Whenever you complete an Echo Test, you'll get a statistical summary of your recorded audio, the volume (in decibels relative to an arbitrary reference that is properly adjusted audio) and the precentage of when your audio was within 6 dB of clipping (50% of the maximum amplitude). For the echo test, you'll generally want 0% clip and a volume of around 0 dB, although most anything above -10 dB is still copyable. So ***first*** adjust your system microphone gain to achieve the desired dB, and ***then*** adjust you system volume level for a comfortable listening level. Note that *mvoice* has no volume or gain controls for either TX or RX. You'll use your Linux gui audio settings for this.
+1) **Echo Test** is a toggle switch. Click it to start recording an echo test and your voice will be encoded using the Codec 2 mode you selected in the Settings dialog. Note that the button will turn yellow when you are recording your test. Click the button again and *mvoice* will decode the saved AMBE data and play it back to you. This is a great way to check the operation of your setup as well as the volume levels and make sure your headset is working properly. Whenever you complete an Echo Test, you'll get a statistical summary of your recorded audio, the volume (in decibels relative to an arbitrary reference that is properly adjusted audio) and the percentage of when your audio was within 6 dB of clipping (50% of the maximum amplitude). For the echo test, you'll generally want 0% clip and a volume of around 0 dB, although most anything above -10 dB is still copyable. So ***first*** adjust your system microphone gain to achieve the desired dB, and ***then*** adjust you system volume level for a comfortable listening level. Note that *mvoice* has no volume or gain controls for either TX or RX. You'll use your Linux gui audio settings for this.
 
 2) **PTT** the large PTT button is also toggle switch. Click it and it will turn yellow also and *mvoice* will encode your audio and send it to your destination. Click the button again to return *mvoice* to receiving. When you do, you'll see your volume statistics. *mvoice* will also report volume statistics on incoming audio streams. There is a locking mechanism in PTT: When you start a transmission by toggling the PTT to the "key on" state, *mvoice* will attempt to lock the gateway. If the lock is achieved, all is good. If the gateway is busy, the PTT lock will fail and the PTT button will be returned to the "key off" state. While response of this lock is quick, it does take a finite time to execute! So here is a best practice: Key up, and **wait one or two seconds** before you start talking. By waiting, you're insuring that the PTT lock has been successfully achieved.
 
@@ -163,6 +163,6 @@ Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press a
 
 Thanks to IU5HKX, *mvoice* is now available in Italian.
 
-If you would like to add another language to *mvoice* GUI to use a different langauge, I would welcome a pull request. To get started, see https://www.gnu.org/software/gettext/manual/html_node/index.html.
+If you would like to add another language to *mvoice* GUI to use a different language, I would welcome a pull request. To get started, see https://www.gnu.org/software/gettext/manual/html_node/index.html.
 
 de n7tae (at) tearly (dot) net

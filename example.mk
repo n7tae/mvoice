@@ -19,7 +19,7 @@ DEBUG = false
 # Otherwise, set this to true.
 USE44100 = false
 
-# By default, mvoice uses the Digital Voice Information Network, a "distributed hash table" network.
-# The DVIN will provide addtional information about reflectors, making it easier to use them.
+# By default, mvoice uses the Ham-DHT network, a "distributed hash table" network.
+# The Ham-DHT will provide addtional information about reflectors, making it easier to use them.
 # if you don't want this, set this to false.
-USE_DVIN = true
+USE_DHT = true
