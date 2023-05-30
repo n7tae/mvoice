@@ -12,7 +12,7 @@ LDFLAGS = `fltk-config --use-images --ldflags` -lasound -lcurl -pthread
 
 ifeq ($(USE_DVIN), true)
 LDFLAGS += -lopendht
-else ifeq($(USE_DHT), true)
+else ifeq ($(USE_DHT), true)
 LDFLAGS += -lopendht
 else
 CPPFLAGS += -DNO_DHT
