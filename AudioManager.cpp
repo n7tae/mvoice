@@ -76,12 +76,12 @@ void CAudioManager::RecordMicThread(E_PTT_Type for_who, const std::string &urcal
 	auto data = pMainWindow->cfg.GetData();
 	hot_mic = true;
 
-	r1 = std::async(std::launch::async, &CAudioManager::microphone2audioqueue, this);
+	mic2audio_fut = std::async(std::launch::async, &CAudioManager::mic2audio, this);
 
-	r2 = std::async(std::launch::async, &CAudioManager::audio2codec, this, data->bVoiceOnlyEnable);
+	audio2codec_fut = std::async(std::launch::async, &CAudioManager::audio2codec, this, data->bVoiceOnlyEnable);
 
 	if (for_who == E_PTT_Type::m17) {
-		r3 = std::async(std::launch::async, &CAudioManager::codec2m17gateway, this, urcall, data->sM17SourceCallsign, data->bVoiceOnlyEnable);
+		codec2gateway_fut = std::async(std::launch::async, &CAudioManager::codec2gateway, this, urcall, data->sM17SourceCallsign, data->bVoiceOnlyEnable);
 	}
 }
 
@@ -166,7 +166,7 @@ void CAudioManager::QuickKey(const std::string &d, const std::string &s)
 	hot_mic = false;
 }
 
-void CAudioManager::codec2m17gateway(const std::string &dest, const std::string &sour, bool voiceonly)
+void CAudioManager::codec2gateway(const std::string &dest, const std::string &sour, bool voiceonly)
 {
 	CCallsign destination(dest);
 	CCallsign source(sour);
@@ -220,7 +220,7 @@ void CAudioManager::codec2m17gateway(const std::string &dest, const std::string 
 	} while (! last);
 }
 
-void CAudioManager::microphone2audioqueue()
+void CAudioManager::mic2audio()
 {
 	auto data = pMainWindow->cfg.GetData();
 	// Open PCM device for recording (capture).
@@ -349,15 +349,15 @@ void CAudioManager::PlayEchoDataThread()
 {
 	auto data = pMainWindow->cfg.GetData();
 	hot_mic = false;
-	r1.get();
-	r2.get();
+	mic2audio_fut.get();
+	audio2codec_fut.get();
 
 	std::this_thread::sleep_for(std::chrono::milliseconds(200));
 
-	p1 = std::async(std::launch::async, &CAudioManager::codec2audio, this, data->bVoiceOnlyEnable);
-	p2 = std::async(std::launch::async, &CAudioManager::play_audio_queue, this);
-	p1.get();
-	p2.get();
+	codec2audio_fut = std::async(std::launch::async, &CAudioManager::codec2audio, this, data->bVoiceOnlyEnable);
+	play_audio_fut = std::async(std::launch::async, &CAudioManager::play_audio, this);
+	codec2audio_fut.get();
+	play_audio_fut.get();
 }
 
 void CAudioManager::M17_2AudioMgr(const SM17Frame &m17)
@@ -370,8 +370,8 @@ void CAudioManager::M17_2AudioMgr(const SM17Frame &m17)
 			is_3200 = ((m17.GetFrameType() & 0x6u) == 0x4u);
 			pMainWindow->Receive(true);
 			// launch the audio processing threads
-			p1 = std::async(std::launch::async, &CAudioManager::codec2audio, this, is_3200);
-			p2 = std::async(std::launch::async, &CAudioManager::play_audio_queue, this);
+			codec2audio_fut = std::async(std::launch::async, &CAudioManager::codec2audio, this, is_3200);
+			play_audio_fut = std::async(std::launch::async, &CAudioManager::play_audio, this);
 		}
 		if (m17.streamid != m17_sid_in)
 			return;
@@ -388,15 +388,15 @@ void CAudioManager::M17_2AudioMgr(const SM17Frame &m17)
 		}
 		data_mutex.unlock();
 		if (last) {
-			p1.get();	// we're done, get the finished threads and reset the current stream id
-			p2.get();
+			codec2audio_fut.get();	// we're done, get the finished threads and reset the current stream id
+			play_audio_fut.get();
 			m17_sid_in = 0U;
 			pMainWindow->Receive(false);
 		}
 	}
 }
 
-void CAudioManager::play_audio_queue()
+void CAudioManager::play_audio()
 {
 	auto data = pMainWindow->cfg.GetData();
 	std::this_thread::sleep_for(std::chrono::milliseconds(300));
@@ -512,9 +512,9 @@ void CAudioManager::KeyOff()
 {
 	if (hot_mic) {
 		hot_mic = false;
-		r1.get();
-		r2.get();
-		r3.get();
+		mic2audio_fut.get();
+		audio2codec_fut.get();
+		codec2gateway_fut.get();
 	}
 }
 

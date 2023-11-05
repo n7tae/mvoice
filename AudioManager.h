@@ -68,7 +68,7 @@ private:
 	CAudioQueue audio_queue;
 	CC2DataQueue c2_queue;
 	std::mutex audio_mutex, data_mutex;
-	std::future<void> r1, r2, r3, p1, p2;
+	std::future<void> mic2audio_fut, audio2codec_fut, codec2gateway_fut, codec2audio_fut, play_audio_fut;
 	bool link_open;
 #ifdef USE44100
 	SDATA expand, shrink;
@@ -91,10 +91,10 @@ private:
 	// methods
 	bool audio_is_empty();
 	bool codec_is_empty();
-	void microphone2audioqueue();
+	void mic2audio();
 	void audio2codec(const bool is_3200);
 	void codec2audio(const bool is_3200);
-	void codec2m17gateway(const std::string &dest, const std::string &sour, bool voiceonly);
-	void play_audio_queue();
+	void codec2gateway(const std::string &dest, const std::string &sour, bool voiceonly);
+	void play_audio();
 	void calc_audio_stats(const short int *audio = nullptr);
 };
