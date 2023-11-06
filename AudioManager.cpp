@@ -65,8 +65,9 @@ bool CAudioManager::Init(CMainWindow *pMain)
 void CAudioManager::RecordMicThread(E_PTT_Type for_who, const std::string &urcall)
 {
 	// wait on audio queue to empty
+
 	unsigned int count = 0u;
-	while (! audio_is_empty()) {
+	while (! audio_queue.IsEmpty()) {
 		std::this_thread::sleep_for(std::chrono::milliseconds(20));
 		count++;
 	}
@@ -92,11 +93,8 @@ void CAudioManager::audio2codec(const bool is_3200)
 	calc_audio_stats();  // initialize volume statistics
 	bool is_odd = false; // true if we've processed an odd number of audio frames
 	do {
-		while ( audio_is_empty() )
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
-		audio_mutex.lock();
-		CAudioFrame audioframe = audio_queue.Pop();
-		audio_mutex.unlock();
+		// we'll wait until there is something
+		CAudioFrame audioframe = audio_queue.WaitPop();
 		calc_audio_stats(audioframe.GetData());
 		last = audioframe.GetFlag();
 		if ( is_3200 ) {
@@ -105,18 +103,14 @@ void CAudioManager::audio2codec(const bool is_3200)
 			c2.codec2_encode(data, audioframe.GetData());
 			CC2DataFrame dataframe(data);
 			dataframe.SetFlag(is_odd ? false : last);
-			data_mutex.lock();
 			c2_queue.Push(dataframe);
-			data_mutex.unlock();
 			if (is_odd && last) { // we need an even number of data frame for 3200
 				// add one more quite frame
 				const short quiet[160] = { 0 };
 				c2.codec2_encode(data, quiet);
 				CC2DataFrame frame2(data);
 				frame2.SetFlag(true);
-				data_mutex.lock();
 				c2_queue.Push(frame2);
-				data_mutex.unlock();
 			}
 		} else { // 1600 - we need 40 ms of audio
 			short audio[320] = { 0 }; // initialize to 40 ms of silence
@@ -125,11 +119,8 @@ void CAudioManager::audio2codec(const bool is_3200)
 			if (last) { // get another frame, if available
 				volStats.count += 160; // a quite frame will only contribute to the total count
 			} else {
-				while (audio_is_empty()) // now we'll get another 160 sample frame
-					std::this_thread::sleep_for(std::chrono::milliseconds(3));
-				audio_mutex.lock();
-				audioframe = audio_queue.Pop();
-				audio_mutex.unlock();
+				//we'll wait until there is something
+				audioframe = audio_queue.WaitPop();
 				calc_audio_stats(audioframe.GetData());
 				memcpy(audio+160, audioframe.GetData(), 160*sizeof(short));	// now we have 40 ms total
 				last = audioframe.GetFlag();
@@ -137,9 +128,7 @@ void CAudioManager::audio2codec(const bool is_3200)
 			c2.codec2_encode(data, audio);
 			CC2DataFrame dataframe(data);
 			dataframe.SetFlag(last);
-			data_mutex.lock();
 			c2_queue.Push(dataframe);
-			data_mutex.unlock();
 		}
 	} while (! last);
 }
@@ -183,11 +172,8 @@ void CAudioManager::codec2gateway(const std::string &dest, const std::string &so
 	unsigned int count = 0;
 	bool last;
 	do {
-		while (codec_is_empty())
-			std::this_thread::sleep_for(std::chrono::milliseconds(2));
-		data_mutex.lock();
-		CC2DataFrame cframe = c2_queue.Pop();
-		data_mutex.unlock();
+		// we'll wait until there is something
+		CC2DataFrame cframe = c2_queue.WaitPop();
 		last = cframe.GetFlag();
 		memcpy(ipframe.payload, cframe.GetData(), 8);
 		if (voiceonly) {
@@ -198,11 +184,7 @@ void CAudioManager::codec2gateway(const std::string &dest, const std::string &so
 				memcpy(ipframe.payload+8, quiet, 8);
 			} else {
 				// fill in the second part of the payload for C2 3200
-				while (codec_is_empty())
-					std::this_thread::sleep_for(std::chrono::milliseconds(2));
-				data_mutex.lock();
-				cframe = c2_queue.Pop();
-				data_mutex.unlock();
+				cframe = c2_queue.WaitPop();
 				last = cframe.GetFlag();
 				memcpy(ipframe.payload+8, cframe.GetData(), 8);
 			}
@@ -297,9 +279,7 @@ void CAudioManager::mic2audio()
 		CAudioFrame frame(audio_buffer);
 #endif
 		frame.SetFlag(! keep_running);
-		audio_mutex.lock();
 		audio_queue.Push(frame);
-		audio_mutex.unlock();
 	} while (keep_running);
 #ifdef USE44100
 	RSShrink.Reset();
@@ -314,20 +294,15 @@ void CAudioManager::codec2audio(const bool is_3200)
 	bool last;
 	calc_audio_stats(); // init volume stats
 	do {
-		while (codec_is_empty())
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
-		data_mutex.lock();
-		CC2DataFrame dataframe = c2_queue.Pop();
-		data_mutex.unlock();
+		// we'll wait until there is something
+		CC2DataFrame dataframe = c2_queue.WaitPop();
 		last = dataframe.GetFlag();
 		if (is_3200) {
 			short audio[160];
 			c2.codec2_decode(audio, dataframe.GetData());
 			CAudioFrame audioframe(audio);
 			audioframe.SetFlag(last);
-			audio_mutex.lock();
 			audio_queue.Push(audioframe);
-			audio_mutex.unlock();
 			calc_audio_stats(audio);
 		} else {
 			short audio[320];	// C2 1600 is 40 ms audio
@@ -335,10 +310,8 @@ void CAudioManager::codec2audio(const bool is_3200)
 			CAudioFrame audio1(audio), audio2(audio+160);
 			audio1.SetFlag(false);
 			audio2.SetFlag(last);
-			audio_mutex.lock();
 			audio_queue.Push(audio1);
 			audio_queue.Push(audio2);
-			audio_mutex.unlock();
 			calc_audio_stats(audio);
 			calc_audio_stats(audio+160);
 		}
@@ -379,14 +352,12 @@ void CAudioManager::M17_2AudioMgr(const SM17Frame &m17)
 		CC2DataFrame dataframe(payload);
 		auto last = (0x8000u == (m17.GetFrameNumber() & 0x8000u));
 		dataframe.SetFlag(is_3200 ? false : last);
-		data_mutex.lock();
 		c2_queue.Push(dataframe);
 		if (is_3200) {
 			CC2DataFrame frame2(payload+8);
 			frame2.SetFlag(last);
 			c2_queue.Push(frame2);
 		}
-		data_mutex.unlock();
 		if (last) {
 			codec2audio_fut.get();	// we're done, get the finished threads and reset the current stream id
 			play_audio_fut.get();
@@ -455,11 +426,7 @@ void CAudioManager::play_audio()
 #ifdef USE44100
 		short short_out[882];
 #endif
-		while (audio_is_empty())
-			std::this_thread::sleep_for(std::chrono::milliseconds(3));
-		audio_mutex.lock();
-		CAudioFrame frame(audio_queue.Pop());
-		audio_mutex.unlock();
+		CAudioFrame frame(audio_queue.NoWaitPop());	// if the queue is empty, we get zeros (silence)
 		last = frame.GetFlag();
 #ifdef USE44100
 		RSExpand.Short2Float(frame.GetData(), expand.data_in, expand.input_frames);
@@ -490,22 +457,6 @@ void CAudioManager::play_audio()
 #ifdef USE44100
 	RSExpand.Reset();
 #endif
-}
-
-bool CAudioManager::audio_is_empty()
-{
-	audio_mutex.lock();
-	bool ret = audio_queue.Empty();
-	audio_mutex.unlock();
-	return ret;
-}
-
-bool CAudioManager::codec_is_empty()
-{
-	data_mutex.lock();
-	bool ret = c2_queue.Empty();
-	data_mutex.unlock();
-	return ret;
 }
 
 void CAudioManager::KeyOff()

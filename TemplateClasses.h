@@ -19,11 +19,15 @@
 #pragma once
 
 #include <queue>
+#include <mutex>
+#include <condition_variable>
 #include <string>
 
 template <class T> class CTQueue
 {
 public:
+	CTQueue() : q(), m(), c() {}
+
 	~CTQueue()
 	{
 		Clear();
@@ -31,53 +35,80 @@ public:
 
 	void Push(T item)
 	{
-		queue.push(item);
+		std::lock_guard<std::mutex> lock(m);
+		q.push(item);
+		c.notify_one();
 	}
 
-	T Pop()
+	T NoWaitPop()
 	{
-		T item = queue.front();
-		queue.pop();
+		std::unique_lock<std::mutex> lock(m);
+		if (q.empty())
+		{
+			T empty_item;
+			return empty_item;
+		}
+		else
+		{
+			T item = q.front();
+			q.pop();
+			return item;
+		}
+	}
+
+	T WaitPop()
+	{
+		std::unique_lock<std::mutex> lock(m);
+		while (q.empty())
+		{
+			c.wait(lock);
+		}
+		T item = q.front();
+		q.pop();
 		return item;
 	}
 
-	bool Empty()
+	bool IsEmpty()
 	{
-		return queue.empty();
+		std::unique_lock<std::mutex> lock(m);
+		return q.empty();
 	}
 
 	void Clear()
 	{
-		while (queue.size())
-			queue.pop();
+		std::unique_lock<std::mutex> lock(m);
+		while (!q.empty())
+			q.pop();
 	}
 
 private:
-	std::queue<T> queue;
+	std::queue<T> q;
+	mutable std::mutex m;
+	std::condition_variable c;
 };
 
-template <class T, class U, int N> class CTFrame
+template <class T, int N> class CTFrame
 {
 public:
 	CTFrame()
 	{
 		memset(data, 0, N * sizeof(T));
-		flag = 0;
+		flag = false;
 	}
 
 	CTFrame(const T *from)
 	{
 		memcpy(data, from, N * sizeof(T));
-		flag = 0;
+		flag = false;
 	}
 
-	CTFrame(const CTFrame<T, U, N> &from)
+	CTFrame(const CTFrame<T, N> &from)
 	{
 		memcpy(data, from.GetData(), N *sizeof(T));
 		flag = from.GetFlag();
 	}
 
-	CTFrame<T, U, N> &operator=(const CTFrame<T, U, N> &from)
+	CTFrame<T, N> &operator=(const CTFrame<T, N> &from)
 	{
 		memcpy(data, from.GetData(), N * sizeof(T));
 		flag = from.GetFlag();
@@ -89,7 +120,7 @@ public:
 		return data;
 	}
 
-	U GetFlag() const
+	bool GetFlag() const
 	{
 		return flag;
 	}
@@ -99,20 +130,20 @@ public:
 		return N;
 	}
 
-	void SetFlag(U s)
+	void SetFlag(bool s)
 	{
 		flag = s;
 	}
 
 private:
 	T data[N];
-	U flag;
+	bool flag;
 };
 
 // audio
-using CAudioFrame = CTFrame<short int, bool, 160>;
+using CAudioFrame = CTFrame<short int, 160>;
 using CAudioQueue = CTQueue<CAudioFrame>;
 
 // M17
-using CC2DataFrame = CTFrame<unsigned char, bool, 8>;
+using CC2DataFrame = CTFrame<unsigned char, 8>;
 using CC2DataQueue = CTQueue<CC2DataFrame>;

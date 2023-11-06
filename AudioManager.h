@@ -67,7 +67,6 @@ private:
 	std::atomic<unsigned short> m17_sid_in;
 	CAudioQueue audio_queue;
 	CC2DataQueue c2_queue;
-	std::mutex audio_mutex, data_mutex;
 	std::future<void> mic2audio_fut, audio2codec_fut, codec2gateway_fut, codec2audio_fut, play_audio_fut;
 	bool link_open;
 #ifdef USE44100
@@ -89,8 +88,6 @@ private:
 #endif
 
 	// methods
-	bool audio_is_empty();
-	bool codec_is_empty();
 	void mic2audio();
 	void audio2codec(const bool is_3200);
 	void codec2audio(const bool is_3200);
