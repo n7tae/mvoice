@@ -78,19 +78,23 @@ CMainWindow::CMainWindow() :
 CMainWindow::~CMainWindow()
 {
 #ifndef NO_DHT
-	// Export nodes to binary file
-	std::string path(CFGDIR);
-	path.append(exportNodeFilename);
-	std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
-	if (myfile.is_open())
+	// save the dht network state
+	auto exnodes = node.exportNodes();
+	if (exnodes.size() > 1)
 	{
-		auto exnodes = node.exportNodes();
-		std::cout << "Saving " << exnodes.size() << " nodes to " << path << std::endl;
-		msgpack::pack(myfile, exnodes);
-		myfile.close();
+		// Export nodes to binary file
+		std::string path(CFGDIR);
+		path.append(exportNodeFilename);
+		std::ofstream myfile(path, std::ios::binary | std::ios::trunc);
+		if (myfile.is_open())
+		{
+			std::cout << "Saving " << exnodes.size() << " nodes to " << path << std::endl;
+			msgpack::pack(myfile, exnodes);
+			myfile.close();
+		}
+		else
+			std::cerr << "Trouble opening " << path << std::endl;
 	}
-	else
-		std::cerr << "Trouble opening " << path << std::endl;
 
 	node.join();
 #endif
