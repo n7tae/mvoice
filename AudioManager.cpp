@@ -426,7 +426,7 @@ void CAudioManager::play_audio()
 #ifdef USE44100
 		short short_out[882];
 #endif
-		CAudioFrame frame(audio_queue.NoWaitPop());	// if the queue is empty, we get zeros (silence)
+		CAudioFrame frame(audio_queue.WaitPop());	// wait for a packet
 		last = frame.GetFlag();
 #ifdef USE44100
 		RSExpand.Short2Float(frame.GetData(), expand.data_in, expand.input_frames);
@@ -448,7 +448,7 @@ void CAudioManager::play_audio()
 #else
 		}  else if (rc != int(frames)) {
 #endif
-			std::cerr << "short write, write " << rc << " frames" << std::endl;
+			std::cerr << "short write, wrote " << rc << " frames" << std::endl;
 		}
 	} while (! last);
 

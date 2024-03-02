@@ -40,22 +40,6 @@ public:
 		c.notify_one();
 	}
 
-	T NoWaitPop()
-	{
-		std::unique_lock<std::mutex> lock(m);
-		if (q.empty())
-		{
-			T empty_item;
-			return empty_item;
-		}
-		else
-		{
-			T item = q.front();
-			q.pop();
-			return item;
-		}
-	}
-
 	T WaitPop()
 	{
 		std::unique_lock<std::mutex> lock(m);
