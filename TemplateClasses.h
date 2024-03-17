@@ -52,7 +52,7 @@ public:
 		return item;
 	}
 
-	bool IsEmpty()
+	bool IsEmpty() const
 	{
 		std::unique_lock<std::mutex> lock(m);
 		return q.empty();
