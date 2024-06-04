@@ -49,6 +49,14 @@ sudo make install
 
 Using the OpenDHT library, mvoice now joins a special digital voice, ham-radio DHT network to discover reflector and repeater destinations directly. For these target systems using the DHT, connection information is published and updated directly by the target and is available to mvoice in near-realtime. All the mvoice user needs to know is the callsign of the target.
 
+If you are using a new OS, like Debian 12 or Ubuntu 24, you may not have to build the OpenDHT support. Try:
+
+```
+sudo apt install libopendht-dev
+```
+
+If the description shows that this package was build with `C++17` or newer, go ahead and let it install, otherwise you should build your own version of the OpenDHT library.
+
 ### Building and installing the OpenDHT support
 
 OpenDHT is available [here](https://github./com/savoirfairelinux/opendht.git). Building and installing instructions are in the [OpenDHT Wiki](https://github.com/savoirfairelinux/opendht/wiki/Build-the-library). Pascal support and proxy-server support (RESTinio) is not required for mvoice and so can be considered optional. With this in mind, this should work on Debian/Ubuntu-based systems:

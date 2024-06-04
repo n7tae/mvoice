@@ -36,7 +36,7 @@ void CConfigure::SetDefaultValues()
 	data.sAudioIn.assign("default");
 	data.sAudioOut.assign("default");
 #ifndef NO_DHT
-	data.sBootstrap.assign("m17-usa.openquad.net");
+	data.sBootstrap.assign("xrf757.openquad.net");
 #endif
 }
 
