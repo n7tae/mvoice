@@ -635,18 +635,23 @@ void CMainWindow::UpdateGUI()
 	else
 	{
 		std::string dest(pDestCallsignInput->value());
-		if (ELinkState::linked != gateM17.GetLinkState()) {
-			pDisconnectButton->deactivate();
-			if (std::regex_match(dest, M17RefRegEx) && bDestIP && bDestPort)
-				pConnectButton->activate();
-			else
-				pConnectButton->deactivate();
-		} else {
-			pConnectButton->deactivate();
-			if (bDestIP && bDestPort)
-				pDisconnectButton->activate();
-			else
+		switch (gateM17.GetLinkState())
+		{
+			case ELinkState::unlinked:
 				pDisconnectButton->deactivate();
+				if (std::regex_match(dest, M17RefRegEx) && bDestIP && bDestPort)
+					pConnectButton->activate();
+				else
+					pConnectButton->deactivate();
+				break;
+			case ELinkState::linking:
+				pDisconnectButton->deactivate();
+				pConnectButton->deactivate();
+				break;
+			case ELinkState::linked:
+				pDisconnectButton->activate();
+				pConnectButton->deactivate();
+				break;
 		}
 		pPTTButton->UpdateLabel();
 		pEchoTestButton->UpdateLabel();

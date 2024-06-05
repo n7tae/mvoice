@@ -175,7 +175,18 @@ void CM17Gateway::Process()
 	while (keep_running)
 	{
 		if (ELinkState::linked == mlink.state)
+		{
 			LinkCheck();
+		}
+		else if (ELinkState::linking == mlink.state)
+		{
+			if (linkingTime.time() >= 5.0)
+			{
+				SendLog("Link request to %s timeout.\n", mlink.cs.GetCS().c_str());
+				mlink.state = ELinkState::unlinked;
+			}
+		}
+
 		if (currentStream.header.streamid && currentStream.lastPacketTime.time() >= 2.0)
 		{
 			StreamTimeout(); // current stream has timed out
