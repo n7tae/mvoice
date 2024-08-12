@@ -312,7 +312,13 @@ bool CMainWindow::Init()
 
 #ifndef NO_DHT
 	// start the dht instance
-	node.run(17171, dht::crypto::generateIdentity(cfgdata.sM17SourceCallsign), true, 59973);
+	std::string idstr(cfgdata.sM17SourceCallsign);
+	if (idstr.empty()) {
+		idstr.assign("MyNode");
+		idstr.append(std::to_string(getpid()));
+		std::cout << "Using " << idstr << " for identity" << std::endl;
+	}
+	node.run(17171, dht::crypto::generateIdentity(idstr), true, 59973);
 
 	// bootstrap the DHT from either saved nodes from a previous run,
 	// or from the configured node
