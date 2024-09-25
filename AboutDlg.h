@@ -19,6 +19,7 @@
  #pragma once
 
  #include "FLTK-GUI.h"
+ #include <libintl.h>
 
  class CAboutDlg
  {
