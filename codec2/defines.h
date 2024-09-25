@@ -124,4 +124,9 @@ extern const struct lsp_codebook lsp_cb[];
 extern const struct lsp_codebook lsp_cbd[];
 extern const struct lsp_codebook ge_cb[];
 
+inline float exp10f(float val)
+{
+	return pow(10.0, val);
+}
+
 #endif
