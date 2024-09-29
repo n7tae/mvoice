@@ -21,6 +21,10 @@
 #include <stdlib.h>
 #include <sys/un.h>
 
+#if !defined(__linux__)
+#define USE_NAMED_SOCKET
+#endif
+
 class CUnixDgramReader
 {
 public:
@@ -32,6 +36,9 @@ public:
 	int GetFD();
 private:
 	int fd;
+#ifdef USE_NAMED_SOCKET
+	std::string socket_path;
+#endif
 };
 
 class CUnixDgramWriter

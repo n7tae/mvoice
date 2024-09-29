@@ -29,6 +29,18 @@
 
 #include "UnixDgramSocket.h"
 
+#ifdef USE_NAMED_SOCKET
+#define SocketNamePtr(x) (x)
+#define StoreSocketName(x, n) snprintf(SocketNamePtr(x), sizeof(x), "/tmp/.mvoice-%s.sock", (n))
+#define SaveSocketPath(x) {socket_path = (x);}
+#define RemoveSocketPath() remove(socket_path.c_str())
+#else
+#define SocketNamePtr(x) ((x) + 1)
+#define StoreSocketName(x, n) strncpy(SocketNamePtr(x), (n), sizeof(x) - 2)
+#define SaveSocketPath(x) /* */
+#define RemoveSocketPath() /* */
+#endif
+
 CUnixDgramReader::CUnixDgramReader() : fd(-1) {}
 
 CUnixDgramReader::~CUnixDgramReader()
@@ -48,7 +60,8 @@ bool CUnixDgramReader::Open(const char *path)	// returns true on failure
 	struct sockaddr_un addr;
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path+1, path, sizeof(addr.sun_path)-2);
+	StoreSocketName(addr.sun_path, path);
+	SaveSocketPath(addr.sun_path);
 
 	int rval = bind(fd, (struct sockaddr *)&addr, sizeof(addr));
 	if (rval < 0) {
@@ -75,6 +88,7 @@ void CUnixDgramReader::Close()
 	if (fd >= 0)
 		close(fd);
 	fd = -1;
+	RemoveSocketPath();
 }
 
 int CUnixDgramReader::GetFD()
@@ -91,7 +105,7 @@ void CUnixDgramWriter::SetUp(const char *path)	// returns true on failure
 	// setup the socket address
 	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
-	strncpy(addr.sun_path+1, path, sizeof(addr.sun_path)-2);
+	StoreSocketName(addr.sun_path, path);
 }
 
 ssize_t CUnixDgramWriter::Write(const void *buf, size_t size)
@@ -99,13 +113,13 @@ ssize_t CUnixDgramWriter::Write(const void *buf, size_t size)
 	// open the socket
 	int fd = socket(AF_UNIX, SOCK_DGRAM, 0);
 	if (fd < 0) {
-		fprintf(stderr, "Failed to open socket %s : %s\n", addr.sun_path+1, strerror(errno));
+		fprintf(stderr, "Failed to open socket %s : %s\n", SocketNamePtr(addr.sun_path), strerror(errno));
 		return -1;
 	}
 	// connect to the receiver
 	int rval = connect(fd, (struct sockaddr *)&addr, sizeof(addr));
 	if (rval < 0) {
-		fprintf(stderr, "Failed to connect to socket %s : %s\n", addr.sun_path+1, strerror(errno));
+		fprintf(stderr, "Failed to connect to socket %s : %s\n", SocketNamePtr(addr.sun_path), strerror(errno));
 		close(fd);
 		return -1;
 	}
@@ -117,11 +131,11 @@ ssize_t CUnixDgramWriter::Write(const void *buf, size_t size)
 		if (written == (ssize_t)size)
 			break;
 		else if (written < 0)
-			fprintf(stderr, "ERROR: faied to write to %s : %s\n", addr.sun_path+1, strerror(errno));
+			fprintf(stderr, "ERROR: faied to write to %s : %s\n", SocketNamePtr(addr.sun_path), strerror(errno));
 		else if (written == 0)
-			fprintf(stderr, "Warning: zero bytes written to %s\n", addr.sun_path+1);
+			fprintf(stderr, "Warning: zero bytes written to %s\n", SocketNamePtr(addr.sun_path));
 		else if (written != (ssize_t)size) {
-			fprintf(stderr, "ERROR: only %d of %d bytes written to %s\n", (int)written, (int)size, addr.sun_path+1);
+			fprintf(stderr, "ERROR: only %d of %d bytes written to %s\n", (int)written, (int)size, SocketNamePtr(addr.sun_path));
 			break;
 		}
 		if (++count >= 100) {
