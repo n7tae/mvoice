@@ -88,17 +88,25 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	else
 		d.eNetType = EInternetType::dualstack;
 	// audio
-	const std::string in(pAudioInputChoice->text());
-	auto itin = AudioInMap.find(in);
-	if (AudioInMap.end() != itin)
+	const char *p_in = pAudioInputChoice->text();
+	if (p_in != NULL)
 	{
-		d.sAudioIn.assign(itin->second.first);
+		const std::string in(p_in);
+		auto itin = AudioInMap.find(in);
+		if (AudioInMap.end() != itin)
+		{
+			d.sAudioIn.assign(itin->second.first);
+		}
 	}
-	const std::string out(pAudioOutputChoice->text());
-	auto itout = AudioOutMap.find(out);
-	if (AudioOutMap.end() != itout)
+	const char *p_out = pAudioOutputChoice->text();
+	if (p_out != NULL)
 	{
-		d.sAudioOut.assign(itout->second.first);
+		const std::string out(p_out);
+		auto itout = AudioOutMap.find(out);
+		if (AudioOutMap.end() != itout)
+		{
+			d.sAudioOut.assign(itout->second.first);
+		}
 	}
 #ifndef NO_DHT
 	d.sBootstrap.assign(pBootstrapInput->value());
@@ -296,11 +304,17 @@ void CSettingsDlg::AudioInputChoiceCB(Fl_Widget *, void *This)
 
 void CSettingsDlg::AudioInputChoice()
 {
-	const std::string selected(pAudioInputChoice->text());
+	const char *p_in = pAudioInputChoice->text();
+	if (p_in == NULL)
+	{
+		pAudioInputDescBox->label(NULL);
+		return;
+	}
+	const std::string selected(p_in);
 	auto it = AudioInMap.find(selected);
 	if (AudioInMap.end() == it)
 	{
-		data.sAudioIn.assign("ERROR");
+		data.sAudioIn.assign(_("ERROR"));
 		pAudioInputDescBox->label(std::string(selected+notfoundstr).c_str());
 
 	}
@@ -318,7 +332,13 @@ void CSettingsDlg::AudioOutputChoiceCB(Fl_Widget *, void *This)
 
 void CSettingsDlg::AudioOutputChoice()
 {
-	const std::string selected(pAudioOutputChoice->text());
+	const char *p_out = pAudioOutputChoice->text();
+	if (p_out == NULL)
+	{
+		pAudioOutputDescBox->label(NULL);
+		return;
+	}
+	const std::string selected(p_out);
 	auto it = AudioOutMap.find(selected);
 	if (AudioOutMap.end() == it)
 	{
