@@ -148,7 +148,7 @@ void CAudioManager::QuickKey(const std::string &d, const std::string &s)
 	memcpy(frame.payload,     quiet, 8);
 	memcpy(frame.payload + 8, quiet, 8);
 	for (uint16_t i=0; i<5; i++) {
-		frame.SetFrameNumber((i < 4) ? i : i & 0x8000u);
+		frame.SetFrameNumber((i < 4) ? i : i | 0x8000u);
 		frame.SetCRC(crc.CalcCRC(frame));
 		AM2M17.Write(frame.magic, sizeof(SM17Frame));
 	}

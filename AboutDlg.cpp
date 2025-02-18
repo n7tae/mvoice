@@ -23,7 +23,7 @@
 
 #define _(STRING) gettext(STRING)
 
-#define VERSION "1.1.4"
+#define VERSION "1.1.5"
 
 CAboutDlg::CAboutDlg() {}
 
