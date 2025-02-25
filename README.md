@@ -167,6 +167,8 @@ Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press a
 
 3) **Quick Key** is a single press button that will send a 200 millisecond transmission. This is useful when trying to get the attention of a Net Control Operator when your are participating in a Net. It could also be useful if you are trying to do a direct callsign route when you are behind a firewall you can't configure.
 
+Starting with Version 1.2.0, *mvoice* can receive M17 Packet Mode packets. SMS type data (null-terminated UTF-8 encoded strings) will be displayed in the main window text area after reporting the source callsign of the sender. Other packet types will be dumped in the shell where *mvoice* was launched. If the packet has either a bad LSF (link setup frame), or payload CRC, that will be reported in the main window text area. In a later release, *mvoice* will be able to send text messages.
+
 ## Language support
 
 Thanks to IU5HKX, *mvoice* is now available in Italian.

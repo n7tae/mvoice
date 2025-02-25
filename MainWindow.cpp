@@ -604,8 +604,8 @@ void CMainWindow::ReadThread()
 		{
 			if (FD_ISSET(gatefd, &fdset))
 			{
-				SM17Frame frame;
-				M172AM.Read(frame.magic, sizeof(SM17Frame));
+				SSMFrame frame;
+				M172AM.Read(frame.magic, sizeof(SSMFrame));
 				if (0 == memcmp(frame.magic, "M17 ", 4))
 					AudioManager.M17_2AudioMgr(frame);
 			}

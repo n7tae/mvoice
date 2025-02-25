@@ -47,7 +47,7 @@ using SM17Link = struct sm17link_tag
 using SStream = struct stream_tag
 {
 	CTimer lastPacketTime;
-	SM17Frame header;
+	SSMFrame header;
 };
 
 class CM17Gateway : public CBase
@@ -85,6 +85,7 @@ private:
 	void PlayAudioNotifyMessage(const char *msg);
 	void Send(const void *buf, size_t size, const CSockAddress &addr) const;
 	bool ProcessFrame(const uint8_t *buf);
+	bool ProcessPacket(const uint8_t *buf, int length);
 	bool ProcessAM(const uint8_t *buf);
 	void SendLinkRequest(const CCallsign &ref);
 };

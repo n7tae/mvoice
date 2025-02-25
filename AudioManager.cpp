@@ -136,21 +136,21 @@ void CAudioManager::audio2codec(const bool is_3200)
 void CAudioManager::QuickKey(const std::string &d, const std::string &s)
 {
 	hot_mic = true;
-	SM17Frame frame;
+	SSMFrame frame;
 	CCallsign dest(d), sour(s);
 	memcpy(frame.magic, "M17 ", 4);
 	frame.streamid = random.NewStreamID();
-	dest.CodeOut(frame.lich.addr_dst);
-	sour.CodeOut(frame.lich.addr_src);
+	dest.CodeOut(frame.lsd.addr_dst);
+	sour.CodeOut(frame.lsd.addr_src);
 	frame.SetFrameType(0x5u);
-	memset(frame.lich.nonce, 0, 14);
+	memset(frame.lsd.metadata, 0, 14);
 	const uint8_t quiet[] = { 0x01u, 0x00u, 0x09u, 0x43u, 0x9cu, 0xe4u, 0x21u, 0x08u };
 	memcpy(frame.payload,     quiet, 8);
 	memcpy(frame.payload + 8, quiet, 8);
 	for (uint16_t i=0; i<5; i++) {
 		frame.SetFrameNumber((i < 4) ? i : i | 0x8000u);
 		frame.SetCRC(crc.CalcCRC(frame));
-		AM2M17.Write(frame.magic, sizeof(SM17Frame));
+		AM2M17.Write(frame.magic, sizeof(SSMFrame));
 	}
 	hot_mic = false;
 }
@@ -161,13 +161,13 @@ void CAudioManager::codec2gateway(const std::string &dest, const std::string &so
 	CCallsign source(sour);
 
 	// make most of the M17 IP frame
-	// TODO: nonce and encryption and more TODOs mentioned later...
-	SM17Frame ipframe;
+	// TODO: metadata and encryption and more TODOs mentioned later...
+	SSMFrame ipframe;
 	memcpy(ipframe.magic, "M17 ", 4);
 	ipframe.streamid = random.NewStreamID(); // no need to htons because it's just a random id
 	ipframe.SetFrameType(voiceonly ? 0x5U : 0x7U);
-	destination.CodeOut(ipframe.lich.addr_dst);
-	source.CodeOut(ipframe.lich.addr_src);
+	destination.CodeOut(ipframe.lsd.addr_dst);
+	source.CodeOut(ipframe.lsd.addr_src);
 
 	unsigned int count = 0;
 	bool last;
@@ -198,7 +198,7 @@ void CAudioManager::codec2gateway(const std::string &dest, const std::string &so
 
 		// TODO: calculate crc
 
-		AM2M17.Write(ipframe.magic, sizeof(SM17Frame));
+		AM2M17.Write(ipframe.magic, sizeof(SSMFrame));
 	} while (! last);
 }
 
@@ -333,7 +333,7 @@ void CAudioManager::PlayEchoDataThread()
 	play_audio_fut.get();
 }
 
-void CAudioManager::M17_2AudioMgr(const SM17Frame &m17)
+void CAudioManager::M17_2AudioMgr(const SSMFrame &m17)
 {
 	static bool is_3200;
 	if (! play_file) {
@@ -472,20 +472,20 @@ void CAudioManager::KeyOff()
 void CAudioManager::Link(const std::string &linkcmd)
 {
 	if (0 == linkcmd.compare(0, 3, "M17")) { //it's an M17 link/unlink command
-		SM17Frame frame;
+		SSMFrame frame;
 		if ('L' == linkcmd.at(3)) {
 			if (13 == linkcmd.size()) {
 				std::string sDest(linkcmd.substr(4));
 				sDest[7] = 'L';
 				CCallsign dest(sDest);
-				dest.CodeOut(frame.lich.addr_dst);
-				//printf("dest=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), frame.lich.addr_dst[0], frame.lich.addr_dst[1], frame.lich.addr_dst[2], frame.lich.addr_dst[3], frame.lich.addr_dst[4], frame.lich.addr_dst[5]);
-				AM2M17.Write(frame.magic, sizeof(SM17Frame));
+				dest.CodeOut(frame.lsd.addr_dst);
+				//printf("dest=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), frame.lsd.addr_dst[0], frame.lsd.addr_dst[1], frame.lsd.addr_dst[2], frame.lsd.addr_dst[3], frame.lsd.addr_dst[4], frame.lsd.addr_dst[5]);
+				AM2M17.Write(frame.magic, sizeof(SSMFrame));
 			}
 		} else if ('U' == linkcmd.at(3)) {
 			CCallsign dest("U");
-			dest.CodeOut(frame.lich.addr_dst);
-			AM2M17.Write(frame.magic, sizeof(SM17Frame));
+			dest.CodeOut(frame.lsd.addr_dst);
+			AM2M17.Write(frame.magic, sizeof(SSMFrame));
 		}
 	}
 }

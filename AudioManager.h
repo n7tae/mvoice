@@ -34,7 +34,7 @@
 #include "Resampler.h"
 #endif
 
-using M17PacketQueue = CTQueue<SM17Frame>;
+using M17PacketQueue = CTQueue<SSMFrame>;
 using SVolStats = struct volstats_tag
 {
 	int count, clip;
@@ -53,7 +53,7 @@ public:
 
 	void RecordMicThread(E_PTT_Type for_who, const std::string &urcall);
 	void PlayEchoDataThread();	// for Echo
-	void M17_2AudioMgr(const SM17Frame &m17);
+	void M17_2AudioMgr(const SSMFrame &m17);
 	void KeyOff();
 	void QuickKey(const std::string &dest, const std::string &sour);
 	void Link(const std::string &linkcmd);

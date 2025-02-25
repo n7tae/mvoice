@@ -62,14 +62,26 @@ CCRC::CCRC()
 	}
 }
 
-uint16_t CCRC::CalcCRC(const SM17Frame &frame) const
+uint16_t CCRC::CalcCRC(const SSMFrame &frame) const
 {
 	uint16_t crc = CRC_START_16;
 	const uint8_t *input_str = frame.magic;
 
-	for (size_t a=0; a<sizeof(SM17Frame)-2; a++)
+	for (size_t a=0; a<sizeof(SSMFrame)-2; a++)
 	{
 		crc = (crc << 8) ^ crc_tab16[ ((crc >> 8) ^ uint16_t(input_str[a])) & 0x00FF ];
+	}
+
+	return crc;
+}
+
+uint16_t CCRC::CalcCRC(const uint8_t *buf, size_t size) const
+{
+	uint16_t crc = CRC_START_16;
+
+	for (size_t a=0; a<size; a++)
+	{
+		crc = (crc << 8) ^ crc_tab16[ ((crc >> 8) ^ uint16_t(buf[a])) & 0x00FF ];
 	}
 
 	return crc;

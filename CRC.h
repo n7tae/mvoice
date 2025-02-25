@@ -42,7 +42,8 @@ class CCRC
 {
 public:
 	CCRC();
-	uint16_t CalcCRC(const SM17Frame &frame) const;
+	uint16_t CalcCRC(const SSMFrame &frame) const;
+	uint16_t CalcCRC(const uint8_t *data, size_t size) const;
 
 private:
 	uint16_t crc_tab16[256];
