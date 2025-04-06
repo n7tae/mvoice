@@ -1039,7 +1039,7 @@ static void ReadM17Json()
 	path.append("/m17refl.json");
 	std::ofstream ofs(path);
 	if (ofs.is_open()) {
-		const std::string url("https://dvref.com/mrefd/json/?format=json");
+		const std::string url("https://dvref.com/mrefd/reflectors/");
 		if(CURLE_OK == curl_read(url, ofs)) {
 			std::cout << url << " copied to " << path << std::endl;
 		} else {
