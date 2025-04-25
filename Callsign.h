@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020 by Thomas A. Early N7TAE
+ *   Copyright (c) 2025 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -31,11 +31,14 @@ public:
 	void CSIn(const std::string &cs);
 	void CodeIn(const uint8_t *code);
 	const std::string GetCS(unsigned len = 0) const;
-	void CodeOut(uint8_t *out) const { memcpy(out, code, 6); };
+	void CodeOut(uint8_t *out) const;
+	uint64_t Hash() const { return coded; }
 	bool operator==(const CCallsign &rhs) const;
+	bool operator!=(const CCallsign &rhs) const;
 	char GetModule(void) const;
-
+	void SetModule(char m);
+	friend std::ostream &operator<<(std::ostream &stream, const CCallsign &call);
 private:
-	uint8_t code[6];
+	uint64_t coded;
 	char cs[10];
 };
