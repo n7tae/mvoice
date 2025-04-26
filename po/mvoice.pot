@@ -43,7 +43,7 @@ msgid "Delete"
 msgstr ""
 
 #: ../MainWindow.cpp:112 ../MainWindow.cpp:119 ../MainWindow.cpp:198
-msgid "Destination"
+msgid "Target"
 msgstr ""
 
 #: ../MainWindow.cpp:170
@@ -60,7 +60,7 @@ msgid "About..."
 msgstr ""
 
 #: ../MainWindow.cpp:210
-msgid "Destination Callsign:"
+msgid "Target Callsign:"
 msgstr ""
 
 #: ../MainWindow.cpp:211

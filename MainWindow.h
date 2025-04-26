@@ -73,8 +73,9 @@ private:
 	Fl_Double_Window *pWin;
 	CTransmitButton *pPTTButton, *pEchoTestButton;
 	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
-	Fl_Input *pDestCallsignInput, *pDestIPInput;
-	Fl_Int_Input *pDestPortInput;
+	Fl_Input *pTargetCSInput, *pTargetIpInput;
+	Fl_Input *pDSTCallsignInput;
+	Fl_Int_Input *pTargetPortInput;
 	Fl_Group *pModuleGroup;
 	Fl_Radio_Round_Button *pModuleRadioButton[26];
 	Fl_Menu_Bar *pMenuBar;
@@ -87,9 +88,9 @@ private:
 	std::mutex logmux;
 
 	// helpers
-	void BuildDestMenuButton();
-	void FixDestActionButton();
-	void SetDestActionButton(const bool sensitive, const char *label);
+	void BuildTargetMenuButton();
+	void FixTargetMenuButton();
+	void SetTargetMenuButton(const bool sensitive, const char *label);
 	void TransmitterButtonControl();
 	std::future<void> futM17;
 	std::future<void> futReadThread;
@@ -101,8 +102,8 @@ private:
 	void CloseAll();
 	void insertLogText(const char *line);
 	void AudioSummary(const char *title);
-	char GetDestinationModule();
-	void SetDestinationAddress(std::string &cs);
+	char GetTargetModule();
+	void SetTargetAddress(std::string &cs);
 #ifndef NO_DHT
 	void Get(const std::string &cs);
 #endif
@@ -115,10 +116,11 @@ private:
 	void EchoButton();
 	void PTTButton();
 	void QuickKeyButton();
-	void DestCallsignInput();
-	void DestIPInput();
-	void DestPortInput();
-	void DestMenuButton();
+	void TargetCSInput();
+	void TargetIPInput();
+	void DestinationCSInput();
+	void TargetPortInput();
+	void TargetMenuButton();
 	void ActionButton();
 	void LinkButton();
 	void UnlinkButton();
@@ -130,15 +132,16 @@ private:
 	static void EchoButtonCB(Fl_Widget *p, void *v);
 	static void PTTButtonCB(Fl_Widget *p, void *v);
 	static void QuickKeyButttonCB(Fl_Widget *, void *);
-	static void DestCallsignInputCB(Fl_Widget *p, void *v);
-	static void DestIPInputCB(Fl_Widget *p, void *v);
-	static void DestPortInputCB(Fl_Widget *p, void *v);
-	static void DestMenuButtonCB(Fl_Widget *p, void *v);
+	static void TargetCSInputCB(Fl_Widget *p, void *v);
+	static void TargetIPInputCB(Fl_Widget *p, void *v);
+	static void TargetPortInputCB(Fl_Widget *p, void *v);
+	static void TargetMenuButtonCB(Fl_Widget *p, void *v);
+	static void DestinationCSInputCB(Fl_Widget *p, void *v);
 	static void ActionButtonCB(Fl_Widget *p, void *v);
 	static void LinkButtonCB(Fl_Widget *p, void *v);
 	static void UnlinkButtonCB(Fl_Widget *p, void *v);
 	static void DashboardButtonCB(Fl_Widget *p, void *v);
 
-	bool bDestCS, bDestIP, bDestPort, bTransOK;
+	bool bDestCS, bTargetCS, bTargetIP, bTargetPort, bTransOK;
 	std::atomic<bool> keep_running;
 };

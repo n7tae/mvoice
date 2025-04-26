@@ -34,7 +34,7 @@ msgid "Delete"
 msgstr "Elimina"
 
 #: MainWindow.cpp:112 MainWindow.cpp:119 MainWindow.cpp:198
-msgid "Destination"
+msgid "Target"
 msgstr "Destinazione"
 
 #: MainWindow.cpp:170
@@ -51,7 +51,7 @@ msgid "About..."
 msgstr "Informazioni..."
 
 #: MainWindow.cpp:210
-msgid "Destination Callsign:"
+msgid "Target Callsign:"
 msgstr "Nominativo destinatario:"
 
 #: MainWindow.cpp:211

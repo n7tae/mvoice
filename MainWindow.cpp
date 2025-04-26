@@ -62,9 +62,10 @@ CMainWindow::CMainWindow() :
 	exportNodeFilename("/exNodes.bin"),
 #endif
 	pWin(nullptr),
+	bTargetCS(false),
+	bTargetIP(false),
+	bTargetPort(false),
 	bDestCS(false),
-	bDestIP(false),
-	bDestPort(false),
 	bTransOK(true)
 {
 	cfg.CopyTo(cfgdata);
@@ -117,29 +118,29 @@ void CMainWindow::RunM17()
 	std::cout << "M17 Gateway has stopped." << std::endl;
 }
 
-void CMainWindow::BuildDestMenuButton()
+void CMainWindow::BuildTargetMenuButton()
 {
-	auto index = pMenuBar->find_index(_("Destination"));
+	auto index = pMenuBar->find_index(_("Target"));
 	if (index >= 0)
 	{
 		pMenuBar->clear_submenu(index);
 		for (const auto &cs : routeMap.GetKeys()) {
 			const auto host = routeMap.Find(cs);
 			if (host) {
-				std::string name(_("Destination"));
+				std::string name(_("Target"));
 				name.append("/");
 				name.append(cs);
 				switch (cfgdata.eNetType) {
 					case EInternetType::ipv6only:
 						if (! host->ip6addr.empty())
-							pMenuBar->add(name.c_str(), 0, &CMainWindow::DestMenuButtonCB, this);
+							pMenuBar->add(name.c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
 						break;
 					case EInternetType::ipv4only:
 						if (! host->ip4addr.empty())
-							pMenuBar->add(name.c_str(), 0, &CMainWindow::DestMenuButtonCB, this);
+							pMenuBar->add(name.c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
 						break;
 					default:
-						pMenuBar->add(name.c_str(), 0, &CMainWindow::DestMenuButtonCB, this);
+						pMenuBar->add(name.c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
 						break;
 				}
 			}
@@ -152,7 +153,7 @@ void CMainWindow::SetState()
 	if (cfg.IsOkay() && false == gateM17.keep_running)
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 
-	BuildDestMenuButton();
+	BuildTargetMenuButton();
 }
 
 void CMainWindow::CloseAll()
@@ -191,7 +192,7 @@ bool CMainWindow::Init()
 
 	pMenuBar = new Fl_Menu_Bar(0, 0, 900, 30);
 	pMenuBar->labelsize(16);
-	pMenuBar->add(_("Destination"), 0, 0, 0, FL_SUBMENU);
+	pMenuBar->add(_("Target"), 0, 0, 0, FL_SUBMENU);
 	pMenuBar->add(_("Settings..."), 0, &CMainWindow::ShowSettingsDialogCB, this, 0);
 	pMenuBar->add(_("About..."),    0, &CMainWindow::ShowAboutDialogCB,    this, 0);
 
@@ -203,31 +204,31 @@ bool CMainWindow::Init()
 
 	pWin->resizable(pTextDisplay);
 
-	pDestCallsignInput = new Fl_Input(195, 360, 130, 30, _("Destination Callsign:"));
-	pDestCallsignInput->tooltip(_("A reflector or user callsign"));
-	pDestCallsignInput->color(FL_RED);
-	pDestCallsignInput->labelsize(16);
-	pDestCallsignInput->textsize(16);
-	pDestCallsignInput->when(FL_WHEN_CHANGED);
-	pDestCallsignInput->callback(&CMainWindow::DestCallsignInputCB, this);
+	pTargetCSInput = new Fl_Input(160, 360, 130, 30, _("Target Callsign:"));
+	pTargetCSInput->tooltip(_("A reflector or user callsign"));
+	pTargetCSInput->color(FL_RED);
+	pTargetCSInput->labelsize(16);
+	pTargetCSInput->textsize(16);
+	pTargetCSInput->when(FL_WHEN_CHANGED);
+	pTargetCSInput->callback(&CMainWindow::TargetCSInputCB, this);
 
-	pDestIPInput = new Fl_Input(360, 360, 380, 30, _("IP:"));
-	pDestIPInput->tooltip(_("The IP of the reflector or user"));
-	pDestIPInput->color(FL_RED);
-	pDestIPInput->labelsize(16);
-	pDestIPInput->textsize(16);
-	pDestIPInput->when(FL_WHEN_CHANGED);
-	pDestIPInput->callback(&CMainWindow::DestIPInputCB, this);
+	pTargetIpInput = new Fl_Input(340, 360, 380, 30, _("IP:"));
+	pTargetIpInput->tooltip(_("The IP of the reflector or user"));
+	pTargetIpInput->color(FL_RED);
+	pTargetIpInput->labelsize(16);
+	pTargetIpInput->textsize(16);
+	pTargetIpInput->when(FL_WHEN_CHANGED);
+	pTargetIpInput->callback(&CMainWindow::TargetIPInputCB, this);
 
-	pDestPortInput = new Fl_Int_Input(790, 360, 80, 30, _("Port:"));
-	pDestPortInput->tooltip(_("The comm port of the reflector or user"));
-	pDestPortInput->color(FL_RED);
-	pDestPortInput->labelsize(16);
-	pDestPortInput->textsize(16);
-	pDestPortInput->when(FL_WHEN_CHANGED);
-	pDestPortInput->callback(&CMainWindow::DestPortInputCB, this);
+	pTargetPortInput = new Fl_Int_Input(790, 360, 80, 30, _("Port:"));
+	pTargetPortInput->tooltip(_("The comm port of the reflector or user"));
+	pTargetPortInput->color(FL_RED);
+	pTargetPortInput->labelsize(16);
+	pTargetPortInput->textsize(16);
+	pTargetPortInput->when(FL_WHEN_CHANGED);
+	pTargetPortInput->callback(&CMainWindow::TargetPortInputCB, this);
 
-	pModuleGroup = new Fl_Group(170, 400, 560, 60, _("Module:"));
+	pModuleGroup = new Fl_Group(140, 400, 560, 64, _("Module:"));
 	pModuleGroup->tooltip(_("Select a module for the reflector or repeater"));
 	pModuleGroup->labelsize(16);
 	pModuleGroup->align(FL_ALIGN_LEFT);
@@ -239,36 +240,45 @@ bool CMainWindow::Init()
 		for (int x=0; x<13; x++)
 		{
 			const int i = 13 * y + x;
-			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*42+177, y*30+402, 40, 25, modlabel[i]);
+			pModuleRadioButton[i] = new Fl_Radio_Round_Button(x*42+147, y*31+403, 40, 25, modlabel[i]);
 			pModuleRadioButton[i]->labelsize(16);
 		}
 	}
 	pModuleGroup->end();
 	pModuleRadioButton[0]->setonly();
 
-	pActionButton = new Fl_Button(50, 475, 100, 30, _("Action"));
-	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
-	pActionButton->labelsize(16);
-	pActionButton->deactivate();
-	pActionButton->callback(&CMainWindow::ActionButtonCB, this);
-
-	pDashboardButton = new Fl_Button(690, 475, 160, 30, _("Open Dashboard"));
-	pDashboardButton->tooltip(_("Open a reflector dashboard, if available"));
-	pDashboardButton->labelsize(16);
-	pDashboardButton->deactivate();
-	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
-
-	pConnectButton = new Fl_Button(338, 475, 100, 30, _("Connect"));
+	pConnectButton = new Fl_Button(740, 400, 100, 30, _("Connect"));
 	pConnectButton->tooltip(_("Connect to an M17 Reflector"));
 	pConnectButton->labelsize(16);
 	pConnectButton->deactivate();
 	pConnectButton->callback(&CMainWindow::LinkButtonCB, this);
 
-	pDisconnectButton = new Fl_Button(455, 475, 100, 30, _("Disconnect"));
+	pDisconnectButton = new Fl_Button(740, 434, 100, 30, _("Disconnect"));
 	pDisconnectButton->tooltip(_("Disconnect from an M17 reflector"));
 	pDisconnectButton->labelsize(16);
 	pDisconnectButton->deactivate();
 	pDisconnectButton->callback(&CMainWindow::UnlinkButtonCB, this);
+
+	pActionButton = new Fl_Button(50, 478, 100, 30, _("Action"));
+	pActionButton->tooltip(_("Update or delete an existing contact, or save a new contact"));
+	pActionButton->labelsize(16);
+	pActionButton->deactivate();
+	pActionButton->callback(&CMainWindow::ActionButtonCB, this);
+
+	pDSTCallsignInput = new Fl_Input(400, 478, 130, 30, _("Destination Callsign:"));
+	pDSTCallsignInput->tooltip(_("A destination callsign"));
+	pDSTCallsignInput->color(FL_RED);
+	pDSTCallsignInput->labelsize(16);
+	pDSTCallsignInput->textsize(16);
+	pDSTCallsignInput->when(FL_WHEN_CHANGED);
+	pDSTCallsignInput->callback(&CMainWindow::DestinationCSInputCB, this);
+	pDSTCallsignInput->value("@ALL");
+
+	pDashboardButton = new Fl_Button(690, 478, 160, 30, _("Open Dashboard"));
+	pDashboardButton->tooltip(_("Open a reflector dashboard, if available"));
+	pDashboardButton->labelsize(16);
+	pDashboardButton->deactivate();
+	pDashboardButton->callback(&CMainWindow::DashboardButtonCB, this);
 
 	pEchoTestButton = new CTransmitButton(50, 540, 144, 40, _("Echo Test"));
 	pEchoTestButton->tooltip(_("Push to record a test that will be played back"));
@@ -416,31 +426,31 @@ void CMainWindow::NewSettings(CFGDATA *newdata)
 	SetState();
 }
 
-void CMainWindow::DestMenuButtonCB(Fl_Widget *, void *This)
+void CMainWindow::TargetMenuButtonCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->DestMenuButton();
+	((CMainWindow *)This)->TargetMenuButton();
 }
 
-void CMainWindow::DestMenuButton()
+void CMainWindow::TargetMenuButton()
 {
 	auto item = pMenuBar->mvalue();
 	if (item)
 	{
 		auto cs = item->label();
-		pDestCallsignInput->value(cs);
-		DestCallsignInput();
+		pTargetCSInput->value(cs);
+		TargetCSInput();
 		auto host = routeMap.Find(cs);
 		if (host) {
 			// first the IP
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
 				// if we're not in IPv4-only mode && there is an IPv6 address for this host
-				pDestIPInput->value(host->ip6addr.c_str());
+				pTargetIpInput->value(host->ip6addr.c_str());
 			else
-				pDestIPInput->value(host->ip4addr.c_str());
-			DestIPInput();
+				pTargetIpInput->value(host->ip4addr.c_str());
+			TargetIPInput();
 			// then the port
-			pDestPortInput->value(std::to_string(host->port).c_str());
-			DestPortInput();
+			pTargetPortInput->value(std::to_string(host->port).c_str());
+			TargetPortInput();
 		}
 	}
 }
@@ -453,27 +463,27 @@ void CMainWindow::ActionButtonCB(Fl_Widget *, void *This)
 void CMainWindow::ActionButton()
 {
 	const std::string label(pActionButton->label());
-	auto cs = pDestCallsignInput->value();
+	auto cs = pTargetCSInput->value();
 	if (0 == label.compare(savestr)) {
-		const std::string a(pDestIPInput->value());
-		auto p = uint16_t(std::atoi(pDestPortInput->value()));
+		const std::string a(pTargetIpInput->value());
+		auto p = uint16_t(std::atoi(pTargetPortInput->value()));
 		if (std::string::npos == a.find(':'))
 			routeMap.Update(false, cs, a, "", "", "", p);
 		else
 			routeMap.Update(false, cs, "", a, "", "", p);
-		BuildDestMenuButton();
+		BuildTargetMenuButton();
 	} else if (0 == label.compare(deletestr)) {
 		routeMap.Erase(cs);
-		BuildDestMenuButton();
+		BuildTargetMenuButton();
 	} else if (0 == label.compare(updatestr)) {
-		std::string a(pDestIPInput->value());
-		const auto p = uint16_t(std::atoi(pDestPortInput->value()));
+		std::string a(pTargetIpInput->value());
+		const auto p = uint16_t(std::atoi(pTargetPortInput->value()));
 		if (std::string::npos == a.find(':'))
 			routeMap.Update(false, cs, a, "", "", "", p);
 		else
 			routeMap.Update(false, cs, "", a, "", "", p);
 	}
-	FixDestActionButton();
+	FixTargetMenuButton();
 	routeMap.Save();
 }
 
@@ -525,15 +535,15 @@ void CMainWindow::Receive(bool is_rx)
 		AudioSummary(_("RX Audio"));
 }
 
-void CMainWindow::SetDestinationAddress(std::string &cs)
+void CMainWindow::SetTargetAddress(std::string &cs)
 {
-	cs.assign(pDestCallsignInput->value());
-	const std::string ip(pDestIPInput->value());
-	uint16_t port = std::stoul(pDestPortInput->value());
+	cs.assign(pTargetCSInput->value());
+	const std::string ip(pTargetIpInput->value());
+	uint16_t port = std::stoul(pTargetPortInput->value());
 	gateM17.SetDestAddress(ip, port);
 	if (0==cs.compare(0, 4, "M17-") || 0==cs.compare(0, 3, "URF")) {
 		cs.resize(8, ' ');
-		cs.append(1, GetDestinationModule());
+		cs.append(1, GetTargetModule());
 	}
 }
 
@@ -549,8 +559,7 @@ void CMainWindow::PTTButton()
 	if (onchar) {
 		if (gateM17.TryLock())
 		{
-			std::string cs;
-			SetDestinationAddress(cs);
+			const std::string cs(pDSTCallsignInput->value());
 			AudioManager.RecordMicThread(E_PTT_Type::m17, cs);
 		}
 		else
@@ -568,8 +577,7 @@ void CMainWindow::PTTButton()
 
 void CMainWindow::QuickKeyButton()
 {
-	std::string cs;
-	SetDestinationAddress(cs);
+	std::string cs(pDSTCallsignInput->value());
 	AudioManager.QuickKey(cs, cfgdata.sM17SourceCallsign);
 }
 
@@ -640,12 +648,12 @@ void CMainWindow::UpdateGUI()
 	}
 	else
 	{
-		std::string dest(pDestCallsignInput->value());
+		std::string target(pTargetCSInput->value());
 		switch (gateM17.GetLinkState())
 		{
 			case ELinkState::unlinked:
 				pDisconnectButton->deactivate();
-				if (std::regex_match(dest, M17RefRegEx) && bDestIP && bDestPort)
+				if (std::regex_match(target, M17RefRegEx) && bTargetIP && bTargetPort)
 					pConnectButton->activate();
 				else
 					pConnectButton->deactivate();
@@ -664,18 +672,18 @@ void CMainWindow::UpdateGUI()
 		TransmitterButtonControl();
 		if (bTransOK)
 		{
-			auto host = routeMap.Find(dest);
+			auto host = routeMap.Find(target);
 			if (host)
 			{
 				if (host->updated)
 				{
 					if (EInternetType::ipv4only!=cfgdata.eNetType && ! host->ip6addr.empty())
-						pDestIPInput->value(host->ip6addr.c_str());
+						pTargetIpInput->value(host->ip6addr.c_str());
 					else
-						pDestIPInput->value(host->ip4addr.c_str());
-					DestIPInput();
-					pDestPortInput->value(std::to_string(host->port).c_str());
-					DestPortInput();
+						pTargetIpInput->value(host->ip4addr.c_str());
+					TargetIPInput();
+					pTargetPortInput->value(std::to_string(host->port).c_str());
+					TargetPortInput();
 
 					if (host->modules.size())
 						ActivateModules(host->modules);
@@ -756,26 +764,48 @@ void CMainWindow::Get(const std::string &cs)
 }
 #endif
 
-void CMainWindow::DestCallsignInputCB(Fl_Widget *, void *This)
+void CMainWindow::DestinationCSInputCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->DestCallsignInput();
+	((CMainWindow *)This)->DestinationCSInput();
 }
 
-void CMainWindow::DestCallsignInput()
+void CMainWindow::DestinationCSInput()
 {
 	// Convert to uppercase
-	auto pos = pDestCallsignInput->position();
-	std::string dest(pDestCallsignInput->value());
+	auto pos = pDSTCallsignInput->position();
+	std::string dest(pDSTCallsignInput->value());
 	if (ToUpper(dest))
 	{
-		pDestCallsignInput->value(dest.c_str());
-		pDestCallsignInput->position(pos);
+		pDSTCallsignInput->value(dest.c_str());
+		pDSTCallsignInput->position(pos);
+	}
+
+	// the destination either has to be @ALL or a legal callsign
+	bDestCS = 0==dest.compare("@ALL") || std::regex_match(dest, M17CallRegEx);
+	pDSTCallsignInput->color(bDestCS ? 2 : 1);
+	pDSTCallsignInput->damage(FL_DAMAGE_ALL);
+}
+
+void CMainWindow::TargetCSInputCB(Fl_Widget *, void *This)
+{
+	((CMainWindow *)This)->TargetCSInput();
+}
+
+void CMainWindow::TargetCSInput()
+{
+	// Convert to uppercase
+	auto pos = pTargetCSInput->position();
+	std::string dest(pTargetCSInput->value());
+	if (ToUpper(dest))
+	{
+		pTargetCSInput->value(dest.c_str());
+		pTargetCSInput->position(pos);
 	}
 
 	// the destination either has to be a reflector or a legal callsign
-	bDestCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, M17RefRegEx);
+	bTargetCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, M17RefRegEx);
 
-	if (bDestCS)
+	if (bTargetCS)
 	{
 		auto host = routeMap.Find(dest); // is it already in the routeMap?
 		if (host)
@@ -786,12 +816,12 @@ void CMainWindow::DestCallsignInput()
 			// let's try to come up with a destination IP
 			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
 				// if we aren't in IPv4-only mode and there is an IPv6 address, use it
-				pDestIPInput->value(host->ip6addr.c_str());
+				pTargetIpInput->value(host->ip6addr.c_str());
 			else if (!host->ip4addr.empty())
 				// otherwise, if there is an IPv4 address, use it
-				pDestIPInput->value(host->ip4addr.c_str());
+				pTargetIpInput->value(host->ip4addr.c_str());
 
-			pDestPortInput->value(std::to_string(host->port).c_str());
+			pTargetPortInput->value(std::to_string(host->port).c_str());
 
 			// activate the configure modules
 			// if there aren't any confgured modules, activate all modules
@@ -816,59 +846,59 @@ void CMainWindow::DestCallsignInput()
 	}
 	else
 	{
-		// bDestCS is false
-		pDestIPInput->value("");
-		pDestPortInput->value("");
+		// bTargetCS is false
+		pTargetIpInput->value("");
+		pTargetPortInput->value("");
 	}
 
-	DestIPInput();
-	pDestCallsignInput->color(bDestCS ? 2 : 1);
-	pDestCallsignInput->damage(FL_DAMAGE_ALL);
+	TargetIPInput();
+	pTargetCSInput->color(bTargetCS ? 2 : 1);
+	pTargetCSInput->damage(FL_DAMAGE_ALL);
 
-	DestPortInput();
-	pDestPortInput->color(bDestPort ? 2 : 1);
-	pDestPortInput->damage(FL_DAMAGE_ALL);
+	TargetPortInput();
+	pTargetPortInput->color(bTargetPort ? 2 : 1);
+	pTargetPortInput->damage(FL_DAMAGE_ALL);
 }
 
-void CMainWindow::DestIPInputCB(Fl_Widget *, void *This)
+void CMainWindow::TargetIPInputCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->DestIPInput();
+	((CMainWindow *)This)->TargetIPInput();
 }
 
-void CMainWindow::DestIPInput()
+void CMainWindow::TargetIPInput()
 {
-	auto bIP4 = std::regex_match(pDestIPInput->value(), IPv4RegEx);
-	auto bIP6 = std::regex_match(pDestIPInput->value(), IPv6RegEx);
+	auto bIP4 = std::regex_match(pTargetIpInput->value(), IPv4RegEx);
+	auto bIP6 = std::regex_match(pTargetIpInput->value(), IPv6RegEx);
 	switch (cfgdata.eNetType) {
 		case EInternetType::ipv4only:
-			bDestIP = bIP4;
+			bTargetIP = bIP4;
 			break;
 		case EInternetType::ipv6only:
-			bDestIP = bIP6;
+			bTargetIP = bIP6;
 			break;
 		default:
-			bDestIP = (bIP4 || bIP6);
+			bTargetIP = (bIP4 || bIP6);
 	}
-	pDestIPInput->color(bDestIP ? 2 : 1);
-	FixDestActionButton();
-	pDestIPInput->damage(FL_DAMAGE_ALL);
+	pTargetIpInput->color(bTargetIP ? 2 : 1);
+	FixTargetMenuButton();
+	pTargetIpInput->damage(FL_DAMAGE_ALL);
 }
 
-void CMainWindow::DestPortInputCB(Fl_Widget *, void *This)
+void CMainWindow::TargetPortInputCB(Fl_Widget *, void *This)
 {
-	((CMainWindow *)This)->DestPortInput();
+	((CMainWindow *)This)->TargetPortInput();
 }
 
-void CMainWindow::DestPortInput()
+void CMainWindow::TargetPortInput()
 {
-	auto port = std::atoi(pDestPortInput->value());
-	bDestPort = (1023 < port && port < 49000);
-	pDestPortInput->color(bDestPort ? 2 : 1);
-	FixDestActionButton();
-	pDestPortInput->damage(FL_DAMAGE_ALL);
+	auto port = std::atoi(pTargetPortInput->value());
+	bTargetPort = (1023 < port && port < 49000);
+	pTargetPortInput->color(bTargetPort ? 2 : 1);
+	FixTargetMenuButton();
+	pTargetPortInput->damage(FL_DAMAGE_ALL);
 }
 
-void CMainWindow::SetDestActionButton(const bool sensitive, const char *label)
+void CMainWindow::SetTargetMenuButton(const bool sensitive, const char *label)
 {
 	if (sensitive)
 		pActionButton->activate();
@@ -894,7 +924,7 @@ void CMainWindow::LinkButton()
 	{
 		std::string cmd("M17L");
 		std::string cs;
-		SetDestinationAddress(cs);
+		SetTargetAddress(cs);
 		cmd.append(cs);
 		AudioManager.Link(cmd);
 	}
@@ -918,53 +948,54 @@ void CMainWindow::DashboardButtonCB(Fl_Widget *, void *This)
 
 void CMainWindow::DashboardButton()
 {
-	auto dciv = pDestCallsignInput->value();
+	auto dciv = pTargetCSInput->value();
 	auto host = routeMap.Find(dciv);
 	if (host && ! host->url.empty()) {
 		fl_open_uri(host->url.c_str());
 	}
 }
 
-void CMainWindow::FixDestActionButton()
+void CMainWindow::FixTargetMenuButton()
 {
-	if (bDestCS) {	// is the destination c/s valid?
-		const std::string cs(pDestCallsignInput->value());
+	if (bTargetCS) {	// is the destination c/s valid?
+		const std::string cs(pTargetCSInput->value());
 		auto host = routeMap.Find(cs);	// look for it
 		if (host) {
 			// cs is found in map
-			if (bDestIP && bDestPort && host->modules.empty()) { // is the IP and port okay and is this not from the csv file?
-				const std::string ip(pDestIPInput->value());
-				const std::string port(pDestPortInput->value());
+			if (bTargetIP && bTargetPort && host->modules.empty()) { // is the IP and port okay and is this not from the csv file?
+				const std::string ip(pTargetIpInput->value());
+				const std::string port(pTargetPortInput->value());
 				if ((ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) || (port.compare(std::to_string(host->port)))) {
 					// the ip in the IPEntry is different, or the port is different
-					SetDestActionButton(true, updatestr);
+					SetTargetMenuButton(true, updatestr);
 				} else {
 					// perfect match
 					if (host->from_json)
-						SetDestActionButton(false, "");
+						SetTargetMenuButton(false, "");
 					else
-						SetDestActionButton(true, deletestr);
+						SetTargetMenuButton(true, deletestr);
 				}
 			} else {
-				SetDestActionButton(false, "");
+				SetTargetMenuButton(false, "");
 			}
 		} else {
 			// cs is not found in map
-			if (bDestIP && bDestPort) { // is the IP okay and is the not from the csv file?
-				SetDestActionButton(true, savestr);
+			if (bTargetIP && bTargetPort) { // is the IP okay and is the not from the csv file?
+				SetTargetMenuButton(true, savestr);
 			} else {
-				SetDestActionButton(false, "");
+				SetTargetMenuButton(false, "");
 			}
 		}
 	} else {
-		SetDestActionButton(false, "");
+		SetTargetMenuButton(false, "");
 	}
 	TransmitterButtonControl();
 }
 
 void CMainWindow::TransmitterButtonControl()
 {
-	if (bTransOK && bDestCS && bDestIP && bDestPort && (0 == pConnectButton->active()))
+	DestinationCSInput();
+	if (bTransOK && bDestCS && bTargetCS && bTargetIP && bTargetPort && (0 == pConnectButton->active()))
 	{
 		pPTTButton->activate();
 		pQuickKeyButton->activate();
@@ -984,7 +1015,7 @@ void CMainWindow::StopM17()
 	}
 }
 
-char CMainWindow::GetDestinationModule()
+char CMainWindow::GetTargetModule()
 {
 	for (unsigned i=0; i<26; i++) {
 		if (pModuleRadioButton[i]->value())
