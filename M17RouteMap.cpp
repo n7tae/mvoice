@@ -16,11 +16,64 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
+#include <nlohmann/json.hpp>
+#include <curl/curl.h>
 #include <fstream>
 #include <regex>
 
 #include "M17RouteMap.h"
 #include "Utilities.h"
+
+using json = nlohmann::json;
+
+// callback function writes data to a std::ostream
+static size_t data_write(void* buf, size_t size, size_t nmemb, void* userp)
+{
+	if(userp)
+	{
+		std::ostream& os = *static_cast<std::ostream*>(userp);
+		std::streamsize len = size * nmemb;
+		if(os.write(static_cast<char*>(buf), len))
+			return len;
+	}
+
+	return 0;
+}
+
+// timeout is in seconds
+static CURLcode curl_read(const std::string& url, std::ostream& os, long timeout = 30)
+{
+	CURLcode code(CURLE_FAILED_INIT);
+	CURL* curl = curl_easy_init();
+
+	if(curl)
+	{
+		if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
+		{
+			code = curl_easy_perform(curl);
+		}
+		curl_easy_cleanup(curl);
+	}
+	return code;
+}
+
+// returns true if there was a problem
+static bool ReadM17Json(const std::string &url, std::stringstream &ss)
+{
+	bool rval = true;
+	curl_global_init(CURL_GLOBAL_ALL);
+
+	if(CURLE_OK == curl_read(url, ss))
+		rval = false;
+
+	curl_global_cleanup();
+	return rval;
+}
 
 CM17RouteMap::CM17RouteMap() {}
 
@@ -45,7 +98,7 @@ const std::shared_ptr<SHost> CM17RouteMap::Find(const std::string &cs) const
 	return rval;
 }
 
-void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string &ip4addr, const std::string &ip6addr, const std::string &url, const std::string &modules, const uint16_t port)
+void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string &domainname, const std::string &ip4addr, const std::string &ip6addr, const std::string &modules, const std::string &specialmodules, const uint16_t port, const std::string &url)
 {
 	std::string base;
 	auto pos = cs.find_first_of(" /.");
@@ -57,21 +110,25 @@ void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string
 		host = std::make_shared<SHost>();
 	host->from_json = frmjson;
 	host->cs.assign(base);
-	if (! url.empty())
-		host->url.assign(url);
-	if (! ip4addr.empty() && ip4addr.compare("none"))
+	if (! domainname.empty())
+		host->dn.assign(domainname);
+	if (! ip4addr.empty())
 		host->ip4addr.assign(ip4addr);
-	if (! ip6addr.empty() && ip6addr.compare("none"))
+	if (! ip6addr.empty())
 		host->ip6addr.assign(ip6addr);
 	if (! modules.empty())
-		host->modules.assign(modules);
+		host->mods.assign(modules);
+	if (! specialmodules.empty())
+		host->smods.assign(specialmodules);
+	if (! url.empty())
+		host->url.assign(url);
 	host->port = port;
 
 	std::lock_guard<std::mutex> lck(mux);
-	if (host->ip4addr.size() || host->ip6addr.size() || host->url.size() || host->modules.size())
+	if (host->dn.size() || host->ip4addr.size() || host->ip6addr.size() || host->url.size() || host->mods.size() || host->smods.size())
 		host->updated = true;
 	baseMap[base] = host;
-	//std::cout << "updating " << host->cs << ": Addr4='" << host->ip4addr << "' Addr6='" << host->ip6addr << "' URL='" << host->url << "' Modules='" << host->modules << "' Port=" << host->port << std::endl;
+	//std::cout << "updating " << host->cs << ": dn='" << host->dn << "' ipv4='" << host->ip4addr << "' ipv6='" << host->ip6addr << "' url='" << host->url << "' mods='" << host->mods << "' smods='" << host->smods << "' port=" << host->port << std::endl;
 
 }
 
@@ -80,64 +137,111 @@ void CM17RouteMap::ReadAll()
 	mux.lock();
 	baseMap.clear();
 	mux.unlock();
-	ReadJson("m17refl.json");
+	ReadJson();
 	Read("M17Hosts.cfg");
 }
 
-void CM17RouteMap::ReadJson(const char *filename)
+#define GET_STRING(a) ((a).is_string() ? a : "")
+
+void CM17RouteMap::ReadJson()
 {
-	auto ecs = std::regex(".*\"designator\":\"([A-Z0-9]{3,3})\".*", std::regex::extended);
-	auto eur = std::regex(".*\"url\":\"([^\"]+)\".*", std::regex::extended);
-	auto ev4 = std::regex(".*\"ipv4\":[\"]?(null|[0-9.]+)[\"]?.*", std::regex::extended);
-	auto ev6 = std::regex(".*\"ipv6\":[\"]?(null|[0-9a-fA-F:]+)[\"]?.*", std::regex::extended);
-	auto epo = std::regex(".*\"port\":([0-9]+).*", std::regex::extended);
-	bool cs, ur, v4, v6, po;
-	cs = ur = v4 = v6 = po = false;
-	std::string scs, sur, sv4, sv6, spo;
-	std::string path(CFGDIR);
-	path.append("/");
-	path.append(filename);
-	std::ifstream f(path, std::ifstream::in);
-	while (f.good()) {
-		std::string s;
-		std::smatch m;
-		std::getline(f, s, ',');
-		if (! cs && std::regex_search(s, m, ecs)) {
-			scs.assign("M17-");
-			scs.append(m[1].str());
-			cs = true;
-			ur = v4 = v6 = po = false;
-		}
-		else if (! ur && std::regex_search(s, m, eur)) {
-			sur = m[1].str();
-			auto pos = sur.find('\\');
-			while (pos != std::string::npos) {
-				sur.erase(pos, 1);
-				pos = sur.find('\\');
+	// downlaod and parse the mrefd and urf json file
+	std::stringstream ss;
+	if (ReadM17Json("https://dvref.com/mrefd/reflectors/", ss))
+	{
+		std::cerr << "ERROR curling M17 reflectors from dvref.com" << std::endl;
+	}
+	else
+	{
+		json mref = json::parse(ss.str());
+		if (mref.contains("reflectors"))
+		{
+			for (auto &ref : mref["reflectors"])
+			{
+				std::string cs("M17-");
+				cs.append(ref["designator"].get<std::string>());
+				const std::string dn(GET_STRING(ref["dns"]));
+				const std::string ipv4(GET_STRING(ref["ipv4"]));
+				if (0==ipv4.compare("127.0.0.1") or 0==ipv4.compare("0.0.0.0"))
+					continue;
+				const std::string ipv6(GET_STRING(ref["ipv6"]));
+				if (0==ipv6.compare("::") or 0==ipv6.compare("::1"))
+					continue;
+				std::string mods(""), emods("");
+				if (ref.contains("modules"))
+				{
+					for (const auto &item : ref["modules"])
+						mods.append(item);
+				}
+				if (ref.contains("encrypted"))
+				{
+					for (const auto &item : ref["encrypted"])
+						emods.append(item);
+				}
+				uint16_t port;
+				if (ref.contains("port") and ref["port"].is_number_unsigned())
+					port = ref["port"].get<uint16_t>();
+				else
+					continue;
+				Update(true, cs, dn, ipv4, ipv6, mods, emods, port, GET_STRING(ref["url"]));
 			}
-			ur = true;
 		}
-		else if (! v4 && std::regex_search(s, m, ev4)) {
-			sv4 = m[1].str();
-			if (0 == sv4.compare("null")) sv4.clear();
-			v4 = true;
-		}
-		else if (! v6 && std::regex_search(s, m, ev6)) {
-			sv6 = m[1].str();
-			if (0 == sv6.compare("null")) sv6.clear();
-			v6 = true;
-		}
-		else if (! po && std::regex_search(s, m, epo)) {
-			spo = m[1].str();
-			po = true;
-		}
-		if (cs && ur && v4 && v6 && po) {
-			Update(true, scs, sv4, sv6, sur, "", std::stoul(spo));
-			cs = ur = v4 = v6 = po = false;
-			scs.clear(); sur.clear(); sv4.clear(); sv6.clear(); spo.clear();
+		else
+		{
+			std::cerr << "ERROR: dvref.com didn't define any M17 reflectors" << std::endl;
 		}
 	}
-	f.close();
+
+	ss.str(std::string());
+
+	if (ReadM17Json("https://dvref.com/urfd/reflectors/", ss))
+	{
+		std::cerr << "ERROR curling URF reflectors from dvref.com" << std::endl;
+		return;
+	}
+
+	json urf = json::parse(ss.str());
+	if (not urf.contains("reflectors"))
+	{
+		std::cerr << "ERROR: dvref.com didn't define any URF refectors" << std::endl;
+	}
+	for (auto &ref : urf["reflectors"])
+	{
+		std::string cs("URF");
+		cs.append(ref["designator"].get<std::string>());
+		const std::string dn(GET_STRING(ref["dns"]));
+		const std::string ipv4(GET_STRING(ref["ipv4"]));
+		if (0==ipv4.compare("127.0.0.1") or 0==ipv4.compare("0.0.0.0"))
+			continue;
+		const std::string ipv6(GET_STRING(ref["ipv6"]));
+		if (0==ipv6.compare("::") or 0==ipv6.compare("::1"))
+			continue;
+		std::string mods(""), smods("");
+		uint16_t port = 17000u;
+		if (ref.contains("modules"))
+		{
+			for (auto &mod : ref["modules"])
+			{
+				auto m = mod["module"].get<std::string>();
+				const std::string mode(GET_STRING(mod["mode"]));
+				if (0==mode.compare("All") or 0==mode.compare("M17"))
+				{
+					mods.append(m);
+					if (mod["transcode"].is_boolean())
+					{
+						if (mod["transcode"].get<bool>())
+							smods.append(m);
+					}
+					if (0 == mode.compare("M17"))
+					{
+						if (mod["port"].is_number_unsigned())
+							port = mod["port"].get<uint16_t>();
+					}
+				}
+			}
+		}
+		Update(true, cs, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
+	}
 }
 
 void CM17RouteMap::Read(const char *filename)
@@ -152,8 +256,8 @@ void CM17RouteMap::Read(const char *filename)
 			trim(line);
 			if (0==line.size() || '#'==line[0]) continue;
 			std::vector<std::string> elem;
-			split(line, ',', elem);
-			Update(false, elem[0], elem[1], elem[2], elem[3], elem[4], std::stoul(elem[5]));
+			split(line, ';', elem);
+			Update(false, elem[0], elem[1], elem[2], elem[3], elem[4], elem[5], std::stoul(elem[6]), elem[7]);
 		}
 		file.close();
 	}
@@ -169,7 +273,7 @@ void CM17RouteMap::Save() const
 		for (const auto &pair : baseMap) {
 			const auto host = pair.second;
 			if (! host->from_json) {
-				file << host->cs << ',' << host->ip4addr << ',' << host->ip6addr << ',' << host->url << ',' << host->modules << ',' << host->port << std::endl;
+				file << host->cs << ';' << host->dn << ';' << host->ip4addr << ';' << host->ip6addr << ';' << host->url << ';' << host->mods << ';' << host->port << ';' << host->url << std::endl;
 			}
 		}
 		file.close();

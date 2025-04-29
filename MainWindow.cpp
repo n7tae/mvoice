@@ -16,11 +16,13 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#include <curl/curl.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <pwd.h>
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
 
 #include <iostream>
 #include <iomanip>
@@ -73,7 +75,7 @@ CMainWindow::CMainWindow() :
 	IPv4RegEx = std::regex("^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3,3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9]){1,1}$", std::regex::extended);
 	IPv6RegEx = std::regex("^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}(:[0-9a-fA-F]{1,4}){1,1}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|([0-9a-fA-F]{1,4}:){1,1}(:[0-9a-fA-F]{1,4}){1,6}|:((:[0-9a-fA-F]{1,4}){1,7}|:))$", std::regex::extended);
 	M17RefRegEx = std::regex("^(M17-|URF)([A-Z0-9]){3,3}$", std::regex::extended);
-	M17CallRegEx = std::regex("^[0-9]?[A-Z]{1,2}[0-9]{1,2}[A-Z]{1,4}([ -/\\.].*)?$", std::regex::extended);
+	M17CallRegEx = std::regex("^[0-9]?[A-Z]{1,2}[0-9]{1,2}[A-Z]{1,4}( *[-/\\.][A-Z0-9][A-Z0-9 ]*)?$", std::regex::extended);
 }
 
 CMainWindow::~CMainWindow()
@@ -468,9 +470,9 @@ void CMainWindow::ActionButton()
 		const std::string a(pTargetIpInput->value());
 		auto p = uint16_t(std::atoi(pTargetPortInput->value()));
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(false, cs, a, "", "", "", p);
+			routeMap.Update(false, cs, "", a, "", "", "", p, "");
 		else
-			routeMap.Update(false, cs, "", a, "", "", p);
+			routeMap.Update(false, cs, "", "", a, "", "", p, "");
 		BuildTargetMenuButton();
 	} else if (0 == label.compare(deletestr)) {
 		routeMap.Erase(cs);
@@ -479,9 +481,9 @@ void CMainWindow::ActionButton()
 		std::string a(pTargetIpInput->value());
 		const auto p = uint16_t(std::atoi(pTargetPortInput->value()));
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(false, cs, a, "", "", "", p);
+			routeMap.Update(false, cs, "", a, "", "", "", p, "");
 		else
-			routeMap.Update(false, cs, "", a, "", "", p);
+			routeMap.Update(false, cs, "", "", a, "", "", p, "");
 	}
 	FixTargetMenuButton();
 	routeMap.Save();
@@ -685,8 +687,8 @@ void CMainWindow::UpdateGUI()
 					pTargetPortInput->value(std::to_string(host->port).c_str());
 					TargetPortInput();
 
-					if (host->modules.size())
-						ActivateModules(host->modules);
+					if (host->mods.size())
+						ActivateModules(host->mods);
 					else
 						ActivateModules();
 
@@ -736,7 +738,7 @@ void CMainWindow::Get(const std::string &cs)
 				if (rdat.timestamp > ts)
 				{
 					ts = rdat.timestamp;
-					routeMap.Update(false, rdat.callsign, rdat.ipv4addr, rdat.ipv6addr, rdat.url, rdat.modules, rdat.port);
+					routeMap.Update(false, rdat.callsign, "", rdat.ipv4addr, rdat.ipv6addr, rdat.modules, rdat.encryptedmods, rdat.port, rdat.url);
 				}
 			}
 			else if (0 == v->user_type.compare(URFD_CONFIG_1))
@@ -745,7 +747,7 @@ void CMainWindow::Get(const std::string &cs)
 				if (rdat.timestamp > ts)
 				{
 					ts = rdat.timestamp;
-					routeMap.Update(false, rdat.callsign, rdat.ipv4addr, rdat.ipv6addr, rdat.url, rdat.modules, rdat.port[toUType(EUrfdPorts::m17)]);
+					routeMap.Update(false, rdat.callsign, "", rdat.ipv4addr, rdat.ipv6addr, rdat.modules, rdat.transcodedmods, rdat.port[toUType(EUrfdPorts::m17)], rdat.url);
 				}
 			}
 			else
@@ -814,19 +816,70 @@ void CMainWindow::TargetCSInput()
 			Get(host->cs);
 #endif
 			// let's try to come up with a destination IP
-			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
+			if (EInternetType::ipv4only!=cfgdata.eNetType and not host->ip6addr.empty())
 				// if we aren't in IPv4-only mode and there is an IPv6 address, use it
 				pTargetIpInput->value(host->ip6addr.c_str());
-			else if (!host->ip4addr.empty())
+			else if (EInternetType::ipv6only!=cfgdata.eNetType and not host->ip4addr.empty())
 				// otherwise, if there is an IPv4 address, use it
 				pTargetIpInput->value(host->ip4addr.c_str());
+			else if (not host->dn.empty())	// is there a domain name specified
+			{
+				// then we'll try to resolve the domain name to a preferred IP address
+				struct addrinfo *res, hints;
+			
+				memset(&hints, 0, sizeof hints);
+				switch (cfgdata.eNetType)
+				{
+					case EInternetType::ipv4only:
+						hints.ai_family = AF_INET;
+						break;
+					case EInternetType::ipv6only:
+						hints.ai_family = AF_INET6;
+						break;
+					default:
+						hints.ai_family = AF_UNSPEC;
+						break;
+				}
+				hints.ai_socktype = SOCK_DGRAM;
+
+				int status = getaddrinfo(host->dn.c_str(), std::to_string(host->port).c_str(), &hints, &res);
+				if (status) {
+					insertLogText(gai_strerror(status));
+					insertLogText("\n");
+				} else {
+					if (res) {
+						void *addr = nullptr;
+						// get the pointer to the address itself,
+						// different fields in IPv4 and IPv6:
+						if (res->ai_family == AF_INET) {
+							struct sockaddr_in *ipv4 = (struct sockaddr_in *)res->ai_addr;
+							addr = &(ipv4->sin_addr);
+						} else if (res->ai_family == AF_INET6) {
+							struct sockaddr_in6 *ipv6 = (struct sockaddr_in6 *)res->ai_addr;
+							addr = &(ipv6->sin6_addr);
+						}
+
+						if (addr) {
+							char ipstr[INET6_ADDRSTRLEN];
+							// convert the IP to a string and print it:
+							inet_ntop(res->ai_family, addr, ipstr, sizeof ipstr);
+							pTargetIpInput->value(ipstr);
+							std::string msg("Resolved domain name ");
+							msg.append(host->dn + " to " + ipstr + "\n");
+							insertLogText(msg.c_str());
+						}
+					}
+					freeaddrinfo(res); // free the linked list
+				}
+			
+			}
 
 			pTargetPortInput->value(std::to_string(host->port).c_str());
 
 			// activate the configure modules
 			// if there aren't any confgured modules, activate all modules
-			if (host->modules.size())
-				ActivateModules(host->modules);
+			if (host->mods.size())
+				ActivateModules(host->mods);
 			else
 				ActivateModules();
 
@@ -962,7 +1015,7 @@ void CMainWindow::FixTargetMenuButton()
 		auto host = routeMap.Find(cs);	// look for it
 		if (host) {
 			// cs is found in map
-			if (bTargetIP && bTargetPort && host->modules.empty()) { // is the IP and port okay and is this not from the csv file?
+			if (bTargetIP && bTargetPort && host->mods.empty()) { // is the IP and port okay and is this not from the csv file?
 				const std::string ip(pTargetIpInput->value());
 				const std::string port(pTargetPortInput->value());
 				if ((ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) || (port.compare(std::to_string(host->port)))) {
@@ -1022,65 +1075,6 @@ char CMainWindow::GetTargetModule()
 			return 'A' + i;
 	}
 	return '!';	// ERROR!
-}
-
-// callback function writes data to a std::ostream
-static size_t data_write(void* buf, size_t size, size_t nmemb, void* userp)
-{
-	if(userp)
-	{
-		std::ostream& os = *static_cast<std::ostream*>(userp);
-		std::streamsize len = size * nmemb;
-		if(os.write(static_cast<char*>(buf), len))
-			return len;
-	}
-
-	return 0;
-}
-
-/**
- * timeout is in seconds
- **/
-static CURLcode curl_read(const std::string& url, std::ostream& os, long timeout = 30)
-{
-	CURLcode code(CURLE_FAILED_INIT);
-	CURL* curl = curl_easy_init();
-
-	if(curl)
-	{
-		if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
-		{
-			code = curl_easy_perform(curl);
-		}
-		curl_easy_cleanup(curl);
-	}
-	return code;
-}
-
-static void ReadM17Json()
-{
-	curl_global_init(CURL_GLOBAL_ALL);
-
-	std::string path(CFGDIR);
-	path.append("/m17refl.json");
-	std::ofstream ofs(path);
-	if (ofs.is_open()) {
-		const std::string url("https://dvref.com/mrefd/reflectors/");
-		if(CURLE_OK == curl_read(url, ofs)) {
-			std::cout << url << " copied to " << path << std::endl;
-		} else {
-			std::cerr << "Could not read " << url << std::endl;
-		}
-	} else {
-		std::cerr << "Could not open " << path << " for writing" << std::endl;
-	}
-
-	curl_global_cleanup();
 }
 
 #define MKDIR(PATH) ::mkdir(PATH, 0755)
@@ -1143,8 +1137,6 @@ int main (int argc, char **argv)
 		std::cerr << "ERROR: HOME enviromental variable not found" << std::endl;
 		return EXIT_FAILURE;
 	}
-
-	ReadM17Json();
 
 	CMainWindow MainWindow;
 	if (MainWindow.Init())
