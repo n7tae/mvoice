@@ -23,7 +23,7 @@
 
 #define _(STRING) gettext(STRING)
 
-#define VERSION "1.2.1"
+#define VERSION "1.3.0"
 
 CAboutDlg::CAboutDlg() {}
 
@@ -40,7 +40,7 @@ bool CAboutDlg::Init(Fl_RGB_Image *pIcon)
 
 	pVersionBox = new Fl_Box(0, 100, 400, 30, version);
 
-	pCopyrightBox = new Fl_Box(0, 150, 400, 30, _("Copyright (c) 2022 by Thomas A. Early N7TAE"));
+	pCopyrightBox = new Fl_Box(0, 150, 400, 30, _("Copyright (c) 2025 by Thomas A. Early N7TAE"));
 
 	pDlg->end();
 	pDlg->callback(&CAboutDlg::WindowCallbackCB, this);

@@ -56,12 +56,12 @@ clean : subdirs
 -include $(DEPS)
 
 install : $(EXE) subdirs
-	mkdir   -p $(BASEDIR)/bin
+	mkdir -p $(BASEDIR)/bin
 	/bin/cp -f $(EXE) $(BASEDIR)/bin
 
 uninstall : subdirs
 	/bin/rm -f $(BASEDIR)/bin/$(EXE)
-	rmdir   -p $(BASEDIR)/bin --ignore-fail-on-non-empty
+	cd $(BASEDIR) && rmdir -p bin --ignore-fail-on-non-empty
 
 SUBDIRS = po
 
