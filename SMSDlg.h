@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 by Thomas A. Early N7TAE
+ *   Copyright (c) 2025 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,23 +16,36 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#pragma once
+ #pragma once
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Text_Display.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Int_Input.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Radio_Button.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Toggle_Button.H>
-#include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Tabs.H>
-#include <FL/fl_ask.H>
-#include <FL/Fl_Text_Editor.H>
+ #include "FLTK-GUI.h"
+ #include "TransmitButton.h"
+
+ class CMainWindow;
+
+ class CSMSDlg
+ {
+public:
+	CSMSDlg();
+	~CSMSDlg();
+	bool Init(CMainWindow *);
+	void Show();
+	void Hide();
+
+private:
+	CMainWindow *pMainWindow;
+	Fl_Double_Window *pDlg;
+	Fl_Input *pDSTCallsignInput;
+	CTransmitButton *pSendButton;
+	Fl_Text_Editor *pMessage;
+	Fl_Text_Buffer *pMsgBuffer;
+	
+	bool bDestCS;
+
+	void DestinationCSInput();
+	void SendButton();
+
+	static void WindowCallbackCB(Fl_Widget *p, void *v);
+	static void DestinationCSInputCB(Fl_Widget *p, void *v);
+	static void SendButtonCB(Fl_Widget *p, void *v);
+ };

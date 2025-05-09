@@ -30,6 +30,7 @@
 #include "Configure.h"
 #include "M17Gateway.h"
 #include "M17RouteMap.h"
+#include "SMSDlg.h"
 #include "SettingsDlg.h"
 #include "AboutDlg.h"
 #include "AudioManager.h"
@@ -58,6 +59,7 @@ public:
 
 private:
 	// classes
+	CSMSDlg SMSDlg;
 	CSettingsDlg SettingsDlg;
 	CAboutDlg AboutDlg;
 	CM17Gateway gateM17;
@@ -111,6 +113,7 @@ private:
 
 	// Actual Callbacks
 	void Quit();
+	void ShowSMSDialog();
 	void ShowSettingsDialog();
 	void ShowAboutDialog();
 	void EchoButton();
@@ -127,6 +130,7 @@ private:
 	void DashboardButton();
 	// Static wrapper for callbacks
 	static void QuitCB(Fl_Widget *p, void *v);
+	static void ShowSMSDialogCB(Fl_Widget *p, void *v);
 	static void ShowSettingsDialogCB(Fl_Widget *p, void *v);
 	static void ShowAboutDialogCB(Fl_Widget *p, void *v);
 	static void EchoButtonCB(Fl_Widget *p, void *v);
