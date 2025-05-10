@@ -31,12 +31,14 @@ public:
 	bool Init(CMainWindow *);
 	void Show();
 	void Hide();
+	void Update();
 
 private:
 	CMainWindow *pMainWindow;
 	Fl_Double_Window *pDlg;
 	Fl_Input *pDSTCallsignInput;
 	CTransmitButton *pSendButton;
+	Fl_Button *pClearButton;
 	Fl_Text_Editor *pMessage;
 	Fl_Text_Buffer *pMsgBuffer;
 	
@@ -44,8 +46,10 @@ private:
 
 	void DestinationCSInput();
 	void SendButton();
+	void ClearButton();
 
 	static void WindowCallbackCB(Fl_Widget *p, void *v);
 	static void DestinationCSInputCB(Fl_Widget *p, void *v);
 	static void SendButtonCB(Fl_Widget *p, void *v);
+	static void ClearButtonCB(Fl_Widget *p, void *v);
  };

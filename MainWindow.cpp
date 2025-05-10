@@ -715,6 +715,7 @@ void CMainWindow::UpdateGUI()
 			}
 		}
 	}
+	SMSDlg.Update();
 	Fl::unlock();
 }
 

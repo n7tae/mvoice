@@ -48,10 +48,16 @@ bool CSMSDlg::Init(CMainWindow *pMain)
 
 	pSendButton = new CTransmitButton(320, 10, 130, 30, _("Send"));
 	pSendButton->tooltip(_("Push to talk. This is actually a toggle button"));
-	pSendButton->labelsize(22);
+	pSendButton->labelsize(18);
 	pSendButton->deactivate();
 	pSendButton->selection_color(FL_YELLOW);
 	pSendButton->callback(&CSMSDlg::SendButtonCB, this);
+
+	pClearButton = new Fl_Button(460, 10, 130, 32, _("Clear"));
+	pClearButton->tooltip(_("Clear the outgoing message"));
+	pClearButton->labelsize(18);
+	pClearButton->deactivate();
+	pClearButton->callback(&CSMSDlg::ClearButtonCB, this);
 
 	pMsgBuffer = new Fl_Text_Buffer();
 	pMessage = new Fl_Text_Editor(10, 70, 580, 160, _("Outgoing Message"));
@@ -110,4 +116,23 @@ void CSMSDlg::SendButtonCB(Fl_Widget *, void *dlg)
 void CSMSDlg::SendButton()
 {
 
+}
+
+void CSMSDlg::ClearButtonCB(Fl_Widget *, void *dlg)
+{
+	((CSMSDlg *)dlg)->ClearButton();
+}
+
+void CSMSDlg::ClearButton()
+{
+	pMsgBuffer->text("");
+}
+
+void CSMSDlg::Update()
+{
+	DestinationCSInput();
+	if (pMsgBuffer->length())
+		pClearButton->activate();
+	else
+		pClearButton->deactivate();
 }
