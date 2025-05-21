@@ -632,10 +632,13 @@ void CMainWindow::ReadThread()
 		{
 			if (FD_ISSET(gatefd, &fdset))
 			{
-				SSMFrame frame;
-				M172AM.Read(frame.magic, sizeof(SSMFrame));
-				if (0 == memcmp(frame.magic, "M17 ", 4))
-					AudioManager.M17_2AudioMgr(frame);
+				CPacket pack;
+				M172AM.Read(pack.GetData(), MAX_PACKET_SIZE);
+				if (0 == memcmp(pack.GetCData(), "M17 ", 4))
+				{
+					pack.Initialize(54u, true);
+					AudioManager.M17_2AudioMgr(pack);
+				}
 			}
 			if (FD_ISSET(logfd, &fdset))
 			{

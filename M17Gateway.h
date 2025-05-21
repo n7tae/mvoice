@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020-2021 by Thomas A. Early N7TAE
+ *   Copyright (c) 2020-2021,2025 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -47,7 +47,7 @@ using SM17Link = struct sm17link_tag
 using SStream = struct stream_tag
 {
 	CTimer lastPacketTime;
-	SSMFrame header;
+	CPacket header;
 };
 
 class CM17Gateway : public CBase
@@ -79,13 +79,10 @@ private:
 
 	void LinkCheck();
 	void Write(const void *buf, const size_t size, const CSockAddress &addr) const;
-	void PlayAudioMessage(const char *msg);
 	void StreamTimeout();
-	void PlayVoiceFile();
-	void PlayAudioNotifyMessage(const char *msg);
 	void Send(const void *buf, size_t size, const CSockAddress &addr) const;
-	bool ProcessFrame(const uint8_t *buf);
-	bool ProcessPacket(const uint8_t *buf, int length);
+	bool ProcessFrame(const CPacket &pack);
+	bool ProcessPacket(const CPacket &pack);
 	bool ProcessAM(const uint8_t *buf);
 	void SendLinkRequest(const CCallsign &ref);
 };

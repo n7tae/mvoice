@@ -29,7 +29,7 @@
  * Description
  * -----------
  * The source file contains routines which calculate the CCITT CRC
- * values for an incomming byte string.
+ * values for an incoming byte string.
  */
 
 #include <stdlib.h>
@@ -62,27 +62,15 @@ CCRC::CCRC()
 	}
 }
 
-uint16_t CCRC::CalcCRC(const SSMFrame &frame) const
-{
-	uint16_t crc = CRC_START_16;
-	const uint8_t *input_str = frame.magic;
-
-	for (size_t a=0; a<sizeof(SSMFrame)-2; a++)
-	{
-		crc = (crc << 8) ^ crc_tab16[ ((crc >> 8) ^ uint16_t(input_str[a])) & 0x00FF ];
-	}
-
-	return crc;
-}
-
-uint16_t CCRC::CalcCRC(const uint8_t *buf, size_t size) const
+uint16_t CCRC::CalcCRC( const uint8_t *input_str, size_t num_bytes ) const
 {
 	uint16_t crc = CRC_START_16;
 
-	for (size_t a=0; a<size; a++)
-	{
-		crc = (crc << 8) ^ crc_tab16[ ((crc >> 8) ^ uint16_t(buf[a])) & 0x00FF ];
-	}
+	if ( input_str )
+		for (size_t a=0; a<num_bytes; a++)
+		{
+			crc = (crc << 8) ^ crc_tab16[ ((crc >> 8) ^ uint16_t(input_str[a])) & 0x00FF ];
+		}
 
 	return crc;
 }

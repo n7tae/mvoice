@@ -29,21 +29,19 @@
  * Description
  * -----------
  * The source file contains routines which calculate the CCITT CRC
- * values for an incomming byte string.
+ * values for an incoming byte string.
  */
 
 #pragma once
 
 #include <cstdint>
-
-#include "Packet.h"
+#include <cstddef>
 
 class CCRC
 {
 public:
 	CCRC();
-	uint16_t CalcCRC(const SSMFrame &frame) const;
-	uint16_t CalcCRC(const uint8_t *data, size_t size) const;
+	uint16_t CalcCRC(const uint8_t *buf, size_t len) const;
 
 private:
 	uint16_t crc_tab16[256];

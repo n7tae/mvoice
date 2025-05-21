@@ -26,7 +26,7 @@ CPPFLAGS += `fltk-config --cxxflags`
 
 EXE = mvoice
 
-SRCS = AboutDlg.cpp AudioManager.cpp Base.cpp Callsign.cpp Configure.cpp CRC.cpp M17Gateway.cpp M17RouteMap.cpp MainWindow.cpp SettingsDlg.cpp SMSDlg.cpp TransmitButton.cpp UDPSocket.cpp UnixDgramSocket.cpp
+SRCS = AboutDlg.cpp AudioManager.cpp Base.cpp Callsign.cpp Configure.cpp CRC.cpp M17Gateway.cpp M17RouteMap.cpp MainWindow.cpp Packet.cpp SettingsDlg.cpp SMSDlg.cpp TransmitButton.cpp UDPSocket.cpp UnixDgramSocket.cpp
 
 ifeq ($(USE44100), true)
 SRCS += Resampler.cpp

@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2020-2021 by Thomas A. Early N7TAE
+ *   Copyright (c) 2020-2021,2025 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -51,6 +51,7 @@ void CM17Gateway::ReleaseLock()
 
 bool CM17Gateway::Init(const CFGDATA &cfgdata)
 {
+	currentStream.header.Initialize(54u, true);
 	mlink.state = ELinkState::unlinked;
 	if (AM2M17.Open("am2m17"))
 		return true;
@@ -66,7 +67,6 @@ bool CM17Gateway::Init(const CFGDATA &cfgdata)
 			return true;
 	}
 	keep_running = true;
-	currentStream.header.streamid = 0;
 	CConfigure config;
 	config.CopyFrom(cfgdata);
 	config.CopyTo(cfg);
@@ -94,68 +94,26 @@ void CM17Gateway::StreamTimeout()
 	case 0x4u:
 		{ //3200
 			uint8_t silent[] = { 0x01u, 0x00u, 0x09u, 0x43u, 0x9cu, 0xe4u, 0x21u, 0x08u };
-			memcpy(currentStream.header.payload,   silent, 8);
-			memcpy(currentStream.header.payload+8, silent, 8);
+			memcpy(currentStream.header.GetVoiceData(),   silent, 8);
+			memcpy(currentStream.header.GetVoiceData(false), silent, 8);
 		}
 		break;
 	case 0x6u:
 		{ // 1600
 			uint8_t silent[] = { 0x01u, 0x00u, 0x04u, 0x00u, 0x25u, 0x75u, 0xddu, 0xf2u };
-			memcpy(currentStream.header.payload, silent, 8);
+			memcpy(currentStream.header.GetVoiceData(), silent, 8);
 		}
 		break;
 	default:
 		break;
 	}
 	// calculate the crc
-	currentStream.header.SetCRC(crc.CalcCRC(currentStream.header));
+	currentStream.header.CalcCRC();
 	// send the packet
-	M172AM.Write(currentStream.header.magic, sizeof(SSMFrame));
+	M172AM.Write(currentStream.header.GetCData(), currentStream.header.GetSize());
 	// close the stream;
-	currentStream.header.streamid = 0;
+	currentStream.header.SetStreamID(0u);
 	streamLock.unlock();
-}
-
-void CM17Gateway::PlayVoiceFile()
-{
-		// play a qnvoice file if it is specified
-		// this could be coming from qnvoice or qngateway (connected2network or notincache)
-		std::ifstream voicefile(qnvoice_file.c_str(), std::ifstream::in);
-		if (voicefile)
-		{
-			if (keep_running)
-			{
-				char line[FILENAME_MAX];
-				voicefile.getline(line, FILENAME_MAX);
-				// trim whitespace
-				char *start = line;
-				while (isspace(*start))
-					start++;
-				char *end = start + strlen(start) - 1;
-				while (isspace(*end))
-					*end-- = (char)0;
-				// anthing reasonable left?
-				if (strlen(start) > 2)
-					PlayAudioNotifyMessage(start);
-			}
-			//clean-up
-			voicefile.close();
-			remove(qnvoice_file.c_str());
-		}
-
-}
-
-void CM17Gateway::PlayAudioNotifyMessage(const char *msg)
-{
-	if (strlen(msg) > sizeof(SSMFrame) - 5)
-	{
-		fprintf(stderr, "Audio Message string too long: %s", msg);
-		return;
-	}
-	SSMFrame frame;
-	memcpy(frame.magic, "PLAY", 4);
-	memcpy(frame.magic+4, msg, strlen(msg)+1);	// copy the terminating NULL
-	M172AM.Write(frame.magic, sizeof(SSMFrame));
 }
 
 void CM17Gateway::Process()
@@ -187,11 +145,10 @@ void CM17Gateway::Process()
 			}
 		}
 
-		if (currentStream.header.streamid && currentStream.lastPacketTime.time() >= 2.0)
+		if (currentStream.header.GetStreamId() && currentStream.lastPacketTime.time() >= 2.0)
 		{
 			StreamTimeout(); // current stream has timed out
 		}
-		PlayVoiceFile(); // play if there is any msg to play
 
 		FD_ZERO(&fdset);
 		if (EInternetType::ipv6only != cfg.eNetType)
@@ -209,20 +166,20 @@ void CM17Gateway::Process()
 		}
 
 		bool is_packet = false;
-		uint8_t buf[859];
+		CPacket pack;
 		socklen_t fromlen = sizeof(struct sockaddr_storage);
 		int length;
 
 		if (keep_running && (ip4fd >= 0) && FD_ISSET(ip4fd, &fdset))
 		{
-			length = recvfrom(ip4fd, buf, 859, 0, from17k.GetPointer(), &fromlen);
+			length = recvfrom(ip4fd, pack.GetData(), MAX_PACKET_SIZE, 0, from17k.GetPointer(), &fromlen);
 			is_packet = true;
 			FD_CLR(ip4fd, &fdset);
 		}
 
 		if (keep_running && (ip6fd >= 0) && FD_ISSET(ip6fd, &fdset))
 		{
-			length = recvfrom(ip6fd, buf, 859, 0, from17k.GetPointer(), &fromlen);
+			length = recvfrom(ip6fd, pack.GetData(), MAX_PACKET_SIZE, 0, from17k.GetPointer(), &fromlen);
 			is_packet = true;
 			FD_CLR(ip6fd, &fdset);
 		}
@@ -234,19 +191,19 @@ void CM17Gateway::Process()
 			case 4:  				// DISC, ACKN or NACK
 				if ((ELinkState::unlinked != mlink.state) && (from17k == mlink.addr))
 				{
-					if (0 == memcmp(buf, "ACKN", 4))
+					if (0 == memcmp(pack.GetCData(), "ACKN", 4))
 					{
 						mlink.state = ELinkState::linked;
 						SendLog("Connected to %s\n", mlink.cs.GetCS().c_str());
 						mlink.receivePingTimer.start();
 					}
-					else if (0 == memcmp(buf, "NACK", 4))
+					else if (0 == memcmp(pack.GetCData(), "NACK", 4))
 					{
 						mlink.state = ELinkState::unlinked;
 						SendLog("Link request refused from %s\n", mlink.cs.GetCS().c_str());
 						mlink.state = ELinkState::unlinked;
 					}
-					else if (0 == memcmp(buf, "DISC", 4))
+					else if (0 == memcmp(pack.GetCData(), "DISC", 4))
 					{
 						SendLog("Disconnected from %s\n", mlink.cs.GetCS().c_str());
 						mlink.state = ELinkState::unlinked;
@@ -264,12 +221,12 @@ void CM17Gateway::Process()
 			case 10: 				// PING or DISC
 				if ((ELinkState::linked == mlink.state) && (from17k == mlink.addr))
 				{
-					if (0 == memcmp(buf, "PING", 4))
+					if (0 == memcmp(pack.GetCData(), "PING", 4))
 					{
 						Send(mlink.pongPacket.magic, 10, mlink.addr);
 						mlink.receivePingTimer.start();
 					}
-					else if (0 == memcmp(buf, "DISC", 4))
+					else if (0 == memcmp(pack.GetCData(), "DISC", 4))
 					{
 						mlink.state = ELinkState::unlinked;
 					}
@@ -280,27 +237,30 @@ void CM17Gateway::Process()
 				}
 				break;
 			default:	// An M17 frame
-				if (0 == memcmp(buf, "M17", 3))
+				if (length > 37 && 0==memcmp(pack.GetCData(), "M17P", 4))
 				{
-					if (length == sizeof(SSMFrame) and ' ' == buf[3])
-						is_packet = ProcessFrame(buf);
-					else if (37 < length and length < 860 and 'P' == buf[3])
-						is_packet = ProcessPacket(buf, length);
-					else
-						is_packet = false;
+					pack.Initialize(length, false);
+					is_packet = ProcessPacket(pack);
 				}
+				else if (54u==length && 0==memcmp(pack.GetCData(), "M17 ", 4))
+				{
+					pack.Initialize(length, true);
+					is_packet = ProcessFrame(pack);
+				}
+				else
+					is_packet = false;
 				break;
 			}
 			if (! is_packet)
-				Dump("Unknown packet", buf, length);
+				Dump("Unknown packet", pack.GetCData(), length);
 		}
 
 		if (keep_running && FD_ISSET(amfd, &fdset))
 		{
-			SSMFrame frame;
-			length = AM2M17.Read(frame.magic, sizeof(SSMFrame));
-			const CCallsign dest(frame.lsd.addr_dst);
-			//printf("DEST=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), frame.lsd.addr_dst[0], frame.lsd.addr_dst[1], frame.lsd.addr_dst[2], frame.lsd.addr_dst[3], frame.lsd.addr_dst[4], frame.lsd.addr_dst[5]);
+			CPacket pack;
+			length = AM2M17.Read(pack.GetData(), MAX_PACKET_SIZE);
+			const CCallsign dest(pack.GetCDstAddress());
+			//printf("DEST=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), pack.GetCDstAddress()[0], pack.GetCDstAddress()[1], pack.GetCDstAddress()[2], pack.GetCDstAddress()[3], pack.GetCDstAddress()[4], pack.GetCDstAddress()[5]);
 			//std::cout << "Read " << length << " bytes with dest='" << dest.GetCS() << "'" << std::endl;
 			if (0==dest.GetCS(3).compare("M17") || 0==dest.GetCS(3).compare("URF")) // Linking a reflector
 			{
@@ -309,7 +269,7 @@ void CM17Gateway::Process()
 				case ELinkState::linked:
 					if (mlink.cs == dest) // this is heading in to the correct desination
 					{
-						Write(frame.magic, sizeof(SSMFrame), mlink.addr);
+						Write(pack.GetCData(), length, mlink.addr);
 					}
 					break;
 				case ELinkState::unlinked:
@@ -337,7 +297,7 @@ void CM17Gateway::Process()
 				call.CodeOut(disc.cscode);
 				Write(disc.magic, 10, mlink.addr);
 			} else {
-				Write(frame.magic, sizeof(SSMFrame), destination);
+				Write(pack.GetCData(), length, destination);
 			}
 			FD_CLR(amfd, &fdset);
 		}
@@ -380,41 +340,39 @@ void CM17Gateway::SendLinkRequest(const CCallsign &ref)
 	linkingTime.start();
 }
 
-bool CM17Gateway::ProcessPacket(const uint8_t *buf, int length)
+bool CM17Gateway::ProcessPacket(const CPacket &pack)
 {
-	SPMFrame frame;
-	memcpy(frame.magic, buf, length);
-	auto datasize = size_t(length - 36); // incudes data type byte(s) but not trailing data CRC
-	auto crccalc = crc.CalcCRC(frame.lsd.addr_dst, 28);
+	// check the lsf crc
+	auto crccalc = crc.CalcCRC(pack.GetCData()+4, 28);
 	//std::cout << "LSF:: " << std::hex << std::showbase << "calc crc: " << crccalc << " received crc: " << frame.GetCRC() << std::noshowbase << std::dec << std::endl;
-	if (frame.GetCRC() == crccalc) {
-		const CCallsign dst(frame.lsd.addr_dst);
-		const CCallsign src(frame.lsd.addr_src);
+	if (pack.GetCRC() == crccalc) {
+		const CCallsign dst(pack.GetCDstAddress());
+		const CCallsign src(pack.GetCSrcAddress());
 		SendLog("PM Packet to %s from %s:\n", dst.GetCS().c_str(), src.GetCS().c_str());
-		auto payloadlength = unsigned(length - 36);
-		auto datacrccalc = crc.CalcCRC(frame.data, payloadlength);
-		uint16_t datacrc = 0x100u * frame.data[payloadlength] + frame.data[payloadlength+1];
+		auto payloadlength = unsigned(pack.GetSize() - 36);
+		auto datacrccalc = crc.CalcCRC(pack.GetCData()+34, payloadlength);
+		uint16_t datacrc = pack.GetCRC(false);
 		//std::cout << "Payload:: length: " << payloadlength << std::hex << std::showbase << " calc crc: " << datacrccalc << " received crc: " << datacrc << std::noshowbase << std::dec << std::endl;
 
 		if (datacrc == datacrccalc)
 		{
-			if (0x05u == frame.data[0])
+			if (0x05u == pack.GetCData()[34])
 			{
-				if (datasize > (strnlen((char *)frame.data, length-31)))
+				if (payloadlength > (strnlen((const char *)pack.GetCData()+34, payloadlength)))
 				{
-					SendLog("Message: %s\n", (char *)frame.data+1);
+					SendLog("Message: %s\n", (const char *)pack.GetCData()+34);
 				}
 				else
 				{
 					SendLog("Could not find a null byte in the data!\n");
-					Dump("PM Packet data:", frame.data, length - 34);
+					Dump("PM Packet data:", pack.GetCData()+34, payloadlength);
 					return true;
 				}
 			}
 			else
 			{
-				SendLog("Is not an SMS type data field, but type is %u\n", frame.data[0]);
-				Dump("PM Packet data:", frame.data, length - 34);
+				SendLog("Is not an SMS type data field, but type is %u\n", pack.GetCData()[34]);
+				Dump("PM Packet data:", pack.GetCData(), payloadlength);
 				return true;
 			}
 		}
@@ -432,22 +390,20 @@ bool CM17Gateway::ProcessPacket(const uint8_t *buf, int length)
 	return true;
 }
 
-bool CM17Gateway::ProcessFrame(const uint8_t *buf)
+bool CM17Gateway::ProcessFrame(const CPacket &pack)
 {
-	SSMFrame frame;
-	memcpy(frame.magic, buf, sizeof(SSMFrame));
-	if (currentStream.header.streamid)
+	if (currentStream.header.GetStreamId())
 	{
-		if (currentStream.header.streamid == frame.streamid)
+		if (currentStream.header.GetStreamId() == pack.GetStreamId())
 		{
-			M172AM.Write(frame.magic, sizeof(SSMFrame));
-			currentStream.header.SetFrameNumber(frame.GetFrameNumber());
-			uint16_t fn = frame.GetFrameNumber();
+			M172AM.Write(pack.GetCData(), pack.GetSize());
+			currentStream.header.SetFrameNumber(pack.GetFrameNumber());
+			uint16_t fn = pack.GetFrameNumber();
 			if (fn & 0x8000u)
 			{
-				SendLog("Close stream id=0x%04x, duration=%.2f sec\n", frame.GetStreamID(), 0.04f * (0x7fffu & fn));
+				SendLog("Close stream id=0x%04x, duration=%.2f sec\n", pack.GetStreamId(), 0.04f * (0x7fffu & fn));
 				currentStream.header.SetFrameNumber(0); // close the stream
-				currentStream.header.streamid = 0;
+				currentStream.header.SetStreamID(0u);
 				streamLock.unlock();
 			}
 			else
@@ -466,13 +422,13 @@ bool CM17Gateway::ProcessFrame(const uint8_t *buf)
 		if (streamLock.try_lock())
 		{
 			// then init the currentStream
-			auto check = crc.CalcCRC(frame);
-			if (frame.GetCRC() != check)
-				std::cout << "Header Packet crc=0x" << std::hex << frame.GetCRC() << " calculate=0x" << std::hex << check << std::endl;
-			memcpy(currentStream.header.magic, frame.magic, sizeof(SSMFrame));
-			M172AM.Write(frame.magic, sizeof(SSMFrame));
-			const CCallsign call(frame.lsd.addr_src);
-			SendLog("Open stream id=0x%04x from %s at %s\n", frame.GetStreamID(), call.GetCS().c_str(), from17k.GetAddress());
+			auto check = crc.CalcCRC(pack.GetCData(), 52u);
+			if (pack.GetCRC() != check)
+				std::cout << "Header Packet crc=0x" << std::hex << pack.GetCRC() << " calculate=0x" << std::hex << check << std::endl;
+			memcpy(currentStream.header.GetData(), pack.GetCData(), 54u);
+			M172AM.Write(pack.GetCData(), 54u);
+			const CCallsign src(pack.GetCSrcAddress());
+			SendLog("Open stream id=0x%04x from %s at %s\n", pack.GetStreamId(), src.GetCS().c_str(), from17k.GetAddress());
 			currentStream.lastPacketTime.start();
 		}
 		else
@@ -489,20 +445,6 @@ void CM17Gateway::Write(const void *buf, const size_t size, const CSockAddress &
 		ipv6.Write(buf, size, addr);
 	else
 		ipv4.Write(buf, size, addr);
-}
-
-void CM17Gateway::PlayAudioMessage(const char *msg)
-{
-	auto len = strlen(msg);
-	if (len > sizeof(SSMFrame)-5)
-	{
-		fprintf(stderr, "Audio Message string too long: %s", msg);
-		return;
-	}
-	SSMFrame m17;
-	memcpy(m17.magic, "PLAY", 4);
-	memcpy(m17.magic+4, msg, len+1);	// copy the terminating NULL
-	M172AM.Write(m17.magic, sizeof(SSMFrame));
 }
 
 void CM17Gateway::Send(const void *buf, size_t size, const CSockAddress &addr) const

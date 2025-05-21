@@ -136,38 +136,37 @@ void CAudioManager::audio2codec(const bool is_3200)
 void CAudioManager::QuickKey(const std::string &d, const std::string &s)
 {
 	hot_mic = true;
-	SSMFrame frame;
-	CCallsign dest(d), sour(s);
-	memcpy(frame.magic, "M17 ", 4);
-	frame.streamid = random.NewStreamID();
-	dest.CodeOut(frame.lsd.addr_dst);
-	sour.CodeOut(frame.lsd.addr_src);
-	frame.SetFrameType(0x5u);
-	memset(frame.lsd.metadata, 0, 14);
+	CPacket pack;
+	pack.Initialize(54u, true);
+	CCallsign dst(d), src(s);
+	pack.SetStreamID(random.NewStreamID());
+	dst.CodeOut(pack.GetDstAddress());
+	src.CodeOut(pack.GetSrcAddress());
+	pack.SetFrameType(0x5u);
 	const uint8_t quiet[] = { 0x01u, 0x00u, 0x09u, 0x43u, 0x9cu, 0xe4u, 0x21u, 0x08u };
-	memcpy(frame.payload,     quiet, 8);
-	memcpy(frame.payload + 8, quiet, 8);
+	memcpy(pack.GetVoiceData(true),  quiet, 8);
+	memcpy(pack.GetVoiceData(false), quiet, 8);
 	for (uint16_t i=0; i<5; i++) {
-		frame.SetFrameNumber((i < 4) ? i : i | 0x8000u);
-		frame.SetCRC(crc.CalcCRC(frame));
-		AM2M17.Write(frame.magic, sizeof(SSMFrame));
+		pack.SetFrameNumber((i < 4) ? i : i | 0x8000u);
+		pack.CalcCRC();
+		AM2M17.Write(pack.GetCData(), pack.GetSize());
 	}
 	hot_mic = false;
 }
 
-void CAudioManager::codec2gateway(const std::string &dest, const std::string &sour, bool voiceonly)
+void CAudioManager::codec2gateway(const std::string &dst, const std::string &src, bool voiceonly)
 {
-	CCallsign destination(dest);
-	CCallsign source(sour);
+	CCallsign destination(dst);
+	CCallsign source(src);
 
 	// make most of the M17 IP frame
 	// TODO: metadata and encryption and more TODOs mentioned later...
-	SSMFrame ipframe;
-	memcpy(ipframe.magic, "M17 ", 4);
-	ipframe.streamid = random.NewStreamID(); // no need to htons because it's just a random id
-	ipframe.SetFrameType(voiceonly ? 0x5U : 0x7U);
-	destination.CodeOut(ipframe.lsd.addr_dst);
-	source.CodeOut(ipframe.lsd.addr_src);
+	CPacket pack;
+	pack.Initialize(54u, true);
+	pack.SetStreamID(random.NewStreamID());
+	pack.SetFrameType(voiceonly ? 0x5U : 0x7U);
+	destination.CodeOut(pack.GetDstAddress());
+	source.CodeOut(pack.GetSrcAddress());
 
 	unsigned int count = 0;
 	bool last;
@@ -175,18 +174,18 @@ void CAudioManager::codec2gateway(const std::string &dest, const std::string &so
 		// we'll wait until there is something
 		CC2DataFrame cframe = c2_queue.WaitPop();
 		last = cframe.GetFlag();
-		memcpy(ipframe.payload, cframe.GetData(), 8);
+		memcpy(pack.GetVoiceData(), cframe.GetData(), 8);
 		if (voiceonly) {
 			if (last) {
 				// we should never get here, but just in case...
 				std::cerr << "WARNING: unexpected end of 3200 voice stream!" << std::endl;
 				const uint8_t quiet[] = { 0x00u, 0x01u, 0x43u, 0x09u, 0xe4u, 0x9cu, 0x08u, 0x21u };	// for 3200 only!
-				memcpy(ipframe.payload+8, quiet, 8);
+				memcpy(pack.GetVoiceData(false), quiet, 8);
 			} else {
 				// fill in the second part of the payload for C2 3200
 				cframe = c2_queue.WaitPop();
 				last = cframe.GetFlag();
-				memcpy(ipframe.payload+8, cframe.GetData(), 8);
+				memcpy(pack.GetVoiceData(false), cframe.GetData(), 8);
 			}
 		}
 		// TODO: do something with the 2nd half of the payload when it's voice + "data"
@@ -194,11 +193,11 @@ void CAudioManager::codec2gateway(const std::string &dest, const std::string &so
 		uint16_t fn = count++ % 0x8000u;
 		if (last)
 			fn |= 0x8000u;
-		ipframe.SetFrameNumber(fn);
+		pack.SetFrameNumber(fn);
 
-		// TODO: calculate crc
+		pack.CalcCRC();
 
-		AM2M17.Write(ipframe.magic, sizeof(SSMFrame));
+		AM2M17.Write(pack.GetCData(), pack.GetSize());
 	} while (! last);
 }
 
@@ -333,28 +332,27 @@ void CAudioManager::PlayEchoDataThread()
 	play_audio_fut.get();
 }
 
-void CAudioManager::M17_2AudioMgr(const SSMFrame &m17)
+void CAudioManager::M17_2AudioMgr(const CPacket &pack)
 {
 	static bool is_3200;
 	if (! play_file) {
-		if (0U==m17_sid_in && 0U==(m17.GetFrameNumber() & 0x8000u)) {	// don't start if it's the last audio frame
+		if (0U==m17_sid_in && 0U==(pack.GetFrameNumber() & 0x8000u)) {	// don't start if it's the last audio frame
 			// here comes a new stream
-			m17_sid_in = m17.streamid;
-			is_3200 = ((m17.GetFrameType() & 0x6u) == 0x4u);
+			m17_sid_in = pack.GetStreamId();
+			is_3200 = ((pack.GetFrameType() & 0x6u) == 0x4u);
 			pMainWindow->Receive(true);
 			// launch the audio processing threads
 			codec2audio_fut = std::async(std::launch::async, &CAudioManager::codec2audio, this, is_3200);
 			play_audio_fut = std::async(std::launch::async, &CAudioManager::play_audio, this);
 		}
-		if (m17.streamid != m17_sid_in)
+		if (pack.GetStreamId() != m17_sid_in)
 			return;
-		auto payload = m17.payload;
-		CC2DataFrame dataframe(payload);
-		auto last = (0x8000u == (m17.GetFrameNumber() & 0x8000u));
+		CC2DataFrame dataframe(pack.GetCVoiceData());
+		auto last = (0x8000u == (pack.GetFrameNumber() & 0x8000u));
 		dataframe.SetFlag(is_3200 ? false : last);
 		c2_queue.Push(dataframe);
 		if (is_3200) {
-			CC2DataFrame frame2(payload+8);
+			CC2DataFrame frame2(pack.GetCVoiceData(false));
 			frame2.SetFlag(last);
 			c2_queue.Push(frame2);
 		}
@@ -472,20 +470,21 @@ void CAudioManager::KeyOff()
 void CAudioManager::Link(const std::string &linkcmd)
 {
 	if (0 == linkcmd.compare(0, 3, "M17")) { //it's an M17 link/unlink command
-		SSMFrame frame;
+		CPacket pack;
+		pack.Initialize(54, true);
 		if ('L' == linkcmd.at(3)) {
 			if (13 == linkcmd.size()) {
 				std::string sDest(linkcmd.substr(4));
 				sDest[7] = 'L';
 				CCallsign dest(sDest);
-				dest.CodeOut(frame.lsd.addr_dst);
+				dest.CodeOut(pack.GetDstAddress());
 				//printf("dest=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), frame.lsd.addr_dst[0], frame.lsd.addr_dst[1], frame.lsd.addr_dst[2], frame.lsd.addr_dst[3], frame.lsd.addr_dst[4], frame.lsd.addr_dst[5]);
-				AM2M17.Write(frame.magic, sizeof(SSMFrame));
+				AM2M17.Write(pack.GetCData(), pack.GetSize());
 			}
 		} else if ('U' == linkcmd.at(3)) {
 			CCallsign dest("U");
-			dest.CodeOut(frame.lsd.addr_dst);
-			AM2M17.Write(frame.magic, sizeof(SSMFrame));
+			dest.CodeOut(pack.GetDstAddress());
+			AM2M17.Write(pack.GetCData(), pack.GetSize());
 		}
 	}
 }
