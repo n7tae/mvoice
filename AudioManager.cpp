@@ -478,7 +478,7 @@ void CAudioManager::Link(const std::string &linkcmd)
 				sDest[7] = 'L';
 				CCallsign dest(sDest);
 				dest.CodeOut(pack.GetDstAddress());
-				//printf("dest=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), frame.lsd.addr_dst[0], frame.lsd.addr_dst[1], frame.lsd.addr_dst[2], frame.lsd.addr_dst[3], frame.lsd.addr_dst[4], frame.lsd.addr_dst[5]);
+				//printf("Link Packet: dest=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), pack.GetCDstAddress()[0], pack.GetCDstAddress()[1], pack.GetCDstAddress()[2], pack.GetCDstAddress()[3], pack.GetCDstAddress()[4], pack.GetCDstAddress()[5]);
 				AM2M17.Write(pack.GetCData(), pack.GetSize());
 			}
 		} else if ('U' == linkcmd.at(3)) {

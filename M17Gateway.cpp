@@ -258,7 +258,8 @@ void CM17Gateway::Process()
 		if (keep_running && FD_ISSET(amfd, &fdset))
 		{
 			CPacket pack;
-			length = AM2M17.Read(pack.GetData(), MAX_PACKET_SIZE);
+			pack.Initialize(54, true);
+			length = AM2M17.Read(pack.GetData(), pack.GetSize());
 			const CCallsign dest(pack.GetCDstAddress());
 			//printf("DEST=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), pack.GetCDstAddress()[0], pack.GetCDstAddress()[1], pack.GetCDstAddress()[2], pack.GetCDstAddress()[3], pack.GetCDstAddress()[4], pack.GetCDstAddress()[5]);
 			//std::cout << "Read " << length << " bytes with dest='" << dest.GetCS() << "'" << std::endl;

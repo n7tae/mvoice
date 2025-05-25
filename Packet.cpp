@@ -67,7 +67,7 @@ void CPacket::SetStreamID(uint16_t sid)
 {
 	if (isstream)
 	{
-		data[4] = 0xffu & sid / 0x100u;
+		data[4] = 0xffu & (sid >> 8);
 		data[5] = 0xffu & sid;
 	}
 }
@@ -84,8 +84,8 @@ uint16_t CPacket::GetFrameType() const
 void CPacket::SetFrameType(uint16_t ft)
 {
 	unsigned offset = isstream ? 18 : 16;
-	data[offset] = 0xffu & ft / 0x100u;
-	data[++offset] = 0xffu * ft;
+	data[offset]   = 0xffu & (ft >> 8);
+	data[offset+1] = 0xffu & ft;
 }
 
 uint16_t CPacket::GetFrameNumber() const
@@ -117,7 +117,7 @@ void CPacket::SetFrameNumber(uint16_t fn)
 {
 	if (isstream)
 	{
-		data[34] = 0xffu & fn / 0x100u;
+		data[34] = 0xffu & (fn >> 8);
 		data[35] = 0xffu & fn;
 	}
 }
@@ -125,7 +125,7 @@ void CPacket::SetFrameNumber(uint16_t fn)
 const uint8_t *CPacket::GetCVoiceData(bool firsthalf) const
 {
 	if (isstream)
-		return data + (firsthalf ? 38u : 44u);
+		return data + (firsthalf ? 36u : 44u);
 	else
 		return 0u;
 }
@@ -133,7 +133,7 @@ const uint8_t *CPacket::GetCVoiceData(bool firsthalf) const
 uint8_t *CPacket::GetVoiceData(bool firsthalf)
 {
 	if (isstream)
-		return data + (firsthalf ? 38u : 44u);
+		return data + (firsthalf ? 36u : 44u);
 	else
 		return 0u;
 }
@@ -150,13 +150,17 @@ void CPacket::CalcCRC()
 	if (isstream)
 	{
 		auto crc = CRC.CalcCRC(data, 52);
-		data[52] = uint8_t(crc >> 8);
-		data[53] = uint8_t(crc & 0xffu);
+		data[52] = 0xffu & (crc >> 8);
+		data[53] = 0xffu & crc;
 	}
 	else
 	{	// set the CRC for the LSF
 		auto crc = CRC.CalcCRC(data+4, 28);
-		data[32] = uint8_t(crc >> 8);
-		data[33] = uint8_t(crc & 0xffu);
+		data[32] = 0xffu & (crc >> 8);
+		data[33] = 0xffu & crc;
+		// now for the payload
+		crc = CRC.CalcCRC(data+34, size-36);
+		data[size-2] = 0xffu & (crc >> 8);
+		data[size-1] = 0xffu & crc;
 	}
 }

@@ -804,8 +804,8 @@ void CMainWindow::DestinationCSInput()
 		pDSTCallsignInput->position(pos);
 	}
 
-	// the destination either has to be @ALL or a legal callsign
-	bDestCS = 0==dest.compare("@ALL") || std::regex_match(dest, M17CallRegEx);
+	// the destination either has to be @ALL, PARROT or a legal callsign
+	bDestCS = 0==dest.compare("@ALL") or 0==dest.compare("PARROT") or std::regex_match(dest, M17CallRegEx);
 	pDSTCallsignInput->color(bDestCS ? 2 : 1);
 	pDSTCallsignInput->damage(FL_DAMAGE_ALL);
 }
