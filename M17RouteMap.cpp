@@ -53,6 +53,7 @@ static CURLcode curl_read(const std::string& url, std::ostream& os, long timeout
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0"))
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
 		{
 			code = curl_easy_perform(curl);
@@ -147,7 +148,7 @@ void CM17RouteMap::ReadJson()
 {
 	// downlaod and parse the mrefd and urf json file
 	std::stringstream ss;
-	if (ReadM17Json("https://dvref.com/mrefd/reflectors/", ss))
+	if (ReadM17Json("https://dvref.com/mrefd/reflectors/?format=json", ss))
 	{
 		std::cerr << "ERROR curling M17 reflectors from dvref.com" << std::endl;
 	}
@@ -194,7 +195,7 @@ void CM17RouteMap::ReadJson()
 
 	ss.str(std::string());
 
-	if (ReadM17Json("https://dvref.com/urfd/reflectors/", ss))
+	if (ReadM17Json("https://dvref.com/urfd/reflectors/?format=json", ss))
 	{
 		std::cerr << "ERROR curling URF reflectors from dvref.com" << std::endl;
 		return;
