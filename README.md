@@ -1,6 +1,6 @@
 # M17 Digital Voice, now using FLTK
 
-*M17 Digital Voice* , mvoice, is a fully functional, graphical repeater. It uses David Rowes Codec 2 and operates as a complete M17 repeater, only there is no RF component. It can Link to M17 reflectors and it can also do *routing*! It works best with a USB-based headset with microphone. mvoice uses the default pulseaudio/ALSA input and output device, so for most versions of linux, all you need to do is plug your headset in and you should be ready to go.
+*M17 Digital Voice* , mvoice, is a fully functional, M17 gateway and module for both voice and packet mode. For voice, it uses David Rowes Codec 2 and operates as a complete M17 repeater, only there is no RF component. It can Link to M17 reflectors and it can also do *routing*! It works best with a USB-based headset with microphone. mvoice uses the default pulseaudio/ALSA input and output device, so for most versions of linux, all you need to do is plug your headset in and you should be ready to go. mvoice does SMS texting using M17 Packet mode. At this time, mvoice only supports SMS texting.
 
 ## Building on a Raspberry Pi
 
@@ -141,23 +141,23 @@ Plug in your headset and start *mvoice*: Open a shell and type `mvoice` if ~/bin
 
 ## Firewall
 
-*mvoice* can operate in linking or routing mode. If you want to be able to receive incoming callsign routes, you'll need to port-forward UDP 17000 on your network firewall. If you can't, you can still connect to M17 reflectors. You can originate a direct, callsign route, but if there is a long pause in the QSO, you're firewall will shutdown the port until you key up again.
+*mvoice* can connect to a reflector module (channel) or it can also do direct one-to-one routing to a target. If you want to be able to receive incoming callsign routes, you'll need to port-forward UDP 17000 on your network firewall. If you can't, you can still connect to M17 reflectors.
 
 ## Operating
 
-The first thing *mvoice* will do is to download the list of registered reflectors from the M17project.org website and save it in your configuration directory. It will do this every time you start *mvoice*.
+The first thing *mvoice* will do is to download the list of registered reflectors from the dvref.com website and save it in your configuration directory. It will do this every time you start *mvoice*. It will download both M17 and URF reflectors which have been registered at that site.
 
 Once it launches, click the **Settings** button and make sure to set your callsign and the codec setting on the M17 page. You can usually leave the audio settings on "default". Also enable IPv6 if your internet provider supports it. Click the Okay button and your settings will be saved in your configuration directory.
 
-On the main window, set your destination callsign and IP address. You can select a reflector from the dropdown list and that will fill the Destination callsign and IP address, or you can type the callsign into the Callsign Entry box. If the IP address can be found from your local data, the IP will be automatically set, otherwise, you will need to know the IP address of your destination. Once you have valid values for both, you can save these for future use, if it's not already in your database. Please remember that when you are setting a new destination, the callsign and IP entry will "approve" their input strictly based on syntax and not whether the callsign or an IP address is actually a place where an M17 destination exists.
+On the main window, set your destination callsign and IP address. You can select a reflector from the dropdown list and that will fill the Destination callsign and IP address, or you can type the callsign into the Callsign Entry box. The dropdown list of targets is very large and it can be tedious to find a target in the lowest part of the list. (I'm working on a solution.) It can be much easier to simply type into the target field. Once you've typed something in your database, it will fill in the IP address an port number for you. If target cannot be found in the database, you will need to know the IP address of your destination. You also need to specify UDP port number. Usually this is 17000. Once you have valid values for all three items, you can save these for future use, if it's not already in your database. Please remember that when you are setting a new destination, the callsign and IP entry will "approve" their input strictly based on syntax and not whether the callsign, an IP address and a port is actually a place where an M17 destination exists. If you are connecting to a reflector, select the module you want to use.
 
 Please note that you don't have to save a destination to use it, but it will not be available in the drop-down selection until you do save it. If you haven't saved a destination and you select another destination from the dropdown list, your unsaved destination will no longer be available. If you are going to use an M17 reflector, a valid callsign is exactly **seven** characters long, `M17-xxx` where `xxx` is made up of letters or numbers. Or, now you can also link to the new URF reflectors. A URF reflector callsign is exactly **six** characters long, beginning with `URF`.
 
 Once you set the reflector callsign, you can select the reflector module with the radio buttons from `A` to `Z`. If you are callsign routing to an individual, you can provide a module in the ninth position, but it isn't necessary. If *mvoice* has found a URL for the target, you can open the reflector's dashboard with the **Open Dashboard** button.
 
-For Linking, you can select a reflector. The link button will only be activated after you have entered a valid target in the destination callsign and IP address. This validation **does not** check to see if reflect exists at that IP and the module you are requesting is actually configured and operational, or even if it actually exists.
+You need to connect to a reflector before you can use it. The connect button will only be activated after you have entered a valid target in the destination callsign and IP address and port number. If you've entered a malformed field for any of the three values, the background for that field will turn red. Properly formed input will have green backgrounds. This validation **does not** check to see if reflect exists at that IP and the module you are requesting is actually configured and operational, or even if it actually exists. Once all three values are green, you can try to connect to it with the `Connect` button.
 
-There are three "transmitting" buttons on *mvoice* that are explained below, but first, an explanation:
+There are four "transmitting" buttons on *mvoice* that are explained below, but first, an explanation:
 
 Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press and release these buttons to start their function and press and release again to stop their function. Both of these buttons also have built-in timers and will show the *approximate* "key on" time.
 
@@ -167,7 +167,11 @@ Both the **Echo Test** and the **PTT** buttons are *toggle* buttons. You press a
 
 3) **Quick Key** is a single press button that will send a 200 millisecond transmission. This is useful when trying to get the attention of a Net Control Operator when your are participating in a Net. It could also be useful if you are trying to do a direct callsign route when you are behind a firewall you can't configure.
 
-Starting with Version 1.2.0, *mvoice* can receive M17 Packet Mode packets. SMS type data (null-terminated UTF-8 encoded strings) will be displayed in the main window text area after reporting the source callsign of the sender. Other packet types will be dumped in the shell where *mvoice* was launched. If the packet has either a bad LSF (link setup frame), or payload CRC, that will be reported in the main window text area. In a later release, *mvoice* will be able to send text messages.
+4) **Send** on the SMS Texting is used to send a single text message to your target using M17 Packet Mode. This SMS Texting is hidden by default and you show this window by selecting the `Texting...` menu item in the main window. You can compose you message and send it to the target from this window. Messages can be over 800 character long, but usually they will just be a short line or two. After you press the `Send` button, the composition window will be cleared and will be displayed in the main window as an outgoing message.
+
+New to version 1.3, you can also specify the DST callsign for both streaming (voice) mode and packet mode. The DST must be either a valid ham radio callsign, `@ALL` or `#PARROT`. You should know that mvoice operates in a *promiscuous* mode: it will play any incoming voice stream and display any incoming SMS text message regardless of what's specified in the DST encoded callsign field and the **Channel Access Number or "CAN"** of the incoming packet(s). Other M17 receiving system can be more restrictive. Some may only pass data with a specific CAN or only data with a DST of `@ALL` (the M17 BROADCAST address), or their specific callsign. One more thing to note is that when you talk or text through a reflector, your data will be sent to all other client on that reflector module, regardless of the DST you have set.
+
+The `PARROT` DST is for parroting your you input on the latest M17 reflectors (version 1.1 or above). Make sure the reflector to which you are connected is at this release or later before attempting a parrot.
 
 ## Language support
 

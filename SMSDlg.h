@@ -31,14 +31,13 @@ public:
 	bool Init(CMainWindow *);
 	void Show();
 	void Hide();
-	void Update();
+	void UpdateSMS(bool cansend);
 
 private:
 	CMainWindow *pMainWindow;
 	Fl_Double_Window *pDlg;
 	Fl_Input *pDSTCallsignInput;
-	CTransmitButton *pSendButton;
-	Fl_Button *pClearButton;
+	Fl_Button *pClearButton, *pSendButton;
 	Fl_Text_Editor *pMessage;
 	Fl_Text_Buffer *pMsgBuffer;
 	

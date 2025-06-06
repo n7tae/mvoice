@@ -25,6 +25,7 @@
 #include <netdb.h>
 
 #include <iostream>
+#include <sstream>
 #include <iomanip>
 #include <fstream>
 #include <thread>
@@ -337,7 +338,12 @@ bool CMainWindow::Init()
 		idstr.append(std::to_string(getpid()));
 		std::cout << "Using " << idstr << " for identity" << std::endl;
 	}
-	node.run(17171, dht::crypto::generateIdentity(idstr), true, 59973);
+	try {
+		node.run(17171, dht::crypto::generateIdentity(idstr), true, 59973);
+	} catch (const std::exception &e) {
+		std::cout << "MVoice could not start the Ham-network! " << e.what() << std::endl;
+		return true;
+	}
 
 	// bootstrap the DHT from either saved nodes from a previous run,
 	// or from the configured node
@@ -369,7 +375,7 @@ bool CMainWindow::Init()
 	}
 	else
 	{
-		std::cout << "ERROR: not connected to any DHT network!" << std::endl;
+		std::cout << "ERROR: MVoice did not bootstrap the Ham-DHT network!" << std::endl;
 	}
 #endif
 
@@ -718,8 +724,41 @@ void CMainWindow::UpdateGUI()
 			}
 		}
 	}
-	SMSDlg.Update();
 	Fl::unlock();
+}
+
+bool CMainWindow::SendMessage(const std::string &dst, const std::string &msg)
+{
+	auto l = gateM17.TryLock();
+	if (l)
+	{
+		CPacket pack;
+		pack.Initialize(38u+msg.length(), false);
+		CCallsign cs(dst);
+		cs.CodeOut(pack.GetDstAddress());
+		cs.CSIn(cfgdata.sM17SourceCallsign);
+		cs.CodeOut(pack.GetSrcAddress());
+		pack.SetFrameType(0);
+		pack.GetData()[34] = 0x5u;
+		auto len = msg.length();
+		if (len > (MAX_PACKET_SIZE - 38u))
+		{
+			insertLogText("Message is too long, it will be truncated.\n");
+			len = MAX_PACKET_SIZE -38u;
+		}
+		memcpy(pack.GetData()+35, msg.c_str(), len);
+		pack.CalcCRC();
+		gateM17.SendMessage(pack);
+		gateM17.ReleaseLock();
+		std::stringstream ss;
+		ss << "Sent an SMS text msg to " << dst << ":\n" << msg << "\n";
+		insertLogText(ss.str().c_str());
+	}
+	else
+	{
+		insertLogText("Could not set the message because the gateway was locked!\n");
+	}
+	return l;
 }
 
 bool CMainWindow::ToUpper(std::string &s)
@@ -805,7 +844,7 @@ void CMainWindow::DestinationCSInput()
 	}
 
 	// the destination either has to be @ALL, PARROT or a legal callsign
-	bDestCS = 0==dest.compare("@ALL") or 0==dest.compare("PARROT") or std::regex_match(dest, M17CallRegEx);
+	bDestCS = 0==dest.compare("@ALL") or 0==dest.compare("#PARROT") or std::regex_match(dest, M17CallRegEx);
 	pDSTCallsignInput->color(bDestCS ? 2 : 1);
 	pDSTCallsignInput->damage(FL_DAMAGE_ALL);
 }
@@ -1074,11 +1113,13 @@ void CMainWindow::TransmitterButtonControl()
 	{
 		pPTTButton->activate();
 		pQuickKeyButton->activate();
+		SMSDlg.UpdateSMS(true);
 	}
 	else
 	{
 		pPTTButton->deactivate();
 		pQuickKeyButton->deactivate();
+		SMSDlg.UpdateSMS(false);
 	}
 }
 

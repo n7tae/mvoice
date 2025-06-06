@@ -50,6 +50,7 @@ public:
 	void Receive(bool is_rx);
 	void NewSettings(CFGDATA *newdata);
 	void UpdateGUI();
+	bool SendMessage(const std::string &dst, const std::string &message);
 
 	// helpers
 	bool ToUpper(std::string &s);

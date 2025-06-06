@@ -116,6 +116,11 @@ void CM17Gateway::StreamTimeout()
 	streamLock.unlock();
 }
 
+void CM17Gateway::SendMessage(const CPacket &pack)
+{
+	Write(pack.GetCData(), pack.GetSize(), destination);
+}
+
 void CM17Gateway::Process()
 {
 	fd_set fdset;
@@ -361,7 +366,7 @@ bool CM17Gateway::ProcessPacket(const CPacket &pack)
 			{
 				if (payloadlength > (strnlen((const char *)pack.GetCData()+34, payloadlength)))
 				{
-					SendLog("Message: %s\n", (const char *)pack.GetCData()+34);
+					SendLog("Message: %s\n", (const char *)pack.GetCData()+35);
 				}
 				else
 				{

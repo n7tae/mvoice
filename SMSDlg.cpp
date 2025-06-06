@@ -21,6 +21,7 @@
 
 #include "MainWindow.h"
 #include "SMSDlg.h"
+#include "Utilities.h"
 
 #define _(STRING) gettext(STRING)
 
@@ -46,11 +47,10 @@ bool CSMSDlg::Init(CMainWindow *pMain)
 	pDSTCallsignInput->callback(&CSMSDlg::DestinationCSInputCB, this);
 	pDSTCallsignInput->value("@ALL");
 
-	pSendButton = new CTransmitButton(320, 10, 130, 30, _("Send"));
-	pSendButton->tooltip(_("Push to talk. This is actually a toggle button"));
+	pSendButton = new Fl_Button(320, 10, 130, 30, _("Send"));
+	pSendButton->tooltip(_("Send this message"));
 	pSendButton->labelsize(18);
 	pSendButton->deactivate();
-	pSendButton->selection_color(FL_YELLOW);
 	pSendButton->callback(&CSMSDlg::SendButtonCB, this);
 
 	pClearButton = new Fl_Button(460, 10, 130, 32, _("Clear"));
@@ -103,7 +103,7 @@ void CSMSDlg::DestinationCSInput()
 	}
 
 	// the destination either has to be @ALL or a legal callsign
-	bDestCS = 0==dest.compare("@ALL") || std::regex_match(dest, pMainWindow->M17CallRegEx);
+	bDestCS = 0==dest.compare("@ALL") or 0==dest.compare("#PARROT") or std::regex_match(dest, pMainWindow->M17CallRegEx);
 	pDSTCallsignInput->color(bDestCS ? 2 : 1);
 	pDSTCallsignInput->damage(FL_DAMAGE_ALL);
 }
@@ -115,7 +115,13 @@ void CSMSDlg::SendButtonCB(Fl_Widget *, void *dlg)
 
 void CSMSDlg::SendButton()
 {
-
+	auto txt = pMsgBuffer->text();
+	const std::string dst(pDSTCallsignInput->value());
+	std::string msg(txt);
+	trim(msg);
+	free(txt);
+	if (pMainWindow->SendMessage(dst, msg))
+		ClearButton();
 }
 
 void CSMSDlg::ClearButtonCB(Fl_Widget *, void *dlg)
@@ -128,11 +134,20 @@ void CSMSDlg::ClearButton()
 	pMsgBuffer->text("");
 }
 
-void CSMSDlg::Update()
+void CSMSDlg::UpdateSMS(bool cansend)
 {
 	DestinationCSInput();
-	if (pMsgBuffer->length())
+	if (pMsgBuffer->length() > 0)
+	{
 		pClearButton->activate();
+		if (bDestCS and cansend)
+			pSendButton->activate();
+		else
+			pSendButton->deactivate();
+	}
 	else
+	{
 		pClearButton->deactivate();
+		pSendButton->deactivate();
+	}
 }

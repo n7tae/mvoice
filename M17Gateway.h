@@ -61,6 +61,7 @@ public:
 	ELinkState GetLinkState() const { return mlink.state; }
 	bool TryLock();
 	void ReleaseLock();
+	void SendMessage(const CPacket &p);
 
 	std::atomic<bool> keep_running;
 
@@ -83,6 +84,5 @@ private:
 	void Send(const void *buf, size_t size, const CSockAddress &addr) const;
 	bool ProcessFrame(const CPacket &pack);
 	bool ProcessPacket(const CPacket &pack);
-	bool ProcessAM(const uint8_t *buf);
 	void SendLinkRequest(const CCallsign &ref);
 };

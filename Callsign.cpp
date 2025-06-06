@@ -53,18 +53,20 @@ void CCallsign::CSIn(const std::string &callsign)
 	for( int i=int(callsign.size()-1); i>=0; i-- ) {
 		auto pos = m17_alphabet.find(cs[i]);
 		if (pos == std::string::npos) {
+			if ('#' == cs[i] and 0 == i) {
+				coded += 0xee6b28000000u;
+				break;
+			}
 			pos = 0;
 		}
 		cs[i] = m17_alphabet[pos];	// replace with valid character
 		coded *= 40;
 		coded += pos;
 	}
-
 	// strip trailing spaces (just to be nice!)
 	auto len = strlen(cs);
 	while (len && (' ' == cs[len-1]))
 		cs[--len] = 0;
-
 }
 
 const std::string CCallsign::GetCS(unsigned len) const
@@ -84,15 +86,20 @@ void CCallsign::CodeIn(const uint8_t *in)
 	coded = in[0];
 	for (int i=1; i<6; i++)
 		coded = (coded << 8) | in[i];
-	if (coded > 0xee6b27ffffffu) {
-		if (0xffffffffffffu == coded)
-			strncpy(cs, "@ALL", sizeof(cs));
-		else
-			strncpy(cs, "uncodable", sizeof(cs));
+	if (coded == 0xffffffffffffu) {
+		strncpy(cs, "@ALL", sizeof(cs));
 		return;
 	}
-	auto c = coded;
+	if (coded > 0xf46108ffffffu) {
+		strncpy(cs, "@INVALID", sizeof(cs));
+		return;
+	}
 	int i = 0;
+	auto c = coded;
+	if (coded > 0xee6b27ffffffu) {
+		cs[i++] = '#';
+		coded -= 0xee6b28000000u;
+	}
 	while (c) {
 		cs[i++] = m17_alphabet[c % 40];
 		c /= 40;
