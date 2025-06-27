@@ -189,7 +189,7 @@ void CM17RouteMap::ReadJson()
 		}
 		else
 		{
-			std::cerr << "ERROR: dvref.com didn't define any M17 reflectors" << std::endl;
+			std::cerr << "ERROR: hostfiles.refcheck.radio didn't define any M17 reflectors" << std::endl;
 		}
 	}
 /*
