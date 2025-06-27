@@ -148,9 +148,9 @@ void CM17RouteMap::ReadJson()
 {
 	// downlaod and parse the mrefd and urf json file
 	std::stringstream ss;
-	if (ReadM17Json("https://dvref.com/mrefd/reflectors/?format=json", ss))
+	if (ReadM17Json("https://hostfiles.refcheck.radio/M17Hosts.json", ss))
 	{
-		std::cerr << "ERROR curling M17 reflectors from dvref.com" << std::endl;
+		std::cerr << "ERROR curling M17 reflectors from hostfiles.refcheck.radio/M17Hosts.json" << std::endl;
 	}
 	else
 	{
@@ -192,7 +192,7 @@ void CM17RouteMap::ReadJson()
 			std::cerr << "ERROR: dvref.com didn't define any M17 reflectors" << std::endl;
 		}
 	}
-
+/*
 	ss.str(std::string());
 
 	if (ReadM17Json("https://dvref.com/urfd/reflectors/?format=json", ss))
@@ -243,6 +243,7 @@ void CM17RouteMap::ReadJson()
 		}
 		Update(true, cs, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
 	}
+*/
 }
 
 void CM17RouteMap::Read(const char *filename)
