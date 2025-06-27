@@ -159,32 +159,69 @@ void CM17RouteMap::ReadJson()
 		{
 			for (auto &ref : mref["reflectors"])
 			{
-				std::string cs("M17-");
-				cs.append(ref["designator"].get<std::string>());
-				const std::string dn(GET_STRING(ref["dns"]));
-				const std::string ipv4(GET_STRING(ref["ipv4"]));
-				if (0==ipv4.compare("127.0.0.1") or 0==ipv4.compare("0.0.0.0"))
-					continue;
-				const std::string ipv6(GET_STRING(ref["ipv6"]));
-				if (0==ipv6.compare("::") or 0==ipv6.compare("::1"))
-					continue;
-				std::string mods(""), emods("");
-				if (ref.contains("modules"))
+				const std::string cs(GET_STRING(ref["designator"]));
+				if (0 == cs.substr(0,4).compare("M17-"))
 				{
-					for (const auto &item : ref["modules"])
-						mods.append(item);
+					const std::string dn(GET_STRING(ref["dns"]));
+					const std::string ipv4(GET_STRING(ref["ipv4"]));
+					if (0==ipv4.compare("127.0.0.1") or 0==ipv4.compare("0.0.0.0"))
+						continue;
+					const std::string ipv6(GET_STRING(ref["ipv6"]));
+					if (0==ipv6.compare("::") or 0==ipv6.compare("::1"))
+						continue;
+					std::string mods(""), emods("");
+					if (ref.contains("modules"))
+					{
+						for (const auto &item : ref["modules"])
+							mods.append(item);
+					}
+					if (ref.contains("encrypted"))
+					{
+						for (const auto &item : ref["encrypted"])
+							emods.append(item);
+					}
+					uint16_t port;
+					if (ref.contains("port") and ref["port"].is_number_unsigned())
+						port = ref["port"].get<uint16_t>();
+					else
+						continue;
+					Update(true, cs, dn, ipv4, ipv6, mods, emods, port, GET_STRING(ref["url"]));
 				}
-				if (ref.contains("encrypted"))
+				else if (0 == cs.substr(0,3).compare("URF"))
 				{
-					for (const auto &item : ref["encrypted"])
-						emods.append(item);
+					const std::string dn(GET_STRING(ref["dns"]));
+					const std::string ipv4(GET_STRING(ref["ipv4"]));
+					if (0==ipv4.compare("127.0.0.1") or 0==ipv4.compare("0.0.0.0"))
+						continue;
+					const std::string ipv6(GET_STRING(ref["ipv6"]));
+					if (0==ipv6.compare("::") or 0==ipv6.compare("::1"))
+						continue;
+					std::string mods(""), smods("");
+					uint16_t port = 17000u;
+					if (ref.contains("modules"))
+					{
+						for (auto &mod : ref["modules"])
+						{
+							auto m = mod["module"].get<std::string>();
+							const std::string mode(GET_STRING(mod["mode"]));
+							if (0==mode.compare("All") or 0==mode.compare("M17"))
+							{
+								mods.append(m);
+								if (mod["transcode"].is_boolean())
+								{
+									if (mod["transcode"].get<bool>())
+										smods.append(m);
+								}
+								if (0 == mode.compare("M17"))
+								{
+									if (mod["port"].is_number_unsigned())
+										port = mod["port"].get<uint16_t>();
+								}
+							}
+						}
+					}
+					Update(true, cs, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
 				}
-				uint16_t port;
-				if (ref.contains("port") and ref["port"].is_number_unsigned())
-					port = ref["port"].get<uint16_t>();
-				else
-					continue;
-				Update(true, cs, dn, ipv4, ipv6, mods, emods, port, GET_STRING(ref["url"]));
 			}
 		}
 		else
@@ -192,58 +229,6 @@ void CM17RouteMap::ReadJson()
 			std::cerr << "ERROR: hostfiles.refcheck.radio didn't define any M17 reflectors" << std::endl;
 		}
 	}
-/*
-	ss.str(std::string());
-
-	if (ReadM17Json("https://dvref.com/urfd/reflectors/?format=json", ss))
-	{
-		std::cerr << "ERROR curling URF reflectors from dvref.com" << std::endl;
-		return;
-	}
-
-	json urf = json::parse(ss.str());
-	if (not urf.contains("reflectors"))
-	{
-		std::cerr << "ERROR: dvref.com didn't define any URF refectors" << std::endl;
-	}
-	for (auto &ref : urf["reflectors"])
-	{
-		std::string cs("URF");
-		cs.append(ref["designator"].get<std::string>());
-		const std::string dn(GET_STRING(ref["dns"]));
-		const std::string ipv4(GET_STRING(ref["ipv4"]));
-		if (0==ipv4.compare("127.0.0.1") or 0==ipv4.compare("0.0.0.0"))
-			continue;
-		const std::string ipv6(GET_STRING(ref["ipv6"]));
-		if (0==ipv6.compare("::") or 0==ipv6.compare("::1"))
-			continue;
-		std::string mods(""), smods("");
-		uint16_t port = 17000u;
-		if (ref.contains("modules"))
-		{
-			for (auto &mod : ref["modules"])
-			{
-				auto m = mod["module"].get<std::string>();
-				const std::string mode(GET_STRING(mod["mode"]));
-				if (0==mode.compare("All") or 0==mode.compare("M17"))
-				{
-					mods.append(m);
-					if (mod["transcode"].is_boolean())
-					{
-						if (mod["transcode"].get<bool>())
-							smods.append(m);
-					}
-					if (0 == mode.compare("M17"))
-					{
-						if (mod["port"].is_number_unsigned())
-							port = mod["port"].get<uint16_t>();
-					}
-				}
-			}
-		}
-		Update(true, cs, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
-	}
-*/
 }
 
 void CM17RouteMap::Read(const char *filename)
