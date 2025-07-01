@@ -154,7 +154,16 @@ void CM17RouteMap::ReadJson()
 	}
 	else
 	{
-		json mref = json::parse(ss.str());
+		json mref;
+
+		try {
+			mref = json::parse(ss.str());
+		}
+		catch (const std::exception &e) {
+			std::cerr << e.what() << std::endl;
+			return;
+		}
+		
 		if (mref.contains("reflectors"))
 		{
 			for (auto &ref : mref["reflectors"])
