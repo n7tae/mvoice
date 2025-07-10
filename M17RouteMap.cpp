@@ -99,7 +99,7 @@ const std::shared_ptr<SHost> CM17RouteMap::Find(const std::string &cs) const
 	return rval;
 }
 
-void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string &domainname, const std::string &ip4addr, const std::string &ip6addr, const std::string &modules, const std::string &specialmodules, const uint16_t port, const std::string &url)
+void CM17RouteMap::Update(EFrom from, const std::string &cs, bool islegacy, const std::string &domainname, const std::string &ip4addr, const std::string &ip6addr, const std::string &modules, const std::string &specialmodules, const uint16_t port, const std::string &url)
 {
 	std::string base;
 	auto pos = cs.find_first_of(" /.");
@@ -109,8 +109,9 @@ void CM17RouteMap::Update(bool frmjson, const std::string &cs, const std::string
 	auto host = Find(base);
 	if (! host)
 		host = std::make_shared<SHost>();
-	host->from_json = frmjson;
+	host->from = from;
 	host->cs.assign(base);
+	host->is_legacy = islegacy;
 	if (! domainname.empty())
 		host->dn.assign(domainname);
 	if (! ip4addr.empty())
@@ -139,7 +140,7 @@ void CM17RouteMap::ReadAll()
 	baseMap.clear();
 	mux.unlock();
 	ReadJson();
-	Read("M17Hosts.cfg");
+	Read();
 }
 
 #define GET_STRING(a) ((a).is_string() ? a : "")
@@ -194,7 +195,7 @@ void CM17RouteMap::ReadJson()
 						port = ref["port"].get<uint16_t>();
 					else
 						continue;
-					Update(true, cs, dn, ipv4, ipv6, mods, emods, port, GET_STRING(ref["url"]));
+					Update(EFrom::json, cs, true, dn, ipv4, ipv6, mods, emods, port, GET_STRING(ref["url"]));
 				}
 				else if (0 == cs.substr(0,3).compare("URF"))
 				{
@@ -229,7 +230,7 @@ void CM17RouteMap::ReadJson()
 							}
 						}
 					}
-					Update(true, cs, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
+					Update(EFrom::json, cs, true, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
 				}
 			}
 		}
@@ -240,11 +241,12 @@ void CM17RouteMap::ReadJson()
 	}
 }
 
-void CM17RouteMap::Read(const char *filename)
+static const char *FILENAME = "/MyM17Hosts.txt";
+
+void CM17RouteMap::Read()
 {
 	std::string path(CFGDIR);
-	path.append("/");
-	path.append(filename);
+	path.append(FILENAME);
 	std::ifstream file(path, std::ifstream::in);
 	if (file.is_open()) {
 		std::string line;
@@ -253,7 +255,17 @@ void CM17RouteMap::Read(const char *filename)
 			if (0==line.size() || '#'==line[0]) continue;
 			std::vector<std::string> elem;
 			split(line, ';', elem);
-			Update(false, elem[0], elem[1], elem[2], elem[3], elem[4], elem[5], std::stoul(elem[6]), elem[7]);
+			switch (elem.size())
+			{
+			case 8:
+				Update(EFrom::user, elem[0], true, elem[1], elem[2], elem[3], elem[4], elem[5], std::stoul(elem[6]), elem[7]);
+				break;
+			case 9:
+				Update(EFrom::user, elem[0], elem[1].compare("FALSE")?true:false, elem[2], elem[3], elem[4], elem[5], elem[6], std::stoul(elem[7]), elem[8]);
+				break;
+			default:
+				break;
+			}
 		}
 		file.close();
 	}
@@ -262,14 +274,15 @@ void CM17RouteMap::Read(const char *filename)
 void CM17RouteMap::Save() const
 {
 	std::string path(CFGDIR);
-	path.append("/M17Hosts.cfg");
+	path.append(FILENAME);
 	std::ofstream file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
+	file << "#Callsign;DomainName;IPv4Address;IPv6Address;Modules;SpecialModules;Port;DashboardURL" << std::endl;
 	if (file.is_open()) {
 		mux.lock();
 		for (const auto &pair : baseMap) {
 			const auto host = pair.second;
-			if (! host->from_json) {
-				file << host->cs << ';' << host->dn << ';' << host->ip4addr << ';' << host->ip6addr << ';' << host->url << ';' << host->mods << ';' << host->port << ';' << host->url << std::endl;
+			if (EFrom::user == host->from) {
+				file << host->cs << ';' << host->dn << ';' << host->ip4addr << ';' << host->ip6addr << ';' << host->mods << ';' << host->smods << ';' << host->port << ';' << host->url << std::endl;
 			}
 		}
 		file.close();

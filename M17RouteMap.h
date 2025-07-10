@@ -26,12 +26,15 @@
 
 #include "SockAddress.h"
 
+enum class EFrom { json, dht, user };
+
 struct SHost
 {
 	SHost() : updated(false) {}
-	std::string cs, url, dn, ip4addr, ip6addr, mods, smods;
-	bool updated, from_json;
+	std::string cs, dn, ip4addr, ip6addr, mods, smods, url;
+	bool updated, is_legacy;
 	uint16_t port;
+	EFrom from;
 };
 
 class CM17RouteMap
@@ -40,7 +43,7 @@ public:
 	CM17RouteMap();
 	~CM17RouteMap();
 	const std::shared_ptr<SHost> Find(const std::string &cs) const;
-	void Update(bool frmjson, const std::string &cs, const std::string &dn, const std::string &ip4addr, const std::string &ip6addr, const std::string &mods, const std::string &smods, const uint16_t port, const std::string &url);
+	void Update(EFrom from, const std::string &cs, bool islegacy, const std::string &dn, const std::string &ip4addr, const std::string &ip6addr, const std::string &mods, const std::string &smods, const uint16_t port, const std::string &url);
 	void Save() const;
 	void ReadAll();
 	const std::list<std::string> GetKeys() const;
@@ -48,7 +51,7 @@ public:
 	size_t Size() const;
 
 private:
-	void Read(const char *filename);
+	void Read();
 	void ReadJson();
 	std::map<std::string, std::shared_ptr<SHost>> baseMap;
 	mutable std::mutex mux;

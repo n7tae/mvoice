@@ -56,7 +56,7 @@ public:
 	bool ToUpper(std::string &s);
 
 	// regular expression for testing stuff
-	std::regex IPv4RegEx, IPv6RegEx, M17CallRegEx, M17RefRegEx;
+	std::regex IPv4RegEx, IPv6RegEx, M17CallRegEx, ReflTarRegEx, ReflDstRegEx;
 
 private:
 	// classes
@@ -76,6 +76,7 @@ private:
 	Fl_Double_Window *pWin;
 	CTransmitButton *pPTTButton, *pEchoTestButton;
 	Fl_Button *pQuickKeyButton, *pActionButton, *pConnectButton, *pDisconnectButton, *pDashboardButton;
+	Fl_Check_Button *pIsLegacyCheck;
 	Fl_Input *pTargetCSInput, *pTargetIpInput;
 	Fl_Input *pDSTCallsignInput;
 	Fl_Int_Input *pTargetPortInput;
@@ -93,7 +94,7 @@ private:
 	// helpers
 	void BuildTargetMenuButton();
 	void FixTargetMenuButton();
-	void SetTargetMenuButton(const bool sensitive, const char *label);
+	void SetTargetMenuButton(const char *label = "");
 	void TransmitterButtonControl();
 	std::future<void> futM17;
 	std::future<void> futReadThread;

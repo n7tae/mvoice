@@ -32,6 +32,7 @@
 #include <FL/Fl_Choice.H>
 #include <FL/Fl_Button.H>
 #include <FL/Fl_Toggle_Button.H>
+#include <FL/Fl_Check_Button.H>
 #include <FL/Fl_Return_Button.H>
 #include <FL/Fl_Tabs.H>
 #include <FL/fl_ask.H>

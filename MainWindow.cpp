@@ -75,7 +75,8 @@ CMainWindow::CMainWindow() :
 	// allowed M17 " ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-/."
 	IPv4RegEx = std::regex("^((25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9])\\.){3,3}(25[0-5]|2[0-4][0-9]|1[0-9][0-9]|[1-9][0-9]|[0-9]){1,1}$", std::regex::extended);
 	IPv6RegEx = std::regex("^(([0-9a-fA-F]{1,4}:){7,7}[0-9a-fA-F]{1,4}|([0-9a-fA-F]{1,4}:){1,7}:|([0-9a-fA-F]{1,4}:){1,6}(:[0-9a-fA-F]{1,4}){1,1}|([0-9a-fA-F]{1,4}:){1,5}(:[0-9a-fA-F]{1,4}){1,2}|([0-9a-fA-F]{1,4}:){1,4}(:[0-9a-fA-F]{1,4}){1,3}|([0-9a-fA-F]{1,4}:){1,3}(:[0-9a-fA-F]{1,4}){1,4}|([0-9a-fA-F]{1,4}:){1,2}(:[0-9a-fA-F]{1,4}){1,5}|([0-9a-fA-F]{1,4}:){1,1}(:[0-9a-fA-F]{1,4}){1,6}|:((:[0-9a-fA-F]{1,4}){1,7}|:))$", std::regex::extended);
-	M17RefRegEx = std::regex("^(M17-|URF)([A-Z0-9]){3,3}$", std::regex::extended);
+	ReflTarRegEx = std::regex("^(M17-|URF)[A-Z0-9]{3,3}$", std::regex::extended);
+	ReflDstRegEx = std::regex("^(M17-[A-Z0-9]{3,3} [A-Z])|(URF[A-Z0-9]{3,3}  [A-Z])$", std::regex::extended);
 	M17CallRegEx = std::regex("^[0-9]?[A-Z]{1,2}[0-9]{1,2}[A-Z]{1,4}([-/\\.][A-Z0-9]{1,2})? *[A-Z]?$", std::regex::extended);
 }
 
@@ -208,7 +209,7 @@ bool CMainWindow::Init()
 
 	pWin->resizable(pTextDisplay);
 
-	pTargetCSInput = new Fl_Input(160, 360, 130, 30, _("Target Callsign:"));
+	pTargetCSInput = new Fl_Input(140, 360, 130, 30, _("Target Callsign:"));
 	pTargetCSInput->tooltip(_("A reflector or user callsign"));
 	pTargetCSInput->color(FL_RED);
 	pTargetCSInput->labelsize(16);
@@ -216,7 +217,12 @@ bool CMainWindow::Init()
 	pTargetCSInput->when(FL_WHEN_CHANGED);
 	pTargetCSInput->callback(&CMainWindow::TargetCSInputCB, this);
 
-	pTargetIpInput = new Fl_Input(340, 360, 380, 30, _("IP:"));
+	pIsLegacyCheck = new Fl_Check_Button(280, 360, 100, 30, _("Is Legacy"));
+	pIsLegacyCheck->tooltip(_("Is the M17 reflector version 0.x.y?"));
+	pIsLegacyCheck->labelsize(16);
+	pIsLegacyCheck->when(FL_WHEN_CHANGED);
+
+	pTargetIpInput = new Fl_Input(420, 360, 350, 30, _("IP:"));
 	pTargetIpInput->tooltip(_("The IP of the reflector or user"));
 	pTargetIpInput->color(FL_RED);
 	pTargetIpInput->labelsize(16);
@@ -224,7 +230,7 @@ bool CMainWindow::Init()
 	pTargetIpInput->when(FL_WHEN_CHANGED);
 	pTargetIpInput->callback(&CMainWindow::TargetIPInputCB, this);
 
-	pTargetPortInput = new Fl_Int_Input(790, 360, 80, 30, _("Port:"));
+	pTargetPortInput = new Fl_Int_Input(820, 360, 60, 30, _("Port:"));
 	pTargetPortInput->tooltip(_("The comm port of the reflector or user"));
 	pTargetPortInput->color(FL_RED);
 	pTargetPortInput->labelsize(16);
@@ -418,7 +424,14 @@ void CMainWindow::ShowSMSDialogCB(Fl_Widget *, void *This)
 
 void CMainWindow::ShowSMSDialog()
 {
-	SMSDlg.Show();
+	if (pIsLegacyCheck->value())
+	{
+		std::lock_guard<std::mutex> lock(logmux);
+		insertLogText("Sorry! You can't send a message to a legacy reflector.\n");
+	}
+	else
+		SMSDlg.Show();
+	
 }
 
 void CMainWindow::ShowAboutDialogCB(Fl_Widget *, void *This)
@@ -490,13 +503,14 @@ void CMainWindow::ActionButton()
 {
 	const std::string label(pActionButton->label());
 	auto cs = pTargetCSInput->value();
+	bool islegacy = pIsLegacyCheck->value();
 	if (0 == label.compare(savestr)) {
 		const std::string a(pTargetIpInput->value());
 		auto p = uint16_t(std::atoi(pTargetPortInput->value()));
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(false, cs, "", a, "", "", "", p, "");
+			routeMap.Update(EFrom::user, cs, islegacy, "", a, "", "", "", p, "");
 		else
-			routeMap.Update(false, cs, "", "", a, "", "", p, "");
+			routeMap.Update(EFrom::user, cs, islegacy, "", "", a, "", "", p, "");
 		BuildTargetMenuButton();
 	} else if (0 == label.compare(deletestr)) {
 		routeMap.Erase(cs);
@@ -505,9 +519,9 @@ void CMainWindow::ActionButton()
 		std::string a(pTargetIpInput->value());
 		const auto p = uint16_t(std::atoi(pTargetPortInput->value()));
 		if (std::string::npos == a.find(':'))
-			routeMap.Update(false, cs, "", a, "", "", "", p, "");
+			routeMap.Update(EFrom::user, cs, islegacy, "", a, "", "", "", p, "");
 		else
-			routeMap.Update(false, cs, "", "", a, "", "", p, "");
+			routeMap.Update(EFrom::user, cs, islegacy, "", "", a, "", "", p, "");
 	}
 	FixTargetMenuButton();
 	routeMap.Save();
@@ -570,6 +584,10 @@ void CMainWindow::SetTargetAddress(std::string &cs)
 	if (0==cs.compare(0, 4, "M17-") || 0==cs.compare(0, 3, "URF")) {
 		cs.resize(8, ' ');
 		cs.append(1, GetTargetModule());
+	}
+	if (pIsLegacyCheck->value())
+	{
+		pDSTCallsignInput->value(cs.c_str());
 	}
 }
 
@@ -677,23 +695,39 @@ void CMainWindow::UpdateGUI()
 	}
 	else
 	{
+		bool isLegacy = pIsLegacyCheck->value() ? true : false;
 		std::string target(pTargetCSInput->value());
 		switch (gateM17.GetLinkState())
 		{
 			case ELinkState::unlinked:
 				pDisconnectButton->deactivate();
-				if (std::regex_match(target, M17RefRegEx) && bTargetIP && bTargetPort)
+				if (std::regex_match(target, ReflTarRegEx) && bTargetIP && bTargetPort)
 					pConnectButton->activate();
 				else
 					pConnectButton->deactivate();
+				pTargetCSInput->activate();
+				pIsLegacyCheck->activate();
+				pTargetIpInput->activate();
+				pTargetPortInput->activate();
+				pDSTCallsignInput->activate();
 				break;
 			case ELinkState::linking:
 				pDisconnectButton->deactivate();
 				pConnectButton->deactivate();
+				if (isLegacy) pDSTCallsignInput->deactivate();
 				break;
 			case ELinkState::linked:
 				pDisconnectButton->activate();
 				pConnectButton->deactivate();
+				pTargetCSInput->deactivate();
+				pIsLegacyCheck->deactivate();
+				pTargetIpInput->deactivate();
+				pTargetPortInput->deactivate();
+				if (isLegacy)
+				{
+					pDSTCallsignInput->deactivate();
+					SMSDlg.Hide();
+				}
 				break;
 		}
 		pPTTButton->UpdateLabel();
@@ -711,6 +745,7 @@ void CMainWindow::UpdateGUI()
 					else
 						pTargetIpInput->value(host->ip4addr.c_str());
 					TargetIPInput();
+					pIsLegacyCheck->value(host->is_legacy ? 1 : 0);
 					pTargetPortInput->value(std::to_string(host->port).c_str());
 					TargetPortInput();
 
@@ -799,7 +834,7 @@ void CMainWindow::Get(const std::string &cs)
 				if (rdat.timestamp > ts)
 				{
 					ts = rdat.timestamp;
-					routeMap.Update(false, rdat.callsign, "", rdat.ipv4addr, rdat.ipv6addr, rdat.modules, rdat.encryptedmods, rdat.port, rdat.url);
+					routeMap.Update(EFrom::dht, rdat.callsign, '0'==rdat.version[0], "", rdat.ipv4addr, rdat.ipv6addr, rdat.modules, rdat.encryptedmods, rdat.port, rdat.url);
 				}
 			}
 			else if (0 == v->user_type.compare(URFD_CONFIG_1))
@@ -808,7 +843,7 @@ void CMainWindow::Get(const std::string &cs)
 				if (rdat.timestamp > ts)
 				{
 					ts = rdat.timestamp;
-					routeMap.Update(false, rdat.callsign, "", rdat.ipv4addr, rdat.ipv6addr, rdat.modules, rdat.transcodedmods, rdat.port[toUType(EUrfdPorts::m17)], rdat.url);
+					routeMap.Update(EFrom::dht, rdat.callsign, true, "", rdat.ipv4addr, rdat.ipv6addr, rdat.modules, rdat.transcodedmods, rdat.port[toUType(EUrfdPorts::m17)], rdat.url);
 				}
 			}
 			else
@@ -844,7 +879,7 @@ void CMainWindow::DestinationCSInput()
 	}
 
 	// the destination either has to be @ALL, PARROT or a legal callsign
-	bDestCS = 0==dest.compare("@ALL") or 0==dest.compare("#PARROT") or std::regex_match(dest, M17CallRegEx);
+	bDestCS = 0==dest.compare("@ALL") or std::regex_match(dest, ReflDstRegEx) or 0==dest.compare("#PARROT") or std::regex_match(dest, M17CallRegEx);
 	pDSTCallsignInput->color(bDestCS ? 2 : 1);
 	pDSTCallsignInput->damage(FL_DAMAGE_ALL);
 }
@@ -865,8 +900,8 @@ void CMainWindow::TargetCSInput()
 		pTargetCSInput->position(pos);
 	}
 
-	// the destination either has to be a reflector or a legal callsign
-	bTargetCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, M17RefRegEx);
+	// the target either has to be a reflector or a legal callsign
+	bTargetCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, ReflTarRegEx);
 
 	if (bTargetCS)
 	{
@@ -963,6 +998,7 @@ void CMainWindow::TargetCSInput()
 		// bTargetCS is false
 		pTargetIpInput->value("");
 		pTargetPortInput->value("");
+		pIsLegacyCheck->value(0);
 	}
 
 	TargetIPInput();
@@ -1012,9 +1048,9 @@ void CMainWindow::TargetPortInput()
 	pTargetPortInput->damage(FL_DAMAGE_ALL);
 }
 
-void CMainWindow::SetTargetMenuButton(const bool sensitive, const char *label)
+void CMainWindow::SetTargetMenuButton(const char *label)
 {
-	if (sensitive)
+	if (*label)
 		pActionButton->activate();
 	else
 		pActionButton->deactivate();
@@ -1053,6 +1089,9 @@ void CMainWindow::UnlinkButton()
 {
 	std::string cmd("M17U");
 	AudioManager.Link(cmd);
+	Fl::lock();
+	pDSTCallsignInput->value("@ALL");
+	Fl::unlock();
 }
 
 void CMainWindow::DashboardButtonCB(Fl_Widget *, void *This)
@@ -1079,29 +1118,29 @@ void CMainWindow::FixTargetMenuButton()
 			if (bTargetIP && bTargetPort && host->mods.empty()) { // is the IP and port okay and is this not from the csv file?
 				const std::string ip(pTargetIpInput->value());
 				const std::string port(pTargetPortInput->value());
-				if ((ip.compare(host->ip4addr) && ip.compare(host->ip6addr)) || (port.compare(std::to_string(host->port)))) {
+				if ((ip.compare(host->ip4addr) and ip.compare(host->ip6addr)) or (port.compare(std::to_string(host->port))) and ((pIsLegacyCheck->value()?true:false)!=host->is_legacy)) {
 					// the ip in the IPEntry is different, or the port is different
-					SetTargetMenuButton(true, updatestr);
+					SetTargetMenuButton(updatestr);
 				} else {
 					// perfect match
-					if (host->from_json)
-						SetTargetMenuButton(false, "");
+					if (EFrom::user != host->from)
+						SetTargetMenuButton();
 					else
-						SetTargetMenuButton(true, deletestr);
+						SetTargetMenuButton(deletestr);
 				}
 			} else {
-				SetTargetMenuButton(false, "");
+				SetTargetMenuButton();
 			}
 		} else {
 			// cs is not found in map
 			if (bTargetIP && bTargetPort) { // is the IP okay and is the not from the csv file?
-				SetTargetMenuButton(true, savestr);
+				SetTargetMenuButton(savestr);
 			} else {
-				SetTargetMenuButton(false, "");
+				SetTargetMenuButton();
 			}
 		}
 	} else {
-		SetTargetMenuButton(false, "");
+		SetTargetMenuButton();
 	}
 	TransmitterButtonControl();
 }
