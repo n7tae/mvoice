@@ -261,7 +261,7 @@ void CM17RouteMap::Read()
 				Update(EFrom::user, elem[0], true, elem[1], elem[2], elem[3], elem[4], elem[5], std::stoul(elem[6]), elem[7]);
 				break;
 			case 9:
-				Update(EFrom::user, elem[0], elem[1].compare("FALSE")?true:false, elem[2], elem[3], elem[4], elem[5], elem[6], std::stoul(elem[7]), elem[8]);
+				Update(EFrom::user, elem[0], elem[1].compare("false")?true:false, elem[2], elem[3], elem[4], elem[5], elem[6], std::stoul(elem[7]), elem[8]);
 				break;
 			default:
 				break;
@@ -276,13 +276,13 @@ void CM17RouteMap::Save() const
 	std::string path(CFGDIR);
 	path.append(FILENAME);
 	std::ofstream file(path.c_str(), std::ofstream::out | std::ofstream::trunc);
-	file << "#Callsign;DomainName;IPv4Address;IPv6Address;Modules;SpecialModules;Port;DashboardURL" << std::endl;
+	file << "#Callsign;IsLegacy;DomainName;IPv4Address;IPv6Address;Modules;SpecialModules;Port;DashboardURL" << std::endl;
 	if (file.is_open()) {
 		mux.lock();
 		for (const auto &pair : baseMap) {
 			const auto host = pair.second;
 			if (EFrom::user == host->from) {
-				file << host->cs << ';' << host->dn << ';' << host->ip4addr << ';' << host->ip6addr << ';' << host->mods << ';' << host->smods << ';' << host->port << ';' << host->url << std::endl;
+				file << host->cs << ';' << (host->is_legacy?"true":"false") << host->dn << ';' << host->ip4addr << ';' << host->ip6addr << ';' << host->mods << ';' << host->smods << ';' << host->port << ';' << host->url << std::endl;
 			}
 		}
 		file.close();
