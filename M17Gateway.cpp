@@ -369,20 +369,21 @@ bool CM17Gateway::ProcessPacket(const CPacket &pack)
 				else
 				{
 					SendLog("Could not find a null byte in the data!\n");
-					Dump("Packet Mode data:", pack.GetCData()+34, payloadlength);
+					Dump("Packet Mode data:", pack.GetCData(), pack.GetSize());
 					return true;
 				}
 			}
 			else
 			{
 				SendLog("Is not an SMS type data field, but type is %u\n", pack.GetCData()[34]);
-				Dump("Packet Mode data:", pack.GetCData()+34, payloadlength);
+				Dump("Packet Mode data:", pack.GetCData(), pack.GetSize());
 				return true;
 			}
 		}
 		else
 		{
 			SendLog("Has invalid data CRC\n");
+			Dump("Invalid CRC in PM data:", pack.GetCData(), pack.GetSize());
 			return false;
 		}
 	}
