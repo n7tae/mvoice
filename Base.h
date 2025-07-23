@@ -27,7 +27,8 @@ public:
 
 protected:
 	void SendLog(const char *fmt, ...);
-	void Dump(const char *title, const void *pointer, int length);
+	void Dump(const char *title, const void *pointer, int length) const;
+	const char *Now() const;
 
 private:
 	CUnixDgramWriter LogInput;

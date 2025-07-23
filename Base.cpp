@@ -49,11 +49,11 @@ void CBase::SendLog(const char *fmt, ...)
 	return;
 }
 
-void CBase::Dump(const char *title, const void *pointer, int length)
+void CBase::Dump(const char *title, const void *pointer, int length) const
 {
 	const unsigned char *data = (const unsigned char *)pointer;
 
-	std::cout << title << std::endl;
+	std::cout << Now() << ' ' << title << std::endl;
 
 	unsigned int offset = 0U;
 
@@ -90,4 +90,12 @@ void CBase::Dump(const char *title, const void *pointer, int length)
 		else
 			length = 0;
 	}
+}
+
+const char *CBase::Now() const
+{
+	static char str[16];
+    auto t = time(NULL);
+	strftime(str, sizeof(str), "%m-%d %T", localtime(&t));
+	return str;
 }

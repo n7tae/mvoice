@@ -215,12 +215,12 @@ void CM17Gateway::Process()
 					}
 					else
 					{
-						is_packet = false;
+						Dump("unexpected packet while not unlinked", pack.GetCData(), length);
 					}
 				}
 				else
 				{
-					is_packet = false;
+					Dump("unexpected packet while unlinked", pack.GetCData(), length);
 				}
 				break;
 			case 10: 				// PING or DISC
@@ -237,7 +237,7 @@ void CM17Gateway::Process()
 					}
 					else
 					{
-						is_packet = false;
+						Dump("unexpected packet", pack.GetCData(), length);
 					}
 				}
 				break;
@@ -245,19 +245,17 @@ void CM17Gateway::Process()
 				if (length > 37 && 0==memcmp(pack.GetCData(), "M17P", 4))
 				{
 					pack.Initialize(length, false);
-					is_packet = ProcessPacket(pack);
+					ProcessPacket(pack);
 				}
 				else if (54u==length && 0==memcmp(pack.GetCData(), "M17 ", 4))
 				{
 					pack.Initialize(length, true);
-					is_packet = ProcessFrame(pack);
+					ProcessFrame(pack);
 				}
 				else
-					is_packet = false;
+					Dump("unknown packet", pack.GetCData(), length);
 				break;
 			}
-			if (! is_packet)
-				Dump("Unknown packet", pack.GetCData(), length);
 		}
 
 		if (keep_running && FD_ISSET(amfd, &fdset))
@@ -371,14 +369,14 @@ bool CM17Gateway::ProcessPacket(const CPacket &pack)
 				else
 				{
 					SendLog("Could not find a null byte in the data!\n");
-					Dump("PM Packet data:", pack.GetCData()+34, payloadlength);
+					Dump("Packet Mode data:", pack.GetCData()+34, payloadlength);
 					return true;
 				}
 			}
 			else
 			{
 				SendLog("Is not an SMS type data field, but type is %u\n", pack.GetCData()[34]);
-				Dump("PM Packet data:", pack.GetCData(), payloadlength);
+				Dump("Packet Mode data:", pack.GetCData()+34, payloadlength);
 				return true;
 			}
 		}
@@ -430,7 +428,7 @@ bool CM17Gateway::ProcessFrame(const CPacket &pack)
 			// then init the currentStream
 			auto check = crc.CalcCRC(pack.GetCData(), 52u);
 			if (pack.GetCRC() != check)
-				std::cout << "Header Packet crc=0x" << std::hex << pack.GetCRC() << " calculate=0x" << std::hex << check << std::endl;
+				std::cout << Now() << "Header Packet crc=0x" << std::hex << pack.GetCRC() << " calculate=0x" << std::hex << check << std::endl;
 			memcpy(currentStream.header.GetData(), pack.GetCData(), 54u);
 			M172AM.Write(pack.GetCData(), 54u);
 			const CCallsign src(pack.GetCSrcAddress());
