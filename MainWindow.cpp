@@ -529,7 +529,7 @@ void CMainWindow::ActionButton()
 
 void CMainWindow::AudioSummary(const char *title)
 {
-		char line[640];
+		char line[64];
 		double t = AudioManager.volStats.count * 0.000125;	// 0.000125 = 1 / 8000
 		// we only do the sums of squares on every other point, so 0.5 mult in denominator
 		// 65 db subtration for "reasonable volume", an arbitrary reference point
@@ -697,7 +697,8 @@ void CMainWindow::UpdateGUI()
 	{
 		bool isLegacy = pIsLegacyCheck->value() ? true : false;
 		std::string target(pTargetCSInput->value());
-		switch (gateM17.GetLinkState())
+		const auto linkState = gateM17.GetLinkState();
+		switch (linkState)
 		{
 			case ELinkState::unlinked:
 				pDisconnectButton->deactivate();
@@ -749,12 +750,19 @@ void CMainWindow::UpdateGUI()
 					pTargetPortInput->value(std::to_string(host->port).c_str());
 					TargetPortInput();
 
+					host->updated = false;
+				}
+
+				if (ELinkState::unlinked != linkState)
+				{
+					ActivateModules("#"); // this will turn off all modules
+				}
+				else
+				{
 					if (host->mods.size())
 						ActivateModules(host->mods);
 					else
 						ActivateModules();
-
-					host->updated = false;
 				}
 			}
 		}
