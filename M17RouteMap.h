@@ -47,6 +47,7 @@ public:
 	void Save() const;
 	void ReadAll();
 	const std::list<std::string> GetKeys() const;
+	unsigned CountKeysThatBeginsWith(const std::string &str) const;
 	void Erase(const std::string &cs);
 	size_t Size() const;
 

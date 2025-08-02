@@ -124,27 +124,79 @@ void CMainWindow::RunM17()
 
 void CMainWindow::BuildTargetMenuButton()
 {
-	auto index = pMenuBar->find_index(_("Target"));
+	const char *base = _("Target");
+	auto index = pMenuBar->find_index(base);
 	if (index >= 0)
 	{
 		pMenuBar->clear_submenu(index);
 		for (const auto &cs : routeMap.GetKeys()) {
 			const auto host = routeMap.Find(cs);
 			if (host) {
-				std::string name(_("Target"));
-				name.append("/");
-				name.append(cs);
+				std::stringstream name;
+				name << base << '/';
+				if (0 == cs.compare(0, 4, "M17-"))
+				{
+					auto c1 = routeMap.CountKeysThatBeginsWith(cs.substr(0, 4));
+					if (c1 > 1u)
+					{
+						name << "M17-/";
+						auto c2 = routeMap.CountKeysThatBeginsWith(cs.substr(0, 5));
+						if (c2 > 1u)
+						{
+							if (c2 < c1)
+								name << cs.substr(0, 5) << "/";
+							auto c3 = routeMap.CountKeysThatBeginsWith(cs.substr(0, 6));
+							if (c3 > 1)
+								name << cs.substr(0, 6) << "/" << cs;
+							else
+								name << cs;
+						}
+						else // c1 > 1u and 1u == c2
+							name << cs;
+					}
+					else if (1u == c1)
+					{
+						name << cs;
+					}
+				}
+				else if (0 == cs.compare(0, 3, "URF"))
+				{
+					auto c1 = routeMap.CountKeysThatBeginsWith(cs.substr(0, 3));
+					if (c1 > 1u)
+					{
+						name << "URF/";
+						auto c2 = routeMap.CountKeysThatBeginsWith(cs.substr(0, 4));
+						if (c2 > 1u)
+						{
+							if (c2 < c1)
+								name << cs.substr(0, 4) << "/";
+							auto c3 = routeMap.CountKeysThatBeginsWith(cs.substr(0, 5));
+							if (c3 > 1)
+								name << cs.substr(0, 5) << "/" << cs;
+							else
+								name << cs;
+						}
+						else // c1 > 1u and 1u == c2
+							name << cs;
+					}
+					else if (1u == c1)
+					{
+						name << cs;
+					}
+				}
+				else
+					name << '/' << cs;
 				switch (cfgdata.eNetType) {
 					case EInternetType::ipv6only:
 						if (! host->ip6addr.empty())
-							pMenuBar->add(name.c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
+							pMenuBar->add(name.str().c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
 						break;
 					case EInternetType::ipv4only:
 						if (! host->ip4addr.empty())
-							pMenuBar->add(name.c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
+							pMenuBar->add(name.str().c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
 						break;
 					default:
-						pMenuBar->add(name.c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
+						pMenuBar->add(name.str().c_str(), 0, &CMainWindow::TargetMenuButtonCB, this);
 						break;
 				}
 			}

@@ -300,6 +300,19 @@ const std::list<std::string> CM17RouteMap::GetKeys() const
 	return keys;
 }
 
+unsigned CM17RouteMap::CountKeysThatBeginsWith(const std::string &str) const
+{
+	unsigned rv = 0;
+	for (const auto item : baseMap)
+	{
+		if (0 == item.first.find(str))
+		{
+			rv++;
+		}
+	}
+	return rv;
+}
+
 void CM17RouteMap::Erase(const std::string &cs)
 {
 	mux.lock();
