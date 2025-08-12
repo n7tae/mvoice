@@ -25,13 +25,14 @@
 enum class EInternetType { ipv4only, ipv6only, dualstack };
 
 using CFGDATA = struct CFGData_struct {
-	std::string sAudioIn, sAudioOut, sM17SourceCallsign;
+	std::string sAudioIn, sAudioOut, sM17SourceCallsign, sMessage;
 #ifndef NO_DHT
 	std::string sBootstrap;
 #endif
 	bool bVoiceOnlyEnable;
 	EInternetType eNetType;
 	char cModule;
+	double dLatitude, dLongitude;
 };
 
 class CConfigure

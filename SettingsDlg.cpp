@@ -80,6 +80,9 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	d.bVoiceOnlyEnable = 1u == pVoiceOnlyRadioButton->value();
 	// station
 	d.cModule = data.cModule;
+	d.dLatitude = std::atof(pLatitude->value());
+	d.dLongitude = std::atof(pLongitude->value());
+	d.sMessage.assign(pTextMessageInput->value());
 	// Internet
 	if (pIPv4RadioButton->value())
 		d.eNetType = EInternetType::ipv4only;
@@ -115,6 +118,13 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 	pSourceCallsignInput->value(d.sM17SourceCallsign.c_str());
 	SourceCallsignInput();
 	pModuleChoice->value(d.cModule - 'A');
+	std::stringstream ss;
+	ss << std::fixed << std::setprecision(5) << d.dLatitude;
+	pLatitude->value(ss.str().c_str());
+	ss.str("");
+	ss << std::fixed << std::setprecision(5) << d.dLongitude;
+	pLongitude->value(ss.str().c_str());
+	pTextMessageInput->value(d.sMessage.c_str());
 #ifndef NO_DHT
 	pBootstrapInput->value(d.sBootstrap.c_str());
 #endif
@@ -144,7 +154,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pStationGroup = new Fl_Group(20, 30, 410, 210, _("Station"));
 	pStationGroup->labelsize(16);
 
-	pSourceCallsignInput = new Fl_Input(218, 45, 127, 30, _("My Callsign:"));
+	pSourceCallsignInput = new Fl_Input(150, 45, 100, 30, _("My Callsign:"));
 	pSourceCallsignInput->tooltip(_("Input your callsign, up to 8 characters"));
 	pSourceCallsignInput->color(FL_RED);
 	pSourceCallsignInput->labelsize(16);
@@ -152,7 +162,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pSourceCallsignInput->when(FL_WHEN_CHANGED);
 	pSourceCallsignInput->callback(&CSettingsDlg::SourceCallsignInputCB, this);
 
-	pModuleChoice = new Fl_Choice(218, 85, 50, 30, _("Using Module:"));
+	pModuleChoice = new Fl_Choice(340, 45, 50, 30, _("Module:"));
 	pModuleChoice->down_box(FL_BORDER_BOX);
 	pModuleChoice->tooltip(_("Assign the transceiver module"));
 	pModuleChoice->labelsize(16);
@@ -164,18 +174,37 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 		pModuleChoice->add(l.c_str());
 	}
 
-	pCodecGroup = new Fl_Group(110, 138, 245, 105, "Codec:");
-	pCodecGroup->box(FL_THIN_UP_BOX);
+	pCodecGroup = new Fl_Group(100, 90, 265, 40, _("Codec:"));
+	pCodecGroup->box(FL_THIN_DOWN_BOX);
+	pCodecGroup->align(FL_ALIGN_LEFT);
 	pCodecGroup->labelsize(16);
 
-	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(160, 155, 150, 30, _("Voice-only"));
+	pVoiceOnlyRadioButton = new Fl_Radio_Round_Button(120, 95, 150, 30, _("Voice-only"));
 	pVoiceOnlyRadioButton->tooltip(_("This is the higher quality, 3200 bits/s codec"));
 	pVoiceOnlyRadioButton->labelsize(16);
 
-	pVoiceDataRadioButton = new Fl_Radio_Round_Button(160, 195, 150, 30, _("Voice+Data"));
+	pVoiceDataRadioButton = new Fl_Radio_Round_Button(230, 95, 150, 30, _("Voice+Data"));
 	pVoiceDataRadioButton->tooltip(_("This is the 1600 bits/s codec"));
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
+
+	pLatitude = new Fl_Float_Input(100, 150, 100, 30, _("Latitude:"));
+	pLatitude->tooltip(_("North is +, South is -"));
+	pLatitude->labelsize(16);
+	pLatitude->textsize(16);
+	pLatitude->value("0.0");
+
+	pLongitude = new Fl_Float_Input(300, 150, 120, 30, _("Longitude:"));
+	pLongitude->tooltip(_("East is +, West is -"));
+	pLongitude->labelsize(16);
+	pLongitude->textsize(16);
+	pLongitude->value("0.0");
+
+	pTextMessageInput = new Fl_Input(100, 200, 320, 30, _("Message:"));
+	pTextMessageInput->tooltip(_("Up to a 52 character text message"));
+	pTextMessageInput->labelsize(16);
+	pTextMessageInput->textsize(16);
+
 	pStationGroup->end();
 	pTabs->add(pStationGroup);
 

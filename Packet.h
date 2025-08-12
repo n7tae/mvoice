@@ -37,28 +37,46 @@ class CPacket
 {
 public:
 	CPacket();
-	void Initialize(size_t s, bool iss);
+	// get pointer to different parts
+	      uint8_t *GetData()        { return data; }
+	const uint8_t *GetCData() const { return data; }
+		  uint8_t *GetDstAddress();
 	const uint8_t *GetCDstAddress() const;
+	      uint8_t *GetSrcAddress();
 	const uint8_t *GetCSrcAddress() const;
+	      uint8_t *GetMetaData();
+	const uint8_t *GetCMetaData() const;
+          uint8_t *GetVoiceData(bool firsthalf = true);
 	const uint8_t *GetCVoiceData(bool firsthalf = true) const;
-	uint8_t *GetDstAddress();
-	uint8_t *GetSrcAddress();
-	uint8_t *GetVoiceData(bool firsthalf = true);
-	uint16_t GetStreamId() const;
-	uint16_t GetFrameType() const;
+
+	// get various 16 bit value in host byte order
+	uint16_t GetStreamId()    const;
+	uint16_t GetFrameType()   const;
 	uint16_t GetFrameNumber() const;
 	uint16_t GetCRC(bool first = true) const;
-	bool IsStreamPacket() const { return isstream; }
-	bool IsLastPacket() const;
-	void CalcCRC();
-	uint8_t *GetData() { return data; }
-	const uint8_t *GetCData() const { return data; }
-	size_t GetSize() const { return size; }
-	void SetStreamID(uint16_t sid);
+
+	// set 16 bit values in network byte order
+	void SetStreamId(uint16_t sid);
 	void SetFrameType(uint16_t ft);
 	void SetFrameNumber(uint16_t fn);
 
+	// get the state data
+	size_t          GetSize() const { return size; }
+	bool       IsStreamData() const { return isstream; }
+	bool       IsPacketData() const { return not isstream; }
+	bool       IsLastPacket() const;
+
+	// set state data 
+	void SetSize(size_t n) { size = n; }
+	void SetType(bool iss) { isstream = iss; }
+	void Initialize(size_t n, bool iss);
+
+	// calculate and set CRC value(s)
+	void CalcCRC();
+
 private:
+	uint16_t Get16At(size_t pos) const;
+	void Set16At(size_t pos, uint16_t val);
 	bool isstream;
 	size_t size;
 	uint8_t data[MAX_PACKET_SIZE+1];

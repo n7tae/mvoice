@@ -53,7 +53,8 @@ private:
 	Fl_Return_Button *pOkayButton;
 	Fl_Button *pAudioRescanButton;
 	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice, *pModuleChoice;
-	Fl_Input *pSourceCallsignInput;
+	Fl_Input *pSourceCallsignInput, *pTextMessageInput;
+	Fl_Float_Input *pLatitude, *pLongitude;
 #ifndef NO_DHT
 	Fl_Input *pBootstrapInput;
 #endif

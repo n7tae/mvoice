@@ -53,7 +53,7 @@ static CURLcode curl_read(const std::string& url, std::ostream& os, long timeout
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_USERAGENT, "libcurl-agent/1.0"))
+		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_USERAGENT, "mvoice/1.0"))
 		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
 		{
 			code = curl_easy_perform(curl);

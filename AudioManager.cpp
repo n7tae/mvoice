@@ -139,7 +139,7 @@ void CAudioManager::QuickKey(const std::string &d, const std::string &s)
 	CPacket pack;
 	pack.Initialize(54u, true);
 	CCallsign dst(d), src(s);
-	pack.SetStreamID(random.NewStreamID());
+	pack.SetStreamId(random.NewStreamID());
 	dst.CodeOut(pack.GetDstAddress());
 	src.CodeOut(pack.GetSrcAddress());
 	pack.SetFrameType(0x5u);
@@ -163,7 +163,7 @@ void CAudioManager::codec2gateway(const std::string &dst, const std::string &src
 	// TODO: metadata and encryption and more TODOs mentioned later...
 	CPacket pack;
 	pack.Initialize(54u, true);
-	pack.SetStreamID(random.NewStreamID());
+	pack.SetStreamId(random.NewStreamID());
 	pack.SetFrameType(voiceonly ? 0x5U : 0x7U);
 	destination.CodeOut(pack.GetDstAddress());
 	source.CodeOut(pack.GetSrcAddress());

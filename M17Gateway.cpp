@@ -112,7 +112,7 @@ void CM17Gateway::StreamTimeout()
 	// send the packet
 	M172AM.Write(currentStream.header.GetCData(), currentStream.header.GetSize());
 	// close the stream;
-	currentStream.header.SetStreamID(0u);
+	currentStream.header.SetStreamId(0u);
 	streamLock.unlock();
 }
 
@@ -408,7 +408,7 @@ bool CM17Gateway::ProcessFrame(const CPacket &pack)
 			{
 				SendLog("Close stream id=0x%04x, duration=%.2f sec\n", pack.GetStreamId(), 0.04f * (0x7fffu & fn));
 				currentStream.header.SetFrameNumber(0); // close the stream
-				currentStream.header.SetStreamID(0u);
+				currentStream.header.SetStreamId(0u);
 				streamLock.unlock();
 			}
 			else
