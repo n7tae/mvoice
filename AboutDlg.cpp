@@ -21,6 +21,7 @@
 
 #include "AboutDlg.h"
 
+#include <libintl.h>
 #define _(STRING) gettext(STRING)
 
 #define VERSION "1.3.9"
