@@ -162,7 +162,45 @@ void CM17RouteMap::ReadJson()
 		}
 		catch (const std::exception &e) {
 			std::cerr << e.what() << std::endl;
-			return;
+		}
+
+		std::string path(CFGDIR);
+		path.append("/bkup.json");
+		if (mref.empty())
+		{
+			ss.str("");
+			ss.clear();
+			std::cout << "Try reading backup json from " << path << "..." << std::endl;
+			std::ifstream bkup(path.c_str());
+			if (bkup.is_open())
+			{
+				ss << bkup.rdbuf();
+				try {
+					mref = json::parse(ss);
+				}
+				catch(const std::exception &e) {
+					std::cerr << e.what() << std::endl;
+				}
+				bkup.close();
+			}
+			else
+			{
+				std::cerr << "ERROR: could not open " << path << std::endl;
+			}
+		}
+		else
+		{
+			std::cout << "Backing up json file to " << path << std::endl;
+			std::ofstream bkup(path.c_str(), std::fstream::trunc);
+			if (bkup.is_open())
+			{
+				bkup << ss.rdbuf();
+				bkup.close();
+			}
+			else
+			{
+				std::cerr << "ERROR: Could not open " << path << std::endl;
+			}
 		}
 		
 		if (mref.contains("reflectors"))
@@ -236,7 +274,7 @@ void CM17RouteMap::ReadJson()
 		}
 		else
 		{
-			std::cerr << "ERROR: hostfiles.refcheck.radio didn't define any M17 reflectors" << std::endl;
+			std::cerr << "ERROR: No M17 reflectors found at hostfiles.refcheck.radio or " << path << std::endl;
 		}
 	}
 }
