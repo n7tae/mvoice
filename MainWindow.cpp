@@ -42,6 +42,7 @@
 #include "dht-values.h"
 #endif
 
+#include <libintl.h>
 #define _(STRING) gettext(STRING)
 //#define BOOTFILENAME "DHTNodes.bin"
 
