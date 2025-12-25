@@ -220,9 +220,6 @@ void CMainWindow::CloseAll()
 
 bool CMainWindow::Init()
 {
-	keep_running = true;
-	futReadThread = std::async(std::launch::async, &CMainWindow::ReadThread, this);
-
 	if (M172AM.Open("m172am")) {
 		CloseAll();
 		return true;
@@ -237,6 +234,9 @@ bool CMainWindow::Init()
 		CloseAll();
 		return true;
 	}
+
+	keep_running = true;
+	futReadThread = std::async(std::launch::async, &CMainWindow::ReadThread, this);
 
 	pIcon = new Fl_RGB_Image(icon_image.pixel_data, icon_image.width, icon_image.height, icon_image.bytes_per_pixel);
 	pWin = new Fl_Double_Window(900, 600, "MVoice");
