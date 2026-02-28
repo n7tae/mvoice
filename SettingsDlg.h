@@ -19,6 +19,7 @@
 #pragma once
 
 #include <map>
+#include <regex>
 #ifndef NO_DHT
 #include <opendht.h>
 #endif
@@ -41,10 +42,12 @@ private:
 	// persistance
 	void SaveWidgetStates(CFGDATA &d);
 	void SetWidgetStates(const CFGDATA &d);
+	// regex
+	std::regex LatRegEx, LongRegEx;
 	// data classes
 	CFGDATA data;
 	// other data
-	bool bM17Source;
+	bool bM17Source, bLatitude, bLongitude;
 	// Windows
 	CMainWindow *pMainWindow;
     Fl_Double_Window *pDlg;
@@ -54,7 +57,7 @@ private:
 	Fl_Button *pAudioRescanButton;
 	Fl_Choice *pAudioInputChoice, *pAudioOutputChoice, *pModuleChoice;
 	Fl_Input *pSourceCallsignInput, *pTextMessageInput;
-	Fl_Float_Input *pLatitude, *pLongitude;
+	Fl_Float_Input *pLatitudeInput, *pLongitudeInput;
 #ifndef NO_DHT
 	Fl_Input *pBootstrapInput;
 #endif
@@ -65,6 +68,8 @@ private:
 	Fl_Radio_Round_Button *pVoiceOnlyRadioButton, *pVoiceDataRadioButton;
 	Fl_Radio_Round_Button *pIPv4RadioButton, *pIPv6RadioButton, *pDualStackRadioButton;
 	Fl_Box *pAudioInputDescBox, *pAudioOutputDescBox;
+	// helpers
+	void SetOkayButton();
 	// Callback wrapper
 	static void SourceCallsignInputCB(Fl_Widget *p, void *v);
 	static void AudioRescanButtonCB(Fl_Widget *p, void *v);
@@ -72,6 +77,10 @@ private:
 	static void AudioOutputChoiceCB(Fl_Widget *p, void *v);
 	static void ModuleChoiceCB(Fl_Widget *p, void *v);
 	static void UpdateButtonCB(Fl_Widget *p, void *v);
+	static void LatitudeInputCB(Fl_Widget *p, void *v);
+	static void LongitudeInputCB(Fl_Widget *p, void *v);
+	static void TextMessageInputCB(Fl_Widget *p, void *v);
+
 	// the actual callbacks
 	void SourceCallsignInput();
 	void AudioRescanButton();
@@ -79,4 +88,7 @@ private:
 	void AudioOutputChoice();
 	void ModuleChoice();
 	void UpdateButton();
+	void LatitudeInput();
+	void LongitudeInput();
+	void TextMessageInput();
 };

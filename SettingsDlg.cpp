@@ -31,6 +31,8 @@ static const char *notfoundstr = _(" not found");
 
 CSettingsDlg::CSettingsDlg() : pMainWindow(nullptr), pDlg(nullptr)
 {
+	LatRegEx = std::regex("^[+-]?(90|([1-8]?[0-9](\\.[0-9]*)?))$", std::regex::extended);
+	LongRegEx = std::regex("^[+-]?(180|(((1[0-7])|[1-9]?)[0-9](\\.[0-9]*)?))$", std::regex::extended);
 }
 
 CSettingsDlg::~CSettingsDlg()
@@ -80,8 +82,8 @@ void CSettingsDlg::SaveWidgetStates(CFGDATA &d)
 	d.bVoiceOnlyEnable = 1u == pVoiceOnlyRadioButton->value();
 	// station
 	d.cModule = data.cModule;
-	d.dLatitude = std::atof(pLatitude->value());
-	d.dLongitude = std::atof(pLongitude->value());
+	d.dLatitude = std::atof(pLatitudeInput->value());
+	d.dLongitude = std::atof(pLongitudeInput->value());
 	d.sMessage.assign(pTextMessageInput->value());
 	// Internet
 	if (pIPv4RadioButton->value())
@@ -117,13 +119,16 @@ void CSettingsDlg::SetWidgetStates(const CFGDATA &d)
 		pVoiceDataRadioButton->setonly();
 	pSourceCallsignInput->value(d.sM17SourceCallsign.c_str());
 	SourceCallsignInput();
+	LatitudeInput();
+	LongitudeInput();
+	TextMessageInput();
 	pModuleChoice->value(d.cModule - 'A');
 	std::stringstream ss;
 	ss << std::fixed << std::setprecision(5) << d.dLatitude;
-	pLatitude->value(ss.str().c_str());
+	pLatitudeInput->value(ss.str().c_str());
 	ss.str("");
 	ss << std::fixed << std::setprecision(5) << d.dLongitude;
-	pLongitude->value(ss.str().c_str());
+	pLongitudeInput->value(ss.str().c_str());
 	pTextMessageInput->value(d.sMessage.c_str());
 #ifndef NO_DHT
 	pBootstrapInput->value(d.sBootstrap.c_str());
@@ -188,22 +193,29 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pVoiceDataRadioButton->labelsize(16);
 	pCodecGroup->end();
 
-	pLatitude = new Fl_Float_Input(100, 150, 100, 30, _("Latitude:"));
-	pLatitude->tooltip(_("North is +, South is -"));
-	pLatitude->labelsize(16);
-	pLatitude->textsize(16);
-	pLatitude->value("0.0");
+	pLatitudeInput = new Fl_Float_Input(100, 150, 100, 30, _("Latitude:"));
+	pLatitudeInput->tooltip(_("North is +, South is -"));
+	pLatitudeInput->labelsize(16);
+	pLatitudeInput->textsize(16);
+	pLatitudeInput->value("0.0");
+	pLatitudeInput->when(FL_WHEN_CHANGED);
+	pLatitudeInput->callback(&CSettingsDlg::LatitudeInputCB, this);
 
-	pLongitude = new Fl_Float_Input(300, 150, 120, 30, _("Longitude:"));
-	pLongitude->tooltip(_("East is +, West is -"));
-	pLongitude->labelsize(16);
-	pLongitude->textsize(16);
-	pLongitude->value("0.0");
+	pLongitudeInput = new Fl_Float_Input(300, 150, 120, 30, _("Longitude:"));
+	pLongitudeInput->tooltip(_("East is +, West is -"));
+	pLongitudeInput->labelsize(16);
+	pLongitudeInput->textsize(16);
+	pLongitudeInput->value("0.0");
+	pLongitudeInput->when(FL_WHEN_CHANGED);
+	pLongitudeInput->callback(&CSettingsDlg::LongitudeInputCB, this);
 
 	pTextMessageInput = new Fl_Input(100, 200, 320, 30, _("Message:"));
 	pTextMessageInput->tooltip(_("Up to a 52 character text message"));
 	pTextMessageInput->labelsize(16);
 	pTextMessageInput->textsize(16);
+	pTextMessageInput->color(FL_GREEN);
+	pTextMessageInput->when(FL_WHEN_CHANGED);
+	pTextMessageInput->callback(&CSettingsDlg::TextMessageInputCB, this);
 
 	pStationGroup->end();
 	pTabs->add(pStationGroup);
@@ -308,14 +320,21 @@ void CSettingsDlg::SourceCallsignInput()
 	if (bM17Source)
 	{
 		pSourceCallsignInput->color(FL_GREEN);
-		pOkayButton->activate();
 	}
 	else
 	{
 		pSourceCallsignInput->color(FL_RED);
-		pOkayButton->deactivate();
 	}
 	pSourceCallsignInput->damage(FL_DAMAGE_ALL);
+	SetOkayButton();
+}
+
+void CSettingsDlg::SetOkayButton()
+{
+	if (bM17Source and bLatitude and bLongitude)
+		pOkayButton->activate();
+	else
+		pOkayButton->deactivate();
 }
 
 void CSettingsDlg::AudioInputChoiceCB(Fl_Widget *, void *This)
@@ -340,9 +359,57 @@ void CSettingsDlg::AudioInputChoice()
 	}
 }
 
+void CSettingsDlg::LatitudeInputCB(Fl_Widget *, void *This)
+{
+	((CSettingsDlg *)This)->LatitudeInput();
+}
+
+void CSettingsDlg::LatitudeInput()
+{
+	std::string str(pLatitudeInput->value());
+	bLatitude = std::regex_match(str, LatRegEx);
+	pLatitudeInput->color(bLatitude ? FL_GREEN : FL_RED);
+	pLatitudeInput->damage(FL_DAMAGE_ALL);
+	SetOkayButton();
+}
+
+void CSettingsDlg::LongitudeInputCB(Fl_Widget *, void *This)
+{
+	((CSettingsDlg *)This)->LongitudeInput();
+}
+
+void CSettingsDlg::LongitudeInput()
+{
+	std::string str(pLongitudeInput->value());
+	bLongitude = std::regex_match(str, LongRegEx);
+	pLongitudeInput->color(bLongitude ? FL_GREEN : FL_RED);
+	pLongitudeInput->damage(FL_DAMAGE_ALL);
+	SetOkayButton();
+}
+
 void CSettingsDlg::AudioOutputChoiceCB(Fl_Widget *, void *This)
 {
 	((CSettingsDlg *)This)->AudioOutputChoice();
+}
+
+void CSettingsDlg::TextMessageInputCB(Fl_Widget *, void *This)
+{
+	((CSettingsDlg *)This)->TextMessageInput();
+}
+
+void CSettingsDlg::TextMessageInput()
+{
+	std::string msg(pTextMessageInput->value());
+	if (msg.size())
+	{
+		auto pos = pTextMessageInput->position();
+		if (msg.size() > 52)
+		{
+			msg.resize(52);
+			pTextMessageInput->value(msg.c_str());
+			pTextMessageInput->position((pos > 52) ? 52 : pos);
+		}
+	}
 }
 
 void CSettingsDlg::AudioOutputChoice()

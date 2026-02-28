@@ -27,8 +27,9 @@
 #include "MainWindow.h"
 #include "AudioManager.h"
 #include "Configure.h"
-#include "codec2.h"
+#include "FrameType.h"
 #include "Callsign.h"
+#include "codec2.h"
 
 CAudioManager::CAudioManager() : hot_mic(false), play_file(false), m17_sid_in(0U)
 {
@@ -55,12 +56,20 @@ CAudioManager::CAudioManager() : hot_mic(false), play_file(false), m17_sid_in(0U
 bool CAudioManager::Init(CMainWindow *pMain)
 {
 	pMainWindow = pMain;
-
 	AM2M17.SetUp("am2m17");
 	LogInput.SetUp("log_input");
 	return false;
 }
 
+void CAudioManager::BuildMetaBlocks()
+{
+	auto pcfg = pMainWindow->cfg.GetData();
+	if (pcfg->dLatitude or pcfg->dLongitude) {
+		gnss.SetDataStationTypes(EGnssSourceType::Client, EGnssStationType::Fixed);
+		gnss.Set(pcfg->dLatitude, pcfg->dLongitude);
+	}
+	CMessage::MakeBlocks(pcfg->sMessage, msgblks);
+}
 
 void CAudioManager::RecordMicThread(E_PTT_Type for_who, const std::string &urcall)
 {
@@ -165,6 +174,8 @@ void CAudioManager::codec2gateway(const std::string &dst, const std::string &src
 	pack.Initialize(54u, true);
 	pack.SetStreamId(random.NewStreamID());
 	pack.SetFrameType(voiceonly ? 0x5U : 0x7U);
+	CFrameType TYPE(pack.GetFrameType());
+	const auto pMeta = pack.GetMetaData();
 	destination.CodeOut(pack.GetDstAddress());
 	source.CodeOut(pack.GetSrcAddress());
 
@@ -190,14 +201,75 @@ void CAudioManager::codec2gateway(const std::string &dst, const std::string &src
 		}
 		// TODO: do something with the 2nd half of the payload when it's voice + "data"
 
-		uint16_t fn = count++ % 0x8000u;
+		uint16_t fn = count % 0x8000u;
 		if (last)
 			fn |= 0x8000u;
 		pack.SetFrameNumber(fn);
 
+		// add meta data:
+		// GPS data first then the message
+		const auto size = msgblks.size();
+		switch (count)
+		{
+			case 6u:	// GPS data starts a FN 6, the second superframe
+				if (gnss.IsValid())
+				{
+					TYPE.SetMetaDataType(EMetaDatType::gnss);
+					gnss.CopyGnssMetaData(pMeta);
+					pack.SetFrameType(TYPE.GetFrameType(EVersionType::legacy));
+				}
+				break;
+			case 12u:	// Message data starts at the third superframe
+				if (size > 0u) {
+					TYPE.SetMetaDataType(EMetaDatType::text);
+					pack.SetFrameType(TYPE.GetFrameType(EVersionType::legacy));
+					memcpy(pMeta, msgblks[0].data, 14);
+				} else if (gnss.IsValid()) {
+					memset(pMeta, 0, 14);
+					TYPE.SetMetaDataType(EMetaDatType::none);
+					pack.SetFrameType(TYPE.GetFrameType(EVersionType::legacy));
+				}
+				break;
+			case 18u:
+				if (size > 1u)
+					memcpy(pMeta, msgblks[1].data, 14);
+				else if (1u == size) {
+					memset(pMeta, 0, 14);
+					TYPE.SetMetaDataType(EMetaDatType::none);
+					pack.SetFrameType(TYPE.GetFrameType(EVersionType::legacy));
+				}
+				break;
+			case 24u:
+				if (size > 2u)
+					memcpy(pMeta, msgblks[2].data, 14);
+				else if (2u == size) {
+					memset(pMeta, 0, 14);
+					TYPE.SetMetaDataType(EMetaDatType::none);
+					pack.SetFrameType(TYPE.GetFrameType(EVersionType::legacy));
+				}
+				break;
+			case 30u:
+				if (size > 3u)
+					memcpy(pMeta, msgblks[3].data, 14);
+				else if (3u == size)
+					memset(pMeta, 0, 14);
+				break;
+			case 36u:	// and a largest message will end at the seventh superframe
+				if (size == 4u) {
+					memset(pMeta, 0, 14);
+					TYPE.SetMetaDataType(EMetaDatType::none);
+					pack.SetFrameType(TYPE.GetFrameType(EVersionType::legacy));
+				}
+				break;
+			default:
+				break;
+		}
+
 		pack.CalcCRC();
 
 		AM2M17.Write(pack.GetCData(), pack.GetSize());
+
+		count++;
 	} while (! last);
 }
 

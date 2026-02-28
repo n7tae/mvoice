@@ -147,9 +147,10 @@ void CM17RouteMap::ReadAll()
 
 void CM17RouteMap::ReadJson()
 {
+	std::string url("https://hostfiles.refcheck.radio/M17Hosts.json");
 	// downlaod and parse the mrefd and urf json file
 	std::stringstream ss;
-	if (ReadM17Json("https://hostfiles.refcheck.radio/M17Hosts.json", ss))
+	if (ReadM17Json(url, ss))
 	{
 		std::cerr << "ERROR curling M17 reflectors from hostfiles.refcheck.radio/M17Hosts.json" << std::endl;
 	}
@@ -177,6 +178,8 @@ void CM17RouteMap::ReadJson()
 				ss << bkup.rdbuf();
 				try {
 					mref = json::parse(ss);
+					url.assign(getenv("HOME"));
+					url += '/' + path;
 				}
 				catch(const std::exception &e) {
 					std::cerr << e.what() << std::endl;
@@ -191,7 +194,7 @@ void CM17RouteMap::ReadJson()
 		else
 		{
 			std::cout << "Backing up json file to " << path << std::endl;
-			std::ofstream bkup(path.c_str(), std::fstream::trunc);
+			std::ofstream bkup(path.c_str(), std::ios::trunc);
 			if (bkup.is_open())
 			{
 				bkup << ss.rdbuf();
@@ -205,6 +208,7 @@ void CM17RouteMap::ReadJson()
 		
 		if (mref.contains("reflectors"))
 		{
+			unsigned ucount = 0, mcount = 0;
 			for (auto &ref : mref["reflectors"])
 			{
 				const std::string cs(GET_STRING(ref["designator"]));
@@ -234,6 +238,7 @@ void CM17RouteMap::ReadJson()
 					else
 						continue;
 					Update(EFrom::json, cs, true, dn, ipv4, ipv6, mods, emods, port, GET_STRING(ref["url"]));
+					mcount++;
 				}
 				else if (0 == cs.substr(0,3).compare("URF"))
 				{
@@ -269,8 +274,10 @@ void CM17RouteMap::ReadJson()
 						}
 					}
 					Update(EFrom::json, cs, true, dn, ipv4, ipv6, mods, smods, port, GET_STRING(ref["url"]));
+					ucount++;
 				}
 			}
+			std::cout << "Loaded " << mcount << " M17 and " << ucount << " URF reflectors from " << url << std::endl;
 		}
 		else
 		{
