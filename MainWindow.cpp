@@ -237,6 +237,7 @@ bool CMainWindow::Init()
 		CloseAll();
 		return true;
 	}
+	AudioManager.BuildMetaBlocks();
 
 	pIcon = new Fl_RGB_Image(icon_image.pixel_data, icon_image.width, icon_image.height, icon_image.bytes_per_pixel);
 	pWin = new Fl_Double_Window(900, 600, "MVoice");
@@ -508,11 +509,19 @@ void CMainWindow::ShowSettingsDialog()
 
 void CMainWindow::NewSettings(CFGDATA *newdata)
 {
-	if (newdata) {	// the user clicked okay so if anything changed. We'll shut things down and let SetState start things up again
-		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) || newdata->eNetType!=cfgdata.eNetType) {
+	if (newdata) {	
+		// the user clicked okay so if anything changed. We'll shut things down and let SetState start things up again
+		if (newdata->sM17SourceCallsign.compare(cfgdata.sM17SourceCallsign) or (newdata->eNetType != cfgdata.eNetType)) {
 			StopM17();
 		}
+		// did the meta data change?
+		bool updateMetaBlock = false;
+		if ((newdata->dLatitude != cfgdata.dLatitude) or (newdata->dLongitude != cfgdata.dLongitude) or (newdata->sMessage.compare(cfgdata.sM17SourceCallsign))) {
+			updateMetaBlock = true;
+		}
 		cfg.CopyTo(cfgdata);
+		if (updateMetaBlock)
+			AudioManager.BuildMetaBlocks();
 	}
 	SetState();
 }

@@ -35,6 +35,8 @@ void CConfigure::SetDefaultValues()
 	// audio
 	data.sAudioIn.assign("default");
 	data.sAudioOut.assign("default");
+	data.dLatitude = data.dLongitude = 0.0;
+	data.sMessage.clear();
 #ifndef NO_DHT
 	data.sBootstrap.assign("xrf757.openquad.net");
 #endif
@@ -84,6 +86,14 @@ void CConfigure::ReadData()
 			data.sM17SourceCallsign.assign(val);
 		} else if (0 == strcmp(key, "M17VoiceOnly")) {
 			data.bVoiceOnlyEnable = IS_TRUE(*val);
+		} else if (0 == strcmp(key, "Latitude")) {
+			data.dLatitude = std::atof(val);
+		} else if (0 == strcmp(key, "Longitude")) {
+			data.dLongitude = std::atof(val);
+		} else if (0 == strcmp(key, "Message")) {
+			data.sMessage.assign(val);
+			if (data.sMessage.size() > 52)
+				data.sMessage.resize(52);
 #ifndef NO_DHT
 		} else if (0 == strcmp(key, "DHTBootstrap")) {
 			data.sBootstrap.assign(val);
@@ -121,6 +131,9 @@ void CConfigure::WriteData()
 	// audio
 	file << "AudioInput='" << data.sAudioIn << "'" << std::endl;
 	file << "AudioOutput='" << data.sAudioOut << "'" << std::endl;
+	file << "Latitude=" << std::fixed << std::setprecision(5) << data.dLatitude << std::endl;
+	file << "Longitude=" << std::fixed << std::setprecision(5) << data.dLongitude << std::endl;
+	file << "Message='" << data.sMessage << "'" << std::endl;
 #ifndef NO_DHT
 	// DHT
 	file << "DHTBootstrap='" << data.sBootstrap << "'" << std::endl;
@@ -139,6 +152,11 @@ void CConfigure::CopyFrom(const CFGDATA &from)
 	// audio
 	data.sAudioIn.assign(from.sAudioIn);
 	data.sAudioOut.assign(from.sAudioOut);
+	// position
+	data.dLatitude = from.dLatitude;
+	data.dLongitude = from.dLongitude;
+	// message
+	data.sMessage.assign(from.sMessage);
 #ifndef NO_DHT
 	// DHT
 	data.sBootstrap.assign(from.sBootstrap);
@@ -156,6 +174,11 @@ void CConfigure::CopyTo(CFGDATA &to)
 	// audio
 	to.sAudioIn.assign(data.sAudioIn);
 	to.sAudioOut.assign(data.sAudioOut);
+	// position
+	to.dLatitude = data.dLatitude;
+	to.dLongitude = data.dLongitude;
+	// messge
+	to.sMessage.assign(data.sMessage);
 #ifndef NO_DHT
 	// DHT
 	to.sBootstrap.assign(data.sBootstrap);

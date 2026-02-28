@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 by Thomas A. Early N7TAE
+ *   Copyright (c) 2025 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -16,25 +16,31 @@
  *   Foundation, Inc., 675 Mass Ave, Cambridge, MA 02139, USA.
  */
 
-#pragma once
+#include <cstdint>
+#include <string>
+#include <nlohmann/json.hpp>
+#include <vector>
 
-#include <FL/Fl.H>
-#include <FL/Fl_Double_Window.H>
-#include <FL/Fl_Text_Display.H>
-#include <FL/Fl_Menu_Bar.H>
-#include <FL/Fl_Input.H>
-#include <FL/Fl_Float_Input.H>
-#include <FL/Fl_Int_Input.H>
-#include <FL/Fl_Box.H>
-#include <FL/Fl_Group.H>
-#include <FL/Fl_Radio_Button.H>
-#include <FL/Fl_Radio_Round_Button.H>
-#include <FL/Fl_Menu_Button.H>
-#include <FL/Fl_Choice.H>
-#include <FL/Fl_Button.H>
-#include <FL/Fl_Toggle_Button.H>
-#include <FL/Fl_Check_Button.H>
-#include <FL/Fl_Return_Button.H>
-#include <FL/Fl_Tabs.H>
-#include <FL/fl_ask.H>
-#include <FL/Fl_Text_Editor.H>
+struct SMeta { uint8_t data[14]; SMeta() { memset(data, 0, 14); }};
+
+class CMessage
+{
+public:
+	CMessage() { Init(); }
+	virtual ~CMessage() {}
+
+	void Init();
+	// returns true when the message string is completely constructed
+	bool GetBlock(const uint8_t *pdata);
+	static void MakeBlocks(const std::string &msg, std::vector<SMeta> &blks);
+	const std::string &GetMessage();
+
+private:
+	// Meta data
+	uint8_t ctl;
+	char msg[53];
+	std::string str;
+
+	void Clean(char *to, const uint8_t *from);
+	void Trim();
+};

@@ -25,9 +25,12 @@
 #include <vector>
 
 #include "TemplateClasses.h"
+#include "UnixDgramSocket.h"
+#include "Message.h"
 #include "Packet.h"
 #include "Random.h"
-#include "UnixDgramSocket.h"
+#include "GNSS.h"
+#include "Base.h"
 #include "CRC.h"
 
 #ifdef USE44100
@@ -45,12 +48,12 @@ enum class E_PTT_Type { echo, m17 };
 
 class CMainWindow;
 
-class CAudioManager
+class CAudioManager : public CBase
 {
 public:
 	CAudioManager();
 	bool Init(CMainWindow *);
-
+	void BuildMetaBlocks();
 	void RecordMicThread(E_PTT_Type for_who, const std::string &urcall);
 	void PlayEchoDataThread();	// for Echo
 	void M17_2AudioMgr(const CPacket &m17);
@@ -65,6 +68,8 @@ private:
 	// data
 	std::atomic<bool> hot_mic, play_file;
 	std::atomic<unsigned short> m17_sid_in;
+	CGNSS gnss;
+	std::vector<SMeta> msgblks;
 	CAudioQueue audio_queue;
 	CC2DataQueue c2_queue;
 	std::future<void> mic2audio_fut, audio2codec_fut, codec2gateway_fut, codec2audio_fut, play_audio_fut;
