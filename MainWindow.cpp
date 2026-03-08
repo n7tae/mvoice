@@ -37,6 +37,7 @@
 #include "MainWindow.h"
 #include "Utilities.h"
 #include "IconData.h"
+#include "FrameType.h"
 #include "TemplateClasses.h"
 #ifndef NO_DHT
 #include "dht-values.h"
@@ -842,7 +843,15 @@ bool CMainWindow::SendMessage(const std::string &dst, const std::string &msg)
 		cs.CodeOut(pack.GetDstAddress());
 		cs.CSIn(cfgdata.sM17SourceCallsign);
 		cs.CodeOut(pack.GetSrcAddress());
-		pack.SetFrameType(0);
+		CFrameType frameType(0);
+		if (cfgdata.dLatitude or cfgdata.dLongitude) {
+			frameType.SetMetaDataType(EMetaDatType::gnss);
+			CGNSS gnss;
+			gnss.SetDataStationTypes(EGnssSourceType::Client, EGnssStationType::Fixed);
+			gnss.Set(cfgdata.dLatitude, cfgdata.dLongitude);
+			memcpy(pack.GetMetaData(), gnss.GetData(), 14);
+		}
+		pack.SetFrameType(frameType.GetFrameType(EVersionType::legacy));
 		pack.GetData()[34] = 0x5u;
 		auto len = msg.length();
 		if (len > (MAX_PACKET_SIZE - 38u))
