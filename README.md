@@ -145,7 +145,7 @@ Plug in your headset and start *mvoice*: Open a shell and type `mvoice` if ~/bin
 
 ## Operating
 
-The first thing *mvoice* will do is to download the list of registered M17 and URF reflectors from the hostfiles.refcheck.radio website and parse it. It will do this every time you start *mvoice*.
+The first thing *mvoice* will do is to download the list of registered M17 and URF reflectors from https://m17-project.github.io/hostfiles/M17Hosts.json and parse it. It will do this every time you start *mvoice*.
 
 Once it launches, click the **Settings** button and make sure to set your callsign and the codec setting on the M17 page. You can usually leave the audio settings on "default". Also enable IPv6 if your internet provider supports it. Click the Okay button and your settings will be saved in your configuration directory.
 

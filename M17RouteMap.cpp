@@ -147,12 +147,12 @@ void CM17RouteMap::ReadAll()
 
 void CM17RouteMap::ReadJson()
 {
-	std::string url("https://hostfiles.refcheck.radio/M17Hosts.json");
+	std::string url("https://m17-project.github.io/hostfiles/M17Hosts.json");
 	// downlaod and parse the mrefd and urf json file
 	std::stringstream ss;
 	if (ReadM17Json(url, ss))
 	{
-		std::cerr << "ERROR curling M17 reflectors from hostfiles.refcheck.radio/M17Hosts.json" << std::endl;
+		std::cerr << "ERROR curling M17 reflectors from m17-project.github.io/hostfiles/M17Hosts.json" << std::endl;
 	}
 	else
 	{
@@ -279,7 +279,7 @@ void CM17RouteMap::ReadJson()
 		}
 		else
 		{
-			std::cerr << "ERROR: No M17 reflectors found at hostfiles.refcheck.radio or " << path << std::endl;
+			std::cerr << "ERROR: No M17 reflectors found at https://m17-project.github.io or " << path << std::endl;
 		}
 	}
 }
