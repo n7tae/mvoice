@@ -741,7 +741,11 @@ void CMainWindow::insertLogText(const char *line)
 {
 	Fl::lock();
 	pTextBuffer->append(line);
+	#if (FL_MINOR_VERSION > 3)
 	pTextDisplay->insert_position(pTextBuffer->length());
+	#else
+	pTextDisplay->position(pTextBuffer->length());
+	#endif
 	pTextDisplay->show_insert_position();
 	Fl::unlock();
 }
@@ -948,12 +952,20 @@ void CMainWindow::DestinationCSInputCB(Fl_Widget *, void *This)
 void CMainWindow::DestinationCSInput()
 {
 	// Convert to uppercase
-	auto pos = pDSTCallsignInput->position();
+	#if (FL_MINOR_VERSION > 3)
+	auto pos = pDSTCallsignInput->insert_position();
+	#else
+	auto pos = pDSTCallsignInput->postion();
+	#endif
 	std::string dest(pDSTCallsignInput->value());
 	if (ToUpper(dest))
 	{
 		pDSTCallsignInput->value(dest.c_str());
-		pDSTCallsignInput->position(pos);
+		#if (FL_MINOR_VERSION > 3)
+		pDSTCallsignInput->insert_position(pos);
+		#else
+		auto pos = pDSTCallsignInput->postion();
+		#endif
 	}
 
 	// the destination either has to be @ALL, PARROT or a legal callsign
@@ -970,12 +982,20 @@ void CMainWindow::TargetCSInputCB(Fl_Widget *, void *This)
 void CMainWindow::TargetCSInput()
 {
 	// Convert to uppercase
+	#if (FL_MINOR_VERSION > 3)
+	auto pos = pTargetCSInput->insert_position();
+	#else
 	auto pos = pTargetCSInput->position();
+	#endif
 	std::string dest(pTargetCSInput->value());
 	if (ToUpper(dest))
 	{
 		pTargetCSInput->value(dest.c_str());
+		#if (FL_MINOR_VERSION > 3)
+		pTargetCSInput->insert_position(pos);
+		#else
 		pTargetCSInput->position(pos);
+		#endif
 	}
 
 	// the target either has to be a reflector or a legal callsign

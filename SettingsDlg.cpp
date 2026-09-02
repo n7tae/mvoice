@@ -309,12 +309,20 @@ void CSettingsDlg::SourceCallsignInputCB(Fl_Widget *, void *This)
 
 void CSettingsDlg::SourceCallsignInput()
 {
+	#if (FL_MINOR_VERSION > 3)
+	auto pos = pSourceCallsignInput->insert_position();
+	#else
 	auto pos = pSourceCallsignInput->position();
+	#endif
 	std::string s(pSourceCallsignInput->value());
 	if (pMainWindow->ToUpper(s))
 	{
 		pSourceCallsignInput->value(s.c_str());
+		#if (FL_MINOR_VERSION > 3)
+		pSourceCallsignInput->insert_position(pos);
+		#else
 		pSourceCallsignInput->position(pos);
+		#endif
 	}
 	bM17Source = std::regex_match(s.c_str(), pMainWindow->M17CallRegEx);
 	if (bM17Source)
@@ -402,12 +410,20 @@ void CSettingsDlg::TextMessageInput()
 	std::string msg(pTextMessageInput->value());
 	if (msg.size())
 	{
+		#if (FL_MINOR_VERSION > 3)
+		auto pos = pTextMessageInput->insert_position();
+		#else
 		auto pos = pTextMessageInput->position();
+		#endif
 		if (msg.size() > 52)
 		{
 			msg.resize(52);
 			pTextMessageInput->value(msg.c_str());
+			#if (FL_MINOR_VERSION > 3)
+			pTextMessageInput->insert_position((pos > 52) ? 52 : pos);
+			#else
 			pTextMessageInput->position((pos > 52) ? 52 : pos);
+			#endif
 		}
 	}
 }

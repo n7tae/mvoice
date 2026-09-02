@@ -94,12 +94,20 @@ void CSMSDlg::DestinationCSInputCB(Fl_Widget *, void *dlg)
 void CSMSDlg::DestinationCSInput()
 {
 	// Convert to uppercase
+	#if (FL_MINOR_VERSION > 3)
+	auto pos = pDSTCallsignInput->insert_position();
+	#else
 	auto pos = pDSTCallsignInput->position();
+	#endif
 	std::string dest(pDSTCallsignInput->value());
 	if (pMainWindow->ToUpper(dest))
 	{
 		pDSTCallsignInput->value(dest.c_str());
+		#if (FL_MINOR_VERSION > 3)
+		pDSTCallsignInput->insert_position(pos);
+		#else
 		pDSTCallsignInput->position(pos);
+		#endif
 	}
 
 	// the destination either has to be @ALL or a legal callsign

@@ -29,13 +29,19 @@ sudo apt install -y git build-essential libasound2-dev nlohmann-json3-dev libcur
 
 ## FLTK
 
-*mvoice* now uses FLTK, the *Fast Light Tool Kit*. You may be able to install it with the package manager:
+*mvoice* now uses FLTK, the *Fast Light Tool Kit*. You may be able to install it with the package manager. First try:
 
 ```bash
-sudo apt install -y libfltk1.3-dev
+sudo apt install -y libfltk1.4-dev
 ```
 
-You can also build it yourself from the FLTK git repository:
+If that doesn't work, try:
+
+```bash
+sudo apt install -y libflkt1.3-dev
+```
+
+If your system has no FLTK packages available (very unusual), you can also build it yourself from the FLTK git repository:
 
 ```bash
 git clone https://github.com/fltk/fltk.git

@@ -1,5 +1,5 @@
 /*
- *   Copyright (c) 2022 by Thomas A. Early N7TAE
+ *   Copyright (c) 2022,2026 by Thomas A. Early N7TAE
  *
  *   This program is free software; you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -38,3 +38,10 @@
 #include <FL/Fl_Tabs.H>
 #include <FL/fl_ask.H>
 #include <FL/Fl_Text_Editor.H>
+#if not defined(FL_MAJOR_VERSION) || not defined(FL_MINOR_VERSION)
+    #error "FLTK library version could not be identified."
+#elif ( FL_MAJOR_VERSION != 1 )
+	#error "FLTK unknnown major version."
+#elif ( FL_MINOR_VERSION != 3 ) && ( FL_MINOR_VERSION != 4 )
+	#error "FLTK unknown minor version."
+#endif
