@@ -741,11 +741,7 @@ void CMainWindow::insertLogText(const char *line)
 {
 	Fl::lock();
 	pTextBuffer->append(line);
-	#if (FL_MINOR_VERSION > 3)
 	pTextDisplay->insert_position(pTextBuffer->length());
-	#else
-	pTextDisplay->position(pTextBuffer->length());
-	#endif
 	pTextDisplay->show_insert_position();
 	Fl::unlock();
 }
@@ -955,7 +951,7 @@ void CMainWindow::DestinationCSInput()
 	#if (FL_MINOR_VERSION > 3)
 	auto pos = pDSTCallsignInput->insert_position();
 	#else
-	auto pos = pDSTCallsignInput->postion();
+	auto pos = pDSTCallsignInput->position();
 	#endif
 	std::string dest(pDSTCallsignInput->value());
 	if (ToUpper(dest))
@@ -964,7 +960,7 @@ void CMainWindow::DestinationCSInput()
 		#if (FL_MINOR_VERSION > 3)
 		pDSTCallsignInput->insert_position(pos);
 		#else
-		auto pos = pDSTCallsignInput->postion();
+		auto pos = pDSTCallsignInput->position();
 		#endif
 	}
 
