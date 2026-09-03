@@ -113,7 +113,7 @@ void CAudioManager::audio2codec(const bool is_3200)
 			CC2DataFrame dataframe(data);
 			dataframe.SetFlag(is_odd ? false : last);
 			c2_queue.Push(dataframe);
-			if (is_odd && last) { // we need an even number of data frame for 3200
+			if (is_odd and last) { // we need an even number of data frame for 3200
 				// add one more quite frame
 				const short quiet[160] = { 0 };
 				c2.codec2_encode(data, quiet);
@@ -408,7 +408,7 @@ void CAudioManager::M17_2AudioMgr(const CPacket &pack)
 {
 	static bool is_3200;
 	if (! play_file) {
-		if (0U==m17_sid_in && 0U==(pack.GetFrameNumber() & 0x8000u)) {	// don't start if it's the last audio frame
+		if (0U==m17_sid_in and 0U==(pack.GetFrameNumber() & 0x8000u)) {	// don't start if it's the last audio frame
 			// here comes a new stream
 			m17_sid_in = pack.GetStreamId();
 			is_3200 = ((pack.GetFrameType() & 0x6u) == 0x4u);

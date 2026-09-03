@@ -230,7 +230,7 @@ bool CSettingsDlg::Init(CMainWindow *pMain)
 	pIPv6RadioButton = new Fl_Radio_Round_Button(145, 110, 200, 30, _("IPv6 Only"));
 	pIPv6RadioButton->labelsize(16);
 
-	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, _("IPv4 && IPv6"));
+	pDualStackRadioButton = new Fl_Radio_Round_Button(145, 160, 200, 30, _("IPv4 and IPv6"));
 	pDualStackRadioButton->labelsize(16);
 
 	pInternetGroup->end();
@@ -478,7 +478,7 @@ void CSettingsDlg::AudioRescanButton()
 			n++;
 			continue;
 		}
-		if ((0==strcmp(name, "default") || strstr(name, "plughw")) && NULL==strstr(desc, "without any conversions")) {
+		if ((0==strcmp(name, "default") or strstr(name, "plughw")) and NULL==strstr(desc, "without any conversions")) {
 
 			char *io = snd_device_name_get_hint(*n, "IOID");
 			bool is_input = true, is_output = true;

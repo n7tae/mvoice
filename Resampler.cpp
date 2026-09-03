@@ -247,7 +247,7 @@ bool CResampler::prepare_data(SDATA &data, int half_filter_chan_len)
 		len = test;
 	//len -= (len % filter.channels);
 
-	if (len < 0 || filter.b_end + len > filter.b_len) {
+	if (len < 0 or filter.b_end + len > filter.b_len) {
 		std::cerr << "Internal error : Bad length in prepare_data()." << std::endl;
 		return true;
 	}
@@ -257,7 +257,7 @@ bool CResampler::prepare_data(SDATA &data, int half_filter_chan_len)
 	filter.b_end += len;
 	filter.in_used += len;
 
-	if (filter.in_used == filter.in_count && filter.b_end - filter.b_current < 2 * half_filter_chan_len && data.end_of_input)
+	if (filter.in_used == filter.in_count and filter.b_end - filter.b_current < 2 * half_filter_chan_len and data.end_of_input)
 	{
 		/* Handle the case where all data in the current buffer has been
 		** consumed and this is the last buffer.
@@ -276,7 +276,7 @@ bool CResampler::prepare_data(SDATA &data, int half_filter_chan_len)
 		filter.b_real_end = filter.b_end;
 		len = half_filter_chan_len + 5;
 
-		if (len < 0 || filter.b_end + len > filter.b_len)
+		if (len < 0 or filter.b_end + len > filter.b_len)
 			len = filter.b_len - filter.b_end;
 
 		memset(filter.buffer.data() + filter.b_end, 0, len * sizeof(filter.buffer[0]));
@@ -287,7 +287,7 @@ bool CResampler::prepare_data(SDATA &data, int half_filter_chan_len)
 }
 bool CResampler::SetRatio(SDATA &data, double new_ratio)
 {
-	if (new_ratio > 40.0 || new_ratio < 1.0/40.0) {
+	if (new_ratio > 40.0 or new_ratio < 1.0/40.0) {
 		std::cerr << "Resample ratio of " << new_ratio << " is out of range" << std::endl;
 		return true;
 	}

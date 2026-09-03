@@ -129,9 +129,9 @@ void CM17Gateway::Process()
 	const auto ip4fd = ipv4.GetSocket();
 	const auto ip6fd = ipv6.GetSocket();
 	const auto amfd = AM2M17.GetFD();
-	if ((EInternetType::ipv6only != cfg.eNetType) && (ip4fd > max_nfds))
+	if ((EInternetType::ipv6only != cfg.eNetType) and (ip4fd > max_nfds))
 		max_nfds = ip4fd;
-	if ((EInternetType::ipv4only != cfg.eNetType) && (ip6fd > max_nfds))
+	if ((EInternetType::ipv4only != cfg.eNetType) and (ip6fd > max_nfds))
 		max_nfds = ip6fd;
 	if (amfd > max_nfds)
 		max_nfds = amfd;
@@ -150,7 +150,7 @@ void CM17Gateway::Process()
 			}
 		}
 
-		if (currentStream.header.GetStreamId() && currentStream.lastPacketTime.time() >= 2.0)
+		if (currentStream.header.GetStreamId() and currentStream.lastPacketTime.time() >= 2.0)
 		{
 			StreamTimeout(); // current stream has timed out
 		}
@@ -175,26 +175,26 @@ void CM17Gateway::Process()
 		socklen_t fromlen = sizeof(struct sockaddr_storage);
 		int length;
 
-		if (keep_running && (ip4fd >= 0) && FD_ISSET(ip4fd, &fdset))
+		if (keep_running and (ip4fd >= 0) and FD_ISSET(ip4fd, &fdset))
 		{
 			length = recvfrom(ip4fd, pack.GetData(), MAX_PACKET_SIZE, 0, from17k.GetPointer(), &fromlen);
 			is_packet = true;
 			FD_CLR(ip4fd, &fdset);
 		}
 
-		if (keep_running && (ip6fd >= 0) && FD_ISSET(ip6fd, &fdset))
+		if (keep_running and (ip6fd >= 0) and FD_ISSET(ip6fd, &fdset))
 		{
 			length = recvfrom(ip6fd, pack.GetData(), MAX_PACKET_SIZE, 0, from17k.GetPointer(), &fromlen);
 			is_packet = true;
 			FD_CLR(ip6fd, &fdset);
 		}
 
-		if (keep_running && is_packet)
+		if (keep_running and is_packet)
 		{
 			switch (length)
 			{
 			case 4:  				// DISC, ACKN or NACK
-				if ((ELinkState::unlinked != mlink.state) && (from17k == mlink.addr))
+				if ((ELinkState::unlinked != mlink.state) and (from17k == mlink.addr))
 				{
 					if (0 == memcmp(pack.GetCData(), "ACKN", 4))
 					{
@@ -224,7 +224,7 @@ void CM17Gateway::Process()
 				}
 				break;
 			case 10: 				// PING or DISC
-				if ((ELinkState::linked == mlink.state) && (from17k == mlink.addr))
+				if ((ELinkState::linked == mlink.state) and (from17k == mlink.addr))
 				{
 					if (0 == memcmp(pack.GetCData(), "PING", 4))
 					{
@@ -242,12 +242,12 @@ void CM17Gateway::Process()
 				}
 				break;
 			default:	// An M17 frame
-				if (length > 37 && 0==memcmp(pack.GetCData(), "M17P", 4))
+				if (length > 37 and 0==memcmp(pack.GetCData(), "M17P", 4))
 				{
 					pack.Initialize(length, false);
 					ProcessPacket(pack);
 				}
-				else if (54u==length && 0==memcmp(pack.GetCData(), "M17 ", 4))
+				else if (54u==length and 0==memcmp(pack.GetCData(), "M17 ", 4))
 				{
 					pack.Initialize(length, true);
 					ProcessFrame(pack);
@@ -258,7 +258,7 @@ void CM17Gateway::Process()
 			}
 		}
 
-		if (keep_running && FD_ISSET(amfd, &fdset))
+		if (keep_running and FD_ISSET(amfd, &fdset))
 		{
 			CPacket pack;
 			pack.Initialize(54, true);
@@ -266,7 +266,7 @@ void CM17Gateway::Process()
 			const CCallsign dest(pack.GetCDstAddress());
 			//printf("DEST=%s=0x%02x%02x%02x%02x%02x%02x\n", dest.GetCS().c_str(), pack.GetCDstAddress()[0], pack.GetCDstAddress()[1], pack.GetCDstAddress()[2], pack.GetCDstAddress()[3], pack.GetCDstAddress()[4], pack.GetCDstAddress()[5]);
 			//std::cout << "Read " << length << " bytes with dest='" << dest.GetCS() << "'" << std::endl;
-			if (0==dest.GetCS(3).compare("M17") || 0==dest.GetCS(3).compare("URF")) // Linking a reflector
+			if (0==dest.GetCS(3).compare("M17") or 0==dest.GetCS(3).compare("URF")) // Linking a reflector
 			{
 				switch (mlink.state)
 				{

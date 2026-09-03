@@ -65,7 +65,7 @@ void CCallsign::CSIn(const std::string &callsign)
 	}
 	// strip trailing spaces (just to be nice!)
 	auto len = strlen(cs);
-	while (len && (' ' == cs[len-1]))
+	while (len and (' ' == cs[len-1]))
 		cs[--len] = 0;
 }
 

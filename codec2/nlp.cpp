@@ -160,7 +160,7 @@ void Cnlp::nlp_create(C2CONST *c2const)
 	int  m = c2const->m_pitch;
 	int  Fs = c2const->Fs;
 
-	assert((Fs == 8000) || (Fs == 16000));
+	assert((Fs == 8000) or (Fs == 16000));
 	snlp.Fs = Fs;
 
 	snlp.m = m;
@@ -429,7 +429,7 @@ float Cnlp::post_process_sub_multiples(std::complex<float> Fw[], int pmax, float
 		/* lower threshold to favour previous frames pitch estimate,
 		    this is a form of pitch tracking */
 
-		if ((prev_f0_bin > bmin) && (prev_f0_bin < bmax))
+		if ((prev_f0_bin > bmin) and (prev_f0_bin < bmax))
 			thresh = CNLP*0.5*gmax;
 		else
 			thresh = CNLP*gmax;
@@ -444,7 +444,7 @@ float Cnlp::post_process_sub_multiples(std::complex<float> Fw[], int pmax, float
 			}
 
 		if (lmax > thresh)
-			if ((lmax > Fw[lmax_bin-1].real()) && (lmax > Fw[lmax_bin+1].real()))
+			if ((lmax > Fw[lmax_bin-1].real()) and (lmax > Fw[lmax_bin+1].real()))
 			{
 				cmax_bin = lmax_bin;
 			}

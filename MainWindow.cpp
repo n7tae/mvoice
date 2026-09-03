@@ -207,7 +207,7 @@ void CMainWindow::BuildTargetMenuButton()
 
 void CMainWindow::SetState()
 {
-	if (cfg.IsOkay() && false == gateM17.keep_running)
+	if (cfg.IsOkay() and false == gateM17.keep_running)
 		futM17 = std::async(std::launch::async, &CMainWindow::RunM17, this);
 
 	BuildTargetMenuButton();
@@ -480,7 +480,7 @@ void CMainWindow::ShowSMSDialog()
 {
 	if (pIsLegacyCheck->value())
 	{
-		std::lock_guard<std::mutex> lock(logmux);
+		std::lock_guard<std::mutex> lck(logmux);
 		insertLogText("Sorry! You can't send a message to a legacy reflector.\n");
 	}
 	else
@@ -543,8 +543,8 @@ void CMainWindow::TargetMenuButton()
 		auto host = routeMap.Find(cs);
 		if (host) {
 			// first the IP
-			if (EInternetType::ipv4only!=cfgdata.eNetType && !host->ip6addr.empty())
-				// if we're not in IPv4-only mode && there is an IPv6 address for this host
+			if (EInternetType::ipv4only!=cfgdata.eNetType and !host->ip6addr.empty())
+				// if we're not in IPv4-only mode and there is an IPv6 address for this host
 				pTargetIpInput->value(host->ip6addr.c_str());
 			else
 				pTargetIpInput->value(host->ip4addr.c_str());
@@ -633,7 +633,7 @@ void CMainWindow::Receive(bool is_rx)
 	else
 		pEchoTestButton->deactivate();
 
-	if (bTransOK && AudioManager.volStats.count)
+	if (bTransOK and AudioManager.volStats.count)
 		AudioSummary(_("RX Audio"));
 }
 
@@ -643,7 +643,7 @@ void CMainWindow::SetTargetAddress(std::string &cs)
 	const std::string ip(pTargetIpInput->value());
 	uint16_t port = std::stoul(pTargetPortInput->value());
 	gateM17.SetDestAddress(ip, port);
-	if (0==cs.compare(0, 4, "M17-") || 0==cs.compare(0, 3, "URF")) {
+	if (0==cs.compare(0, 4, "M17-") or 0==cs.compare(0, 3, "URF")) {
 		cs.resize(8, ' ');
 		cs.append(1, GetTargetModule());
 	}
@@ -730,7 +730,7 @@ void CMainWindow::ReadThread()
 			{
 				char line[256] = { 0 };
 				LogInput.Read(line, 256);
-				std::lock_guard<std::mutex> lok(logmux);
+				std::lock_guard<std::mutex> lck(logmux);
 				insertLogText(line);
 			}
 		}
@@ -764,7 +764,7 @@ void CMainWindow::UpdateGUI()
 		{
 			case ELinkState::unlinked:
 				pDisconnectButton->deactivate();
-				if (std::regex_match(target, ReflTarRegEx) && bTargetIP && bTargetPort)
+				if (std::regex_match(target, ReflTarRegEx) and bTargetIP and bTargetPort)
 					pConnectButton->activate();
 				else
 					pConnectButton->deactivate();
@@ -803,7 +803,7 @@ void CMainWindow::UpdateGUI()
 			{
 				if (host->updated)
 				{
-					if (EInternetType::ipv4only!=cfgdata.eNetType && ! host->ip6addr.empty())
+					if (EInternetType::ipv4only!=cfgdata.eNetType and ! host->ip6addr.empty())
 						pTargetIpInput->value(host->ip6addr.c_str());
 					else
 						pTargetIpInput->value(host->ip4addr.c_str());
@@ -856,8 +856,9 @@ bool CMainWindow::SendMessage(const std::string &dst, const std::string &msg)
 		auto len = msg.length();
 		if (len > (MAX_PACKET_SIZE - 38u))
 		{
+			std::lock_guard<std::mutex> lck(logmux);
 			insertLogText("Message is too long, it will be truncated.\n");
-			len = MAX_PACKET_SIZE -38u;
+			len = MAX_PACKET_SIZE - 38u;
 		}
 		memcpy(pack.GetData()+35, msg.c_str(), len);
 		pack.CalcCRC();
@@ -865,10 +866,12 @@ bool CMainWindow::SendMessage(const std::string &dst, const std::string &msg)
 		gateM17.ReleaseLock();
 		std::stringstream ss;
 		ss << "Sent an SMS text msg to " << dst << ":\n" << msg << "\n";
+		std::lock_guard<std::mutex> lck(logmux);
 		insertLogText(ss.str().c_str());
 	}
 	else
 	{
+		std::lock_guard<std::mutex> lck(logmux);
 		insertLogText("Could not set the message because the gateway was locked!\n");
 	}
 	return l;
@@ -995,7 +998,7 @@ void CMainWindow::TargetCSInput()
 	}
 
 	// the target either has to be a reflector or a legal callsign
-	bTargetCS = std::regex_match(dest, M17CallRegEx) || std::regex_match(dest, ReflTarRegEx);
+	bTargetCS = std::regex_match(dest, M17CallRegEx) or std::regex_match(dest, ReflTarRegEx);
 
 	if (bTargetCS)
 	{
@@ -1073,7 +1076,7 @@ void CMainWindow::TargetCSInput()
 			else
 				ActivateModules();
 
-			if (host && !host->url.empty())
+			if (host and !host->url.empty())
 				pDashboardButton->activate();
 			else
 				pDashboardButton->deactivate();
@@ -1121,7 +1124,7 @@ void CMainWindow::TargetIPInput()
 			bTargetIP = bIP6;
 			break;
 		default:
-			bTargetIP = (bIP4 || bIP6);
+			bTargetIP = (bIP4 or bIP6);
 	}
 	pTargetIpInput->color(bTargetIP ? 2 : 1);
 	FixTargetMenuButton();
@@ -1136,7 +1139,7 @@ void CMainWindow::TargetPortInputCB(Fl_Widget *, void *This)
 void CMainWindow::TargetPortInput()
 {
 	auto port = std::atoi(pTargetPortInput->value());
-	bTargetPort = (1023 < port && port < 49000);
+	bTargetPort = (1023 < port and port < 49000);
 	pTargetPortInput->color(bTargetPort ? 2 : 1);
 	FixTargetMenuButton();
 	pTargetPortInput->damage(FL_DAMAGE_ALL);
@@ -1197,7 +1200,7 @@ void CMainWindow::DashboardButton()
 {
 	auto dciv = pTargetCSInput->value();
 	auto host = routeMap.Find(dciv);
-	if (host && ! host->url.empty()) {
+	if (host and ! host->url.empty()) {
 		fl_open_uri(host->url.c_str());
 	}
 }
@@ -1209,7 +1212,7 @@ void CMainWindow::FixTargetMenuButton()
 		auto host = routeMap.Find(cs);	// look for it
 		if (host) {
 			// cs is found in map
-			if (bTargetIP && bTargetPort && host->mods.empty()) { // is the IP and port okay and is this not from the csv file?
+			if (bTargetIP and bTargetPort and host->mods.empty()) { // is the IP and port okay and is this not from the csv file?
 				const std::string ip(pTargetIpInput->value());
 				const std::string port(pTargetPortInput->value());
 				if ((ip.compare(host->ip4addr) and ip.compare(host->ip6addr)) or (port.compare(std::to_string(host->port))) and ((pIsLegacyCheck->value()?true:false)!=host->is_legacy)) {
@@ -1227,7 +1230,7 @@ void CMainWindow::FixTargetMenuButton()
 			}
 		} else {
 			// cs is not found in map
-			if (bTargetIP && bTargetPort) { // is the IP okay and is the not from the csv file?
+			if (bTargetIP and bTargetPort) { // is the IP okay and is the not from the csv file?
 				SetTargetMenuButton(savestr);
 			} else {
 				SetTargetMenuButton();
@@ -1242,7 +1245,7 @@ void CMainWindow::FixTargetMenuButton()
 void CMainWindow::TransmitterButtonControl()
 {
 	DestinationCSInput();
-	if (bTransOK && bDestCS && bTargetCS && bTargetIP && bTargetPort && (0 == pConnectButton->active()))
+	if (bTransOK and bDestCS and bTargetCS and bTargetIP and bTargetPort and (0 == pConnectButton->active()))
 	{
 		pPTTButton->activate();
 		pQuickKeyButton->activate();
@@ -1280,7 +1283,7 @@ static bool do_mkdir(const std::string& path)
     struct stat st;
     if (::stat(path.c_str(), &st) != 0)
 	{
-        if (MKDIR(path.c_str()) != 0 && errno != EEXIST)
+        if (MKDIR(path.c_str()) != 0 and errno != EEXIST)
 		{
             return false;
         }

@@ -59,7 +59,7 @@ void CConfigure::ReadData()
 		char *key = strtok(line, "=");
 		if (!key)
 			continue;	// skip empty lines
-		if (0==strlen(key) || '#'==*key)
+		if (0==strlen(key) or '#'==*key)
 			continue;	// skip comments
 		char *val = strtok(NULL, "\t\r");
 		if (!val)
@@ -187,10 +187,10 @@ void CConfigure::CopyTo(CFGDATA &to)
 
 bool CConfigure::IsOkay()
 {
-	bool audio = (data.sAudioIn.size()>0 && data.sAudioOut.size()>0);
+	bool audio = (data.sAudioIn.size()>0 and data.sAudioOut.size()>0);
 	bool module = isalpha(data.cModule);
 	bool src = (data.sM17SourceCallsign.size() > 2);
-	return (audio && src && module);
+	return (audio and src and module);
 }
 
 const CFGDATA *CConfigure::GetData()

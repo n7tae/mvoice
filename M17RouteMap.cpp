@@ -49,12 +49,12 @@ static CURLcode curl_read(const std::string& url, std::ostream& os, long timeout
 	if(curl)
 	{
 		if(CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, &data_write))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_USERAGENT, "mvoice/1.0"))
-		&& CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
+		and CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_NOPROGRESS, 1L))
+		and CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FOLLOWLOCATION, 1L))
+		and CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_FILE, &os))
+		and CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_TIMEOUT, timeout))
+		and CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_USERAGENT, "mvoice/1.0"))
+		and CURLE_OK == (code = curl_easy_setopt(curl, CURLOPT_URL, url.c_str())))
 		{
 			code = curl_easy_perform(curl);
 		}
@@ -127,7 +127,7 @@ void CM17RouteMap::Update(EFrom from, const std::string &cs, bool islegacy, cons
 	host->port = port;
 
 	std::lock_guard<std::mutex> lck(mux);
-	if (host->dn.size() || host->ip4addr.size() || host->ip6addr.size() || host->url.size() || host->mods.size() || host->smods.size())
+	if (host->dn.size() or host->ip4addr.size() or host->ip6addr.size() or host->url.size() or host->mods.size() or host->smods.size())
 		host->updated = true;
 	baseMap[base] = host;
 	//std::cout << "updating " << host->cs << ": dn='" << host->dn << "' ipv4='" << host->ip4addr << "' ipv6='" << host->ip6addr << "' url='" << host->url << "' mods='" << host->mods << "' smods='" << host->smods << "' port=" << host->port << std::endl;
@@ -295,7 +295,7 @@ void CM17RouteMap::Read()
 		std::string line;
 		while (getline(file, line)) {
 			trim(line);
-			if (0==line.size() || '#'==line[0]) continue;
+			if (0==line.size() or '#'==line[0]) continue;
 			std::vector<std::string> elem;
 			split(line, ';', elem);
 			switch (elem.size())

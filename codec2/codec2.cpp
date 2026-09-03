@@ -928,7 +928,7 @@ void CCodec2::postfilter( MODEL *model, float *bg_est )
 	   of the threshold is to prevent updating during high level
 	   speech. */
 
-	if ((e < BG_THRESH) && !model->voiced)
+	if ((e < BG_THRESH) and !model->voiced)
 		*bg_est =  *bg_est*(1.0 - BG_BETA) + e*BG_BETA;
 
 	/* now mess with phases during voiced frames to make any harmonics
@@ -950,7 +950,7 @@ C2CONST CCodec2::c2const_create(int Fs, float framelength_s)
 {
 	C2CONST c2const;
 
-	assert((Fs == 8000) || (Fs = 16000));
+	assert((Fs == 8000) or (Fs = 16000));
 	c2const.Fs = Fs;
 	c2const.n_samp = round(Fs*framelength_s);
 	c2const.max_amp = floor(Fs*P_MAX_S/2);
@@ -1398,7 +1398,7 @@ float CCodec2::est_voicing_mbe( C2CONST *c2const, MODEL *model, std::complex<flo
 		   pitch, so we have just a small eratio threshold. */
 
 		sixty = 60.0*TWO_PI/c2const->Fs;
-		if ((eratio < -4.0) && (model->Wo <= sixty))
+		if ((eratio < -4.0) and (model->Wo <= sixty))
 			model->voiced = 0;
 	}
 	//printf(" v: %d snr: %f eratio: %3.2f %f\n",model->voiced,snr,eratio,dF0);
@@ -1561,7 +1561,7 @@ void CCodec2::interp_Wo2(
 {
 	/* trap corner case where voicing est is probably wrong */
 
-	if (interp->voiced && !prev->voiced && !next->voiced)
+	if (interp->voiced and !prev->voiced and !next->voiced)
 	{
 		interp->voiced = 0;
 	}
@@ -1570,11 +1570,11 @@ void CCodec2::interp_Wo2(
 
 	if (interp->voiced)
 	{
-		if (prev->voiced && next->voiced)
+		if (prev->voiced and next->voiced)
 			interp->Wo = (1.0 - weight)*prev->Wo + weight*next->Wo;
-		if (!prev->voiced && next->voiced)
+		if (!prev->voiced and next->voiced)
 			interp->Wo = next->Wo;
-		if (prev->voiced && !next->voiced)
+		if (prev->voiced and !next->voiced)
 			interp->Wo = prev->Wo;
 	}
 	else

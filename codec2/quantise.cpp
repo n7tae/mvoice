@@ -790,7 +790,7 @@ int CQuantize::lpc_to_lsp(float *a, int order, float *freq, int nb, float delta)
 
 		psuml = cheb_poly_eva(pt,xl,order);	/* evals poly. at xl 	*/
 		flag = 1;
-		while(flag && (xr >= -1.0))
+		while(flag and (xr >= -1.0))
 		{
 			xr = xl - delta ;                  	/* interval spacing 	*/
 			psumr = cheb_poly_eva(pt,xr,order);/* poly(xl-delta_x) 	*/
@@ -806,7 +806,7 @@ int CQuantize::lpc_to_lsp(float *a, int order, float *freq, int nb, float delta)
 			   interval between xl and xr and repeat till root is located
 			   within the specified limits  */
 
-			if(((psumr*psuml)<0.0) || (psumr == 0.0))
+			if(((psumr*psuml)<0.0) or (psumr == 0.0))
 			{
 				roots++;
 

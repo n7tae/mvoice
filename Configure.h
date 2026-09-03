@@ -20,7 +20,7 @@
 
 #include <string>
 
-#define IS_TRUE(a) ((a)=='t' || (a)=='T' || (a)=='1')
+#define IS_TRUE(a) ((a)=='t' or (a)=='T' or (a)=='1')
 
 enum class EInternetType { ipv4only, ipv6only, dualstack };
 
