@@ -5,7 +5,7 @@ include mvoice.mk
 ifeq ($(DEBUG), true)
 CPPFLAGS = -ggdb -W -std=c++17 -Icodec2 -DCFGDIR=\"$(CFGDIR)\" -DBASEDIR=\"$(BASEDIR)\"
 else
-CPPFLAGS = -W -std=c++17 -Icodec2 -DCFGDIR=\"$(CFGDIR)\" -DBASEDIR=\"$(BASEDIR)\"
+CPPFLAGS = -O2 -W -std=c++17 -Icodec2 -DCFGDIR=\"$(CFGDIR)\" -DBASEDIR=\"$(BASEDIR)\"
 endif
 
 LDFLAGS = `fltk-config --use-images --ldflags` -lasound -lcurl -pthread
