@@ -25,6 +25,7 @@
 #include "SettingsDlg.h"
 #include "MainWindow.h"
 
+#include <libintl.h>
 #define _(STRING) gettext(STRING)
 
 static const char *notfoundstr = _(" not found");

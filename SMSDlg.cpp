@@ -23,6 +23,7 @@
 #include "SMSDlg.h"
 #include "Utilities.h"
 
+#include <libintl.h>
 #define _(STRING) gettext(STRING)
 
 CSMSDlg::CSMSDlg() : pMainWindow(nullptr), pDlg(nullptr) {}
