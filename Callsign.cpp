@@ -91,14 +91,13 @@ void CCallsign::CodeIn(const uint8_t *in)
 		return;
 	}
 	if (coded > 0xf46108ffffffu) {
-		strncpy(cs, "@INVALID", sizeof(cs));
 		return;
 	}
 	int i = 0;
 	auto c = coded;
 	if (coded > 0xee6b27ffffffu) {
 		cs[i++] = '#';
-		coded -= 0xee6b28000000u;
+		c -= 0xee6b28000000u;
 	}
 	while (c) {
 		cs[i++] = m17_alphabet[c % 40];
